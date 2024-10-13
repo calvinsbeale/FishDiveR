@@ -75,6 +75,7 @@ depthStats <- create_depth_stats(
 
 # List the tags to perform PCA of daily wavelet statistics
 tag_list <- c("data")
+
 # Create the data frame of wavelet statistics for all tags in tag_list. Choose which wavelet statistics to include.
 pc_data <- pca_data(
   tag_vector = tag_list,

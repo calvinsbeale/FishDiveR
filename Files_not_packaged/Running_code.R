@@ -18,6 +18,7 @@ pkgdown::build_site()
 usethis::use_github_action()
 use_github_action("test-coverage")
 
+# Installation methods: Public repository
 devtools::install_github("calvinsbeale/FishDiveR")
 remotes::install_github("calvinsbeale/FishDiveR")
 

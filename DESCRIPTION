@@ -1,0 +1,47 @@
+Package: FishDiveR
+Title: Classify Aquatic Animal Behaviours from Vertical Movement Data
+Version: 0.9.9.9
+Authors@R: 
+    person(given = "Calvin", family = "Beale", email = "calvin.beale.8@gmail.com", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0002-3505-8929"))
+Author: Calvin Beale [aut, cre, cph] (<calvin.beale.8@gmail.com>)
+Maintainer: Calvin Beale <calvin.beale.8@gmail.com>
+Description: 
+  Quantitatively analyse depth time-series data from pop-up satellite archival tags (PSATs) through the application of continuous wavelet transformation (CWT) combined with Principal Component Analysis (PCA), and k-means clustering.
+  Import, crop, and plot depth time-depth records (TDRs). Using CWT to detect important signals within the non-stationary data, we create daily wavelet statistics to summarise vertical movements on different wavelet periods and combine with daily and diel depth statistics.
+  Classify depth time-series with unsupervised k-means clustering into 24-hour periods of vertical movement behaviour with distinct patterns of vertical movement. Plot example days from each behaviour cluster, and plot the TDR coloured by cluster.
+  Based on principals of combining CWT with k-means first developed by Sakamoto et al. (2009) <doi:10.1371/journal.pone.0005379> and redeveloped by Beale et al. (2024) <doi: In Press>.
+License: GPL (>= 3)
+URL: https://github.com/calvinsbeale/FishDiveR
+BugReports: https://github.com/calvinsbeale/FishDiveR/issues
+Imports:
+    cluster,
+    cowplot,
+    data.table,
+    dplyr,
+    FactoMineR,
+    geometry,
+    ggplot2,
+    gridExtra,
+    lubridate,
+    moments,
+    patchwork,
+    colorspace,
+    rgl,
+    rlang,
+    scales,
+    suncalc,
+    tidyr,
+    WaveletComp,
+    withr
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Depends:
+    R (>= 3.5.0)
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+VignetteBuilder: knitr

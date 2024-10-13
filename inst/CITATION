@@ -1,0 +1,11 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "FishDiveR: Wavelet analyses and machine learning provide robust classification of animal behaviour from depth data",
+  author   = "Calvin Steven Beale, Adrian Gleiss",
+  journal  = "Journal of..." ,
+  year     = 2024,
+  volume   = 1,
+  number   = 1,
+  pages    = 1,
+  doi      = 1
+)

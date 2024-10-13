@@ -1,0 +1,16 @@
+^.*\.Rproj$
+^FishDiveR\.Rproj$
+^\.Rproj\.user$
+^README\.Rmd$
+^LICENSE\.md$
+^\\.git$
+^\.Rhistory$
+^\.RData$
+^\.Files_not_packaged$
+^Files_not_packaged$
+^\.git$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
+^cran-comments\.md$

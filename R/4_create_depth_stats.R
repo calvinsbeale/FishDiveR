@@ -219,7 +219,8 @@ create_depth_stats <- function(archive = archive_days,
       cat("Reading in GPS locations. Using actual sunrise and sunset times to calculate diel statistics\n")
 
       # Read in GPS coordinates
-      gps <- read.csv(file = file.path(GPS))
+      gps <- data.table::fread(file.path(GPS), select = c("date", "lat", "lon"))
+      # str(gps)
 
       # Check that date, latitude and longitude exist in the 'gps' data frame
       required_columns <- c("date", "lat", "lon")
@@ -227,9 +228,6 @@ create_depth_stats <- function(archive = archive_days,
         # If not all columns are present, throw an error
         stop("If GPS is enabled, 'date', 'lat', and 'lon' must exist in the data frame 'gps'.")
       }
-
-      # Keep only required columns
-      gps <- as.data.frame(gps)[c("date", "lat", "lon")]
 
       # Check for NA's in 'gps' file
       if (any(is.na(gps))) {
@@ -241,6 +239,7 @@ create_depth_stats <- function(archive = archive_days,
 
       # Convert gps$date to a Date object
       gps$date <- as.Date(gps$date, format = "%d-%b-%Y")
+      # str(gps) # "date" should now be formatted as a Date
 
       # Add a day before the first date and after the last date
       first_date <- min(gps$date) - 1

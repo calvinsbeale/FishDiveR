@@ -26,7 +26,8 @@
 #'   "18:30:00"
 #' @param diel Include diel statistics when TRUE
 #' @param GPS Either FALSE or the location of the GPS file containing columns
-#'   'date', 'lat' (latitude) and 'lon' (longitude) if one exists
+#'   'date', 'lat' (latitude) and 'lon' (longitude) if one exists. 'date'
+#'   columns must be in a format readable by lubridate::dmy()
 #' @param sunset_type Choose which type of sunset to include 'NULL', civil',
 #'   'nautical', or 'astronomical'
 #'
@@ -145,11 +146,11 @@ create_depth_stats <- function(archive = archive_days,
   check_date_format <- function(date_column) {
     # Ensure the date_column is a character vector
     if (!is.character(date_column)) {
-      stop("GPS date must be a character string in the format 'dd-mmm-yyyy'")
+      stop("GPS date must be a character string readable by ludridate::dmy()")
     }
 
     # Try to parse the dates with the expected format
-    parsed_dates <- lubridate::parse_date_time(date_column, orders = "%d-%b-%Y")
+    parsed_dates <- lubridate::dmy(date_column)
 
     # Check for any NA values in the parsed dates
     if (any(is.na(parsed_dates))) {
@@ -220,7 +221,6 @@ create_depth_stats <- function(archive = archive_days,
 
       # Read in GPS coordinates
       gps <- data.table::fread(file.path(GPS), select = c("date", "lat", "lon"))
-      # str(gps)
 
       # Check that date, latitude and longitude exist in the 'gps' data frame
       required_columns <- c("date", "lat", "lon")
@@ -238,8 +238,7 @@ create_depth_stats <- function(archive = archive_days,
       check_date_format(gps$date)
 
       # Convert gps$date to a Date object
-      gps$date <- as.Date(gps$date, format = "%d-%b-%Y")
-      # str(gps) # "date" should now be formatted as a Date
+      gps$date <- lubridate::dmy(gps$date)
 
       # Add a day before the first date and after the last date
       first_date <- min(gps$date) - 1

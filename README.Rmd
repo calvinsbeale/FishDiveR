@@ -125,6 +125,8 @@ As with any wavelet transformation, there are inherent assumptions that the user
 
 The lower wavelet period is typically set to 5 minutes where depth sampling frequency allows. Ensuring that shorter time period behaviours could be accurately captured, while reducing wavelet file size. An upper period of 24 hours is typically used to focus the analysis on daily behaviour patterns, excluding longer-scale patterns that are not relevant to the study's objectives. To detect lunar cycles, sufficient data covering the 28-day cycle must be available. To achieve a detailed resolution of behavioural patterns, the period range was divided into twelve sub-octaves. This division provided intervals with ecological relevance, such as 24, 12, and 6 hours, while including 12 periods between 24 and 12 hours to capture finer details within daily cycles.
 
+If you have errors allocating large vectors try using library(bigmemory) and create a big matrix with: big_mat <- big.matrix(nrow = 1e7, ncol = 10, type = "double") then run your code again. This allows greater range between lower and upper periods, allowing the capture of long time-frame changes e.g. 6 hours to 128 days.
+
 ```{r Create-wavelet}
 # Create the wavelet and plot the wavelet spectrum
 my.w <- create_wavelet(

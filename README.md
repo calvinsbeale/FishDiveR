@@ -118,7 +118,7 @@ archive_days <- import_tag_data(
 #> Maximum depth = 262.2
 #> Number of full days in dataset: 10
 #> 
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/archive_days.rds
+#> Output file: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/archive_days.rds
 # Plot the depth time-series record
 TDR_plot <- plot_TDR(
   tag_ID = "data",
@@ -140,7 +140,7 @@ TDR_plot <- plot_TDR(
 <img src="man/figures/README-Import-data-1.png" width="100%" />
 
     #> 
-    #> Output file: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/data_archive.png
+    #> Output file: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/data_archive.png
 
 The `create_wavelet()` function performs wavelet analysis on the
 processed tag archive using the ‘WaveletComp’ package
@@ -174,6 +174,12 @@ twelve sub-octaves. This division provided intervals with ecological
 relevance, such as 24, 12, and 6 hours, while including 12 periods
 between 24 and 12 hours to capture finer details within daily cycles.
 
+If you have errors allocating large vectors try using library(bigmemory)
+and create a big matrix with: big_mat \<- big.matrix(nrow = 1e7, ncol =
+10, type = “double”) then run your code again. This allows greater range
+between lower and upper periods, allowing the capture of long time-frame
+changes e.g. 6 hours to 128 days.
+
 ``` r
 # Create the wavelet and plot the wavelet spectrum
 my.w <- create_wavelet(
@@ -201,9 +207,9 @@ my.w <- create_wavelet(
 #> Class attributes are accessible through following names:
 #> series loess.span dt dj Wave Phase Ampl Power Power.avg Power.pval Power.avg.pval Ridge Period Scale nc nr coi.1 coi.2 axis.1 axis.2 date.format date.tz 
 #> 
-#> Wavelet saved to C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/1_Wavelets/data_wavelet.rds
+#> Wavelet saved to C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/1_Wavelets/data_wavelet.rds
 #> 
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/2_Wavelet_Figures/
+#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/2_Wavelet_Figures/
 ```
 
 The two functions `create_wavelet_stats()` and `create_depth_stats()`
@@ -224,7 +230,7 @@ waveStats <- create_wavelet_stats(
 #> 
 #> Running create_wavelet_stats() on tag ID data 
 #> 
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/3_Stats/data_waveStats.csv
+#> Output file: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/3_Stats/data_waveStats.csv
 # Create daily and diel depth statistics
 depthStats <- create_depth_stats(
   archive = archive_days,
@@ -241,7 +247,7 @@ depthStats <- create_depth_stats(
 #> Reading in GPS locations. Using actual sunrise and sunset times to calculate diel statistics
 #> Archive updated with diel periods based on GPS calculated times
 #> 
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/3_Stats/data_depthStats.csv
+#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/3_Stats/data_depthStats.csv
 ```
 
 Performing Principal Component Analysis (PCA). PCA is performed to
@@ -297,7 +303,7 @@ pc_data <- pca_data(
   output_folder = output_folder
 )
 #> 
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/4_PCA/pc_data.rds
+#> Output file: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/4_PCA/pc_data.rds
 # Run Principal Component Analysis on the data frame to calculate PC scores
 pc_results <- pca_results(
   pc_data = pc_data,
@@ -321,15 +327,15 @@ pc_results <- pca_results(
 #> 
 #> 7 principal components of 9 have eigenvalues >= 1 
 #> 
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/4_PCA/eigenvalues_cum_var.csv
+#> Output file: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/4_PCA/eigenvalues_cum_var.csv
 #> Using cumulative variance threshold: Keeping 3 principal components to reach 90 % variance
 ```
 
 <img src="man/figures/README-Principal-Component-Analysis-1.png" width="100%" /><img src="man/figures/README-Principal-Component-Analysis-2.png" width="100%" />
 
-    #> Output folder: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/4_PCA 
+    #> Output folder: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/4_PCA 
     #> 
-    #> Output file: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/4_PCA/pc_results.rds contains the selected number of principal components.
+    #> Output file: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/4_PCA/pc_results.rds contains the selected number of principal components.
     # Extract the principal component scores.
     pc_scores <- pca_scores(
       pc_results = pc_results,
@@ -340,9 +346,9 @@ pc_results <- pca_results(
 <img src="man/figures/README-Principal-Component-Analysis-3.png" width="100%" /><img src="man/figures/README-Principal-Component-Analysis-4.png" width="100%" /><img src="man/figures/README-Principal-Component-Analysis-5.png" width="100%" /><img src="man/figures/README-Principal-Component-Analysis-6.png" width="100%" />
 
     #> 
-    #> Output folder: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/4_PCA
+    #> Output folder: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/4_PCA
     #> 
-    #> Output file: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/4_PCA/pc_scores.rds
+    #> Output file: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/4_PCA/pc_scores.rds
 
 The PC scores and depth statistics calculated from the raw tag data are
 combined prior to clustering. `combine_data()` loads the depth
@@ -357,7 +363,7 @@ kmeans_features <- combine_data(
   output_folder = output_folder
 )
 #> 
-#> Saving combined metrics to: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/5_k-means/combined_stats.rds
+#> Saving combined metrics to: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/5_k-means/combined_stats.rds
 # Optionally at this stage the user may select to remove or add additional statistics. If data are modified, be sure to re-standardise the data frame.
 # kmeans_features <- kmeans_features[,c(1:8, 10:20)]
 ```
@@ -426,7 +432,7 @@ selecting_k <- select_k(
 #> 1 1 1 1 3 1 1 1 
 #> 
 #> Optimal number of clusters according to gap statistic: 2
-#> Single tag output file: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/5_k-means/Select_k.3_PCs.png
+#> Single tag output file: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/5_k-means/Select_k.3_PCs.png
 ```
 
 <img src="man/figures/README-Kmeans-clustering-1.png" width="100%" />
@@ -453,7 +459,7 @@ kmeans_result <- k_clustering(
 #> 2   data       2               1
 #> 3   data       3               2
 #> 4   data       4               5
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/5_k-means
+#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/5_k-means
 ```
 
 <img src="man/figures/README-Kmeans-clustering-2.png" width="100%" />
@@ -498,7 +504,7 @@ TDR_plot <- plot_cluster_TDR(
 <img src="man/figures/README-Plot-TDR-1.png" width="100%" />
 
     #> 
-    #>  Output file: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data_TDR_k=4.png
+    #>  Output file: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data_TDR_k=4.png
 
 Plot the depth time-series of the 24-hour segments closest to the centre
 of each cluster group. ‘No_days’ allows you to choose the number of
@@ -534,7 +540,7 @@ plots_list <- plot_clusters(
 #>  Cluster 3 dates 2000-01-03 Tag: data
 #> 
 #>  Cluster 4 dates 2000-01-04 Tag: data
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmp27e3en/data/6_Cluster-plots.K=4_shaded
+#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpqI9esm/data/6_Cluster-plots.K=4_shaded
 ```
 
 <img src="man/figures/README-Plot-clusters-1.png" width="100%" />

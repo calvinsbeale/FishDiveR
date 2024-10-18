@@ -6,7 +6,10 @@
 #' @details Uses [WaveletComp::analyze.wavelet()] to create a univariate wavelet
 #'   power spectrum for the depth data imported, see
 #'   [WaveletComp::analyze.wavelet()] for more details. Plots mean wavelet power
-#'   using [WaveletComp::wt.avg()].
+#'   using [WaveletComp::wt.avg()]. If you have errors allocating large vectors
+#'   try using library(bigmemory) and create a big matrix with
+#'   big_mat <- big.matrix(nrow = 1e7, ncol = 10, type = "double") then run
+#'   your code again. This allows greater range between lower and upper periods
 #'
 #'
 #' @name create_wavelet
@@ -125,7 +128,8 @@ create_wavelet <- function(archive,
   # Check range of periods
   if (upper_period_hours == 24 && lower_period_mins < 5 && suboctaves == 12) {
     cat("Using an upper period of 24 hours and lower period of less than 5 minutes can result in a long processing time and very large wavelet file (>20 GB).
-        Some computers will not be able to render the power spectrum plot at default size and resolution.\n")
+        Some computers will not be able to render the power spectrum plot at default size and resolution. If receiving vector allocation errors,
+        see details in ?FishDiveR::create_wavelet \n")
   }
 
   # 2. Check other inputs

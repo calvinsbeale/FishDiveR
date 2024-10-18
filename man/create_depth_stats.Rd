@@ -30,7 +30,8 @@ E.g. "123456"}
 "18:30:00"}
 
 \item{GPS}{Either FALSE or the location of the GPS file containing columns
-'date', 'lat' (latitude) and 'lon' (longitude) if one exists}
+'date', 'lat' (latitude) and 'lon' (longitude) if one exists. 'date'
+columns must be in a format readable by lubridate::dmy()}
 
 \item{sunset_type}{Choose which type of sunset to include 'NULL', civil',
 'nautical', or 'astronomical'}

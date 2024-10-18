@@ -76,7 +76,10 @@ Skips creation if my.w is already in the global environment.
 Uses \code{\link[WaveletComp:analyze.wavelet]{WaveletComp::analyze.wavelet()}} to create a univariate wavelet
 power spectrum for the depth data imported, see
 \code{\link[WaveletComp:analyze.wavelet]{WaveletComp::analyze.wavelet()}} for more details. Plots mean wavelet power
-using \code{\link[WaveletComp:wt.avg]{WaveletComp::wt.avg()}}.
+using \code{\link[WaveletComp:wt.avg]{WaveletComp::wt.avg()}}. If you have errors allocating large vectors
+try using library(bigmemory) and create a big matrix with
+big_mat <- big.matrix(nrow = 1e7, ncol = 10, type = "double") then run
+your code again. This allows greater range between lower and upper periods
 }
 \examples{
 # Set file path

@@ -247,6 +247,8 @@ import_tag_data <- function(tag_ID,
 #'   sampling frequency. Overrides every_nth if != 0.
 #' @param plot_size ggSave height and width for saving the output plot. Must be
 #'   numeric, positive and 2 elements long. Default to 'c(12,6)'
+#' @param X_lim Optional. Vector with two dates delimiting the time-depth record
+#'   to plot. E.g. c("2000-01-01", "2000-11-23")
 #' @param Y_lim Character vector with minimum depth, maximum depth, and sequence
 #'   for ticks on Y-axis. Must be numeric, positive and 3 elements long. E.g.
 #'   c(0,1500,100).
@@ -269,6 +271,7 @@ import_tag_data <- function(tag_ID,
 #'   every_nth = 10,
 #'   every_s = 0,
 #'   plot_size = c(12, 6),
+#'   X_lim = NULL,
 #'   Y_lim = c(0, 300, 50),
 #'   date_breaks = "24 hour",
 #'   dpi = 100,
@@ -281,6 +284,7 @@ plot_TDR <- function(tag_ID,
                      every_nth = 20,
                      every_s = 0,
                      plot_size = c(12, 6),
+                     X_lim = NULL,
                      Y_lim = c(0, 1500, 100),
                      date_breaks = "14 day",
                      dpi = 300,
@@ -306,6 +310,17 @@ plot_TDR <- function(tag_ID,
   if ((!is.numeric(dpi) || dpi <= 0)) {
     stop("dpi must be a positive integer.")
   }
+  # Check X_lim if provided
+  if (!is.null(X_lim)) {
+    if (!is.character(X_lim) || length(X_lim) != 2) {
+      stop("X_lim must be a character vector of two dates in 'YYYY-MM-DD' format.")
+    }
+    # Convert to Date format for subsetting
+    X_lim <- as.Date(X_lim)
+    if (any(is.na(X_lim))) {
+      stop("Invalid dates in X_lim. Ensure they are in 'YYYY-MM-DD' format.")
+    }
+  }
 
   # Read in tag archive
   archive_days <- readRDS(file = file.path(data_folder, tag_ID, "/archive_days.rds"))
@@ -318,6 +333,16 @@ plot_TDR <- function(tag_ID,
 
   if (length(sampling_interval) != 1) {
     stop("Error: The original data does not have a consistent sampling frequency.")
+  }
+
+  # Check X_lim if provided
+  if (!is.null(X_lim)) {
+    # Crop archive_days to the subset set by the limits
+    archive_days <- subset(archive_days, date_only >= as.Date(X_lim[1]) & date_only <= as.Date(X_lim[2]))
+    if (nrow(archive_days) == 0) {
+      stop("No data available within the specified X_lim date range.")
+    }
+    cat("Data has been filtered between X-axis limits \n")
   }
 
   # Print sampling interval

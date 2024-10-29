@@ -10,6 +10,7 @@ plot_TDR(
   every_nth = 20,
   every_s = 0,
   plot_size = c(12, 6),
+  X_lim = NULL,
   Y_lim = c(0, 1500, 100),
   date_breaks = "14 day",
   dpi = 300,
@@ -33,6 +34,9 @@ sampling frequency. Overrides every_nth if != 0.}
 
 \item{plot_size}{ggSave height and width for saving the output plot. Must be
 numeric, positive and 2 elements long. Default to 'c(12,6)'}
+
+\item{X_lim}{Optional. Vector with two dates delimiting the time-depth record
+to plot. E.g. c("2000-01-01", "2000-11-23")}
 
 \item{Y_lim}{Character vector with minimum depth, maximum depth, and sequence
 for ticks on Y-axis. Must be numeric, positive and 3 elements long. E.g.
@@ -63,6 +67,7 @@ TDR_plot <- plot_TDR(
   every_nth = 10,
   every_s = 0,
   plot_size = c(12, 6),
+  X_lim = NULL,
   Y_lim = c(0, 300, 50),
   date_breaks = "24 hour",
   dpi = 100,

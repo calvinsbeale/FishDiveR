@@ -28,6 +28,7 @@ Imports:
     patchwork,
     colorspace,
     rgl,
+    Rfast,
     rlang,
     scales,
     suncalc,

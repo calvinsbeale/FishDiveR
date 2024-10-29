@@ -42,6 +42,7 @@ test_that("process_tag_data() imports a tag archive", {
     every_nth = 10, # 1-minute depth sampling interval. Plot every 10th data point = 10 minutes.
     every_s = 0,
     plot_size = c(12, 6),
+    X_lim = NULL,
     Y_lim = c(0, 275, 50),
     date_breaks = "48 hour",
     dpi = 30,
@@ -54,6 +55,7 @@ test_that("process_tag_data() imports a tag archive", {
     every_nth = 10,
     every_s = 600, # plot every 600th second (10 minutes)
     plot_size = c(12, 6),
+    X_lim = c("2000-01-02", "2000-01-10"),
     Y_lim = c(0, 275, 50),
     date_breaks = "48 hour",
     dpi = 30,

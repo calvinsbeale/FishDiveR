@@ -11,6 +11,7 @@ plot_cluster_TDR(
   kmeans_result,
   every_nth = 10,
   every_s = 0,
+  X_lim = NULL,
   Y_lim = c(0, 250, 50),
   date_breaks = "14 day",
   legend = TRUE,
@@ -36,6 +37,9 @@ Defaults to 10, plotting every 10th record.}
 of data points to plot by number of seconds, as opposed to records. E.g.
 plots every 60th second, rather than 10th row of data. Must be a multiple of the
 sampling frequency. Overrides every_nth if != 0.}
+
+\item{X_lim}{Optional. Vector with two dates delimiting the time-depth record
+to plot. E.g. c("2000-01-01", "2000-11-23")}
 
 \item{Y_lim}{Character vector with minimum depth, maximum depth, and sequence
 for ticks on Y-axis. Must be numeric, positive and 3 elements long. E.g.
@@ -78,6 +82,7 @@ plot_cluster_TDR(
   kmeans_result = kmeans_result,
   every_nth = 10,
   every_s = 0,
+  X_lim = NULL,
   Y_lim = c(0, 300, 50),
   date_breaks = "1 day",
   legend = TRUE,

@@ -5,3 +5,4 @@
 # FishDiveR 1.0.0.0
 
 ## Changes in version 1.0.0.0
+Added x-axis limits for TDR plots

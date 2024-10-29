@@ -38,6 +38,7 @@
 #'   kmeans_result = kmeans_result,
 #'   every_nth = 10,
 #'   every_s = 0,
+#'   X_lim = NULL,
 #'   Y_lim = c(0, 300, 50),
 #'   date_breaks = "1 day",
 #'   legend = TRUE,
@@ -52,6 +53,7 @@ plot_cluster_TDR <- function(tag_ID,
                              kmeans_result,
                              every_nth = 10,
                              every_s = 0,
+                             X_lim = NULL,
                              Y_lim = c(0, 250, 50),
                              date_breaks = "14 day",
                              legend = TRUE,
@@ -84,6 +86,17 @@ plot_cluster_TDR <- function(tag_ID,
   }
   if ((!is.numeric(dpi) || dpi <= 0)) {
     stop("dpi must be a positive integer.")
+  }
+  # Check X_lim if provided
+  if (!is.null(X_lim)) {
+    if (!is.character(X_lim) || length(X_lim) != 2) {
+      stop("X_lim must be a character vector of two dates in 'YYYY-MM-DD' format.")
+    }
+    # Convert to Date format for subsetting
+    X_lim <- as.Date(X_lim)
+    if (any(is.na(X_lim))) {
+      stop("Invalid dates in X_lim. Ensure they are in 'YYYY-MM-DD' format.")
+    }
   }
 
   # Tag info:
@@ -141,6 +154,16 @@ plot_cluster_TDR <- function(tag_ID,
 
   # Print sampling interval
   cat(paste0("\nData sampling interval is ", sampling_interval, " seconds\n"))
+
+  # Check X_lim if provided
+  if (!is.null(X_lim)) {
+    # Crop archive_days to the subset set by the limits
+    archive_days <- subset(archive_days, date_only >= as.Date(X_lim[1]) & date_only <= as.Date(X_lim[2]))
+    if (nrow(archive_days) == 0) {
+      stop("No data available within the specified X_lim date range.")
+    }
+    cat("Data has been filtered between X-axis limits \n")
+  }
 
   if (every_s != 0) { # Using time, rather than number of rows to plot data.
     # Check if every_s is a multiple of the original sampling frequency

@@ -9,6 +9,7 @@ test_that("select_k() creates the appropriate plot", {
     standardise = FALSE,
     Max.k = 8,
     v_line = 4,
+    calc_gap = TRUE,
     plot_gap = TRUE,
     output_folder = tempdir()
   )
@@ -26,6 +27,7 @@ test_that("select_k() creates the appropriate plot", {
     standardise = TRUE,
     Max.k = 8,
     v_line = 4,
+    calc_gap = FALSE,
     plot_gap = FALSE,
     output_folder = tempdir()
   )

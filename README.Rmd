@@ -243,6 +243,8 @@ selecting_k <- select_k(
   standardise = TRUE,
   Max.k = 8,
   v_line = 4,
+  calc_gap = FALSE,
+  plot_gap = FALSE,
   output_folder = output_folder
 )
 # Run k-means with the selected number of clusters

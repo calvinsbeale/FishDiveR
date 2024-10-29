@@ -11,6 +11,7 @@
 #' @importFrom stats dist
 #' @importFrom cowplot plot_grid
 #' @importFrom withr local_options
+#' @importFrom Rfast Dist
 #'
 #' @inheritParams pca_data
 #' @param kmeans_data Data frame containing the combined PC scores and depth
@@ -136,7 +137,8 @@ select_k <- function(kmeans_data,
       sil[k] <- sil_summary$avg.width
 
       # Compute silhouette scores
-      sil_scores <- cluster::silhouette(kmeans_result$cluster, dist(kmeans_data))
+      distance_matrix <- Rfast::Dist(kmeans_data)
+      sil_scores <- cluster::silhouette(kmeans_result$cluster, distance_matrix)
 
       # Average silhouette width (higher is better, closer to 1)
       avg_sil_width <- round(mean(sil_scores[, 3]), 3)

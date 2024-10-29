@@ -9,6 +9,7 @@ select_k(
   standardise = TRUE,
   Max.k = 15,
   v_line = NULL,
+  calc_gap = FALSE,
   plot_gap = FALSE,
   output_folder = data_dir
 )
@@ -25,6 +26,9 @@ Defaults to TRUE.}
 
 \item{v_line}{Numerical. Option to add a vertical line to plot at a specific
 value of k. Defaults to NULL.}
+
+\item{calc_gap}{TRUE or FALSE. Whether or not to calculate the gap statistic.
+Defaults to FALSE}
 
 \item{plot_gap}{TRUE or FALSE. Whether or not to plot the gap statistic.
 Defaults to FALSE.}
@@ -54,6 +58,7 @@ selecting_k <- select_k(
   standardise = TRUE,
   Max.k = 8,
   v_line = 4,
+  calc_gap = FALSE,
   plot_gap = FALSE,
   output_folder = tempdir()
 )

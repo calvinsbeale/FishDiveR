@@ -21,6 +21,8 @@
 #' @param Max.k Numerical. Maximum value of k to try. Defaults to 15.
 #' @param v_line Numerical. Option to add a vertical line to plot at a specific
 #'   value of k. Defaults to NULL.
+#' @param calc_gap TRUE or FALSE. Whether or not to calculate the gap statistic.
+#'   Defaults to FALSE
 #' @param plot_gap TRUE or FALSE. Whether or not to plot the gap statistic.
 #'   Defaults to FALSE.
 #'
@@ -43,6 +45,7 @@
 #'   standardise = TRUE,
 #'   Max.k = 8,
 #'   v_line = 4,
+#'   calc_gap = FALSE,
 #'   plot_gap = FALSE,
 #'   output_folder = tempdir()
 #' )
@@ -52,6 +55,7 @@ select_k <- function(kmeans_data,
                      standardise = TRUE,
                      Max.k = 15,
                      v_line = NULL,
+                     calc_gap = FALSE,
                      plot_gap = FALSE,
                      output_folder = data_dir) {
   # Check if kmeans_data is a data frame
@@ -67,8 +71,11 @@ select_k <- function(kmeans_data,
   if (!is.null(v_line) && (!is.numeric(v_line) || v_line <= 0)) {
     stop("v_line must be NULL or a positive number.")
   }
+  if (!is.logical(calc_gap)) {
+    stop("calc_gap must be TRUE or FALSE.")
+  }
   if (!is.logical(plot_gap)) {
-    stop("standardise must be TRUE or FALSE.")
+    stop("plot_gap must be TRUE or FALSE.")
   }
 
   # Set the random seed for reproducible results in the function
@@ -143,24 +150,28 @@ select_k <- function(kmeans_data,
     }
   }
 
-  # Calculate gap statistic for all k
-  gap_stat_result <- cluster::clusGap(kmeans_data, FUN = kmeans, K.max = Max.k, B = 100)
-  gap_stat <- gap_stat_result$Tab[, "gap"]
-  se_sim <- gap_stat_result$Tab[, "SE.sim"]
+  # If gap statistic is required, calculate it
+  if(calc_gap) {
 
-  # Identify the optimal number of clusters based on the gap statistic
-  firstSEmax <- function(gap_stat, se_sim) {
-    k <- 1
-    for (i in 2:length(gap_stat)) {
-      if (gap_stat[i] >= gap_stat[i - 1] - se_sim[i]) {
-        k <- i
-        break
+    # Calculate gap statistic for all k
+    gap_stat_result <- cluster::clusGap(kmeans_data, FUN = kmeans, K.max = Max.k, B = 100)
+    gap_stat <- gap_stat_result$Tab[, "gap"]
+    se_sim <- gap_stat_result$Tab[, "SE.sim"]
+
+    # Identify the optimal number of clusters based on the gap statistic
+    firstSEmax <- function(gap_stat, se_sim) {
+      k <- 1
+      for (i in 2:length(gap_stat)) {
+        if (gap_stat[i] >= gap_stat[i - 1] - se_sim[i]) {
+          k <- i
+          break
+        }
       }
+      return(k)
     }
-    return(k)
+    optimal_k_gap <- firstSEmax(gap_stat, se_sim)
+    cat(paste0("\nOptimal number of clusters according to gap statistic: ", optimal_k_gap, "\n"))
   }
-  optimal_k_gap <- firstSEmax(gap_stat, se_sim)
-  cat(paste0("\nOptimal number of clusters according to gap statistic: ", optimal_k_gap, "\n"))
 
   # Create the within-cluster sum of squares plot "Elbow method"
   Elbow_plot <- ggplot2::ggplot() +
@@ -196,7 +207,7 @@ select_k <- function(kmeans_data,
     Silhouette_plot <- Silhouette_plot + geom_vline(xintercept = v_line, linetype = "dashed", color = "red")
   }
 
-  if (plot_gap) {
+  if (calc_gap && plot_gap) {
     # Create the gap statistic plot
     Gap_plot <- ggplot2::ggplot() +
       geom_line(data = data.frame(k_values, gap_stat), aes(x = k_values, y = gap_stat), color = "black") +
@@ -217,6 +228,10 @@ select_k <- function(kmeans_data,
     # Combine the three plots
     combined_k_plot <- cowplot::plot_grid(Elbow_plot, Silhouette_plot, Gap_plot, labels = c("A", "B", "C"), label_size = 10)
   } else {
+    if(plot_gap) {
+      cat("'calc_gap' must be True to plot the gap statistic")
+    }
+
     # Combine the elbow and silhouette width plots
     combined_k_plot <- cowplot::plot_grid(Elbow_plot, Silhouette_plot, labels = c("A", "B"), label_size = 10)
   }

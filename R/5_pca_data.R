@@ -88,12 +88,13 @@ pca_data <- function(tag_vector,
 
   # Initialize an empty list to store the data frames
   pc_data <- list()
-  wave_length <- list() # List to store the length of each wave data frame
+  No_vars <- list()
 
   # Initialize a variable to track the diel inclusion
   includes_diel <- FALSE
 
   # Loop through each tag_ID
+  # tag_ID <- tag_vector[1]
   for (tag_ID in tag_vector) {
     # Locate wavelet statistics file
     wave_stats_path <- file.path(data_folder, tag_ID, "3_Stats", paste0(tag_ID, "_waveStats.csv"))
@@ -102,9 +103,8 @@ pca_data <- function(tag_vector,
       # Read in wavelet statistics
       wave_stats <- read.csv(file = wave_stats_path, header = TRUE)
 
-      # List the lengths of wave statistics for each tag_ID
-      wave_length[[tag_ID]] <- ncol(wave_stats)
-
+      # List the number of variables in wave_stats for each tag_ID
+      No_vars[[tag_ID]] <- ncol(wave_stats)
       pc_data[[tag_ID]] <- wave_stats
 
       # Read in the wavelet meta and carry it forward
@@ -117,9 +117,10 @@ pca_data <- function(tag_vector,
   # Check if there is more than 1 tag
   if (length(pc_data) > 1) {
     # More than one tag.
-    # Check if wave_length is uneven (same number of wavelet periods amongst tags)
-    if (length(unique(unlist(wave_length))) != 1) {
-      stop("\n Differing numbers of wavelet periods amongst tags. Cannot combine wavelet statistics of different lengths. Check number of periods. \n")
+    # Check if No_vars is uneven (same number of wavelet variables amongst tags)
+    if (length(unique(unlist(No_vars))) != 1) {
+      stop("\n Differing numbers of wavelet periods amongst tags. Cannot combine wavelet statistics of different lengths. Check that lower and upper periods
+      as well as sub-octaves match. Combining wavelet statistics calculated at different sampling intervals is likely to cause problems in clustering. \n")
     }
 
     # Check if all data frames in pc_data have the same column names

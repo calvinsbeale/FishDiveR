@@ -219,15 +219,44 @@ create_depth_stats <- function(archive = archive_days,
 
       cat("Reading in GPS locations. Using actual sunrise and sunset times to calculate diel statistics\n")
 
-      # Read in GPS coordinates
-      gps <- data.table::fread(file.path(GPS), select = c("date", "lat", "lon"))
+      # Define possible names for date, latitude, and longitude
+      possible_columns <- list(
+        date = c("date", "Date", "DATE"),
+        lat = c("lat", "Lat", "LAT", "latitude", "Latitude", "LATITUDE"),
+        lon = c("lon", "Lon", "LON", "longitude", "Longitude", "LONGITUDE")
+      )
 
-      # Check that date, latitude and longitude exist in the 'gps' data frame
-      required_columns <- c("date", "lat", "lon")
-      if (!all(required_columns %in% names(gps))) {
-        # If not all columns are present, throw an error
-        stop("If GPS is enabled, 'date', 'lat', and 'lon' must exist in the data frame 'gps'.")
+      # Read in the GPS file (without specifying columns yet, we'll handle this dynamically)
+      gps <- data.table::fread(file.path(GPS))
+
+      # Function to find the first matching column from possible names
+      find_column <- function(possible_names, data) {
+        match <- which(tolower(names(data)) %in% tolower(possible_names))
+        if (length(match) > 0) {
+          return(names(data)[match[1]])  # Return the first match found
+        } else {
+          return(NULL)
+        }
       }
+
+      # Find actual columns for date, lat, and lon
+      date_col <- find_column(possible_columns$date, gps)
+      lat_col <- find_column(possible_columns$lat, gps)
+      lon_col <- find_column(possible_columns$lon, gps)
+
+      # Check if all required columns were found
+      if (is.null(date_col) || is.null(lat_col) || is.null(lon_col)) {
+        stop("If GPS is enabled, 'date', 'lat', and 'lon' (or their variations) must exist in the data frame 'gps'.")
+      }
+
+      # Select only the relevant columns
+      gps <- gps[, .(get(date_col), get(lat_col), get(lon_col))]
+
+      # Rename the columns to standard names for further use
+      setnames(gps, c("V1", "V2", "V3"), c("date", "lat", "lon"))
+
+      # Convert to data frame
+      gps <- as.data.frame(gps)
 
       # Check for NA's in 'gps' file
       if (any(is.na(gps))) {

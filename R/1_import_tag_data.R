@@ -239,6 +239,8 @@ import_tag_data <- function(tag_ID,
 #'
 #' @inheritParams import_tag_data
 #' @inheritParams pca_data
+#' @param rds_file Character vector file path of rds file.
+#'   E.g. ("E:/data/archive_days.rds")
 #' @param every_nth Numerical. Optional down-sampling of data points to plot.
 #'   Defaults to 10, plotting every 10th record.
 #' @param every_s  Numerical. Alternative to every_nth. Optional down-sampling
@@ -266,7 +268,7 @@ import_tag_data <- function(tag_ID,
 #'
 #' # Run depth_data function
 #' TDR_plot <- plot_TDR(
-#'   tag_ID = "data",
+#'   rds_file = "data/archive_days.rds",
 #'   data_folder = filepath,
 #'   every_nth = 10,
 #'   every_s = 0,
@@ -279,7 +281,7 @@ import_tag_data <- function(tag_ID,
 #' )
 #'
 # Utility function to combine the depth statistics and the pc scores for input to k-means clustering
-plot_TDR <- function(tag_ID,
+plot_TDR <- function(rds_file,
                      data_folder = data_dir,
                      every_nth = 20,
                      every_s = 0,
@@ -290,8 +292,8 @@ plot_TDR <- function(tag_ID,
                      dpi = 300,
                      output_folder = data_dir) {
   # Check format of inputs, on error stop
-  if (!is.character(tag_ID)) {
-    stop("tag_ID must be a character string.")
+  if (!is.character(rds_file)) {
+    stop("rds_file must be a character string.")
   }
   if (!is.numeric(every_nth) || every_nth <= 0) {
     stop("every_nth must be a positive integer.")
@@ -323,7 +325,7 @@ plot_TDR <- function(tag_ID,
   }
 
   # Read in tag archive
-  archive_days <- readRDS(file = file.path(data_folder, tag_ID, "/archive_days.rds"))
+  archive_days <- readRDS(file = file.path(data_folder, rds_file))
 
   # Calculate the time differences between consecutive records
   time_diffs <- diff(as.numeric(archive_days$date, units = "secs"))
@@ -399,8 +401,8 @@ plot_TDR <- function(tag_ID,
     )
   print(TDR_plot)
 
-  ggsave(file.path(output_folder, tag_ID, paste0(tag_ID, "_archive.png")), plot = TDR_plot, width = plot_size[1], height = plot_size[2], dpi = dpi, create.dir = TRUE)
-  cat("\nOutput file:", file.path(output_folder, tag_ID, paste0(tag_ID, "_archive.png")))
+  ggsave(file.path(output_folder, paste0("tag_archive.png")), plot = TDR_plot, width = plot_size[1], height = plot_size[2], dpi = dpi, create.dir = TRUE)
+  cat("\nOutput file:", file.path(output_folder, paste0("tag_archive.png")))
 
   return(plot_data)
 }

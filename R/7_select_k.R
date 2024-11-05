@@ -153,8 +153,7 @@ select_k <- function(kmeans_data,
   }
 
   # If gap statistic is required, calculate it
-  if(calc_gap) {
-
+  if (calc_gap) {
     # Calculate gap statistic for all k
     gap_stat_result <- cluster::clusGap(kmeans_data, FUN = kmeans, K.max = Max.k, B = 100)
     gap_stat <- gap_stat_result$Tab[, "gap"]
@@ -230,7 +229,7 @@ select_k <- function(kmeans_data,
     # Combine the three plots
     combined_k_plot <- cowplot::plot_grid(Elbow_plot, Silhouette_plot, Gap_plot, labels = c("A", "B", "C"), label_size = 10)
   } else {
-    if(plot_gap) {
+    if (plot_gap) {
       cat("'calc_gap' must be True to plot the gap statistic")
     }
 

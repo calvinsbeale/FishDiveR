@@ -233,7 +233,7 @@ create_depth_stats <- function(archive = archive_days,
       find_column <- function(possible_names, data) {
         match <- which(tolower(names(data)) %in% tolower(possible_names))
         if (length(match) > 0) {
-          return(names(data)[match[1]])  # Return the first match found
+          return(names(data)[match[1]]) # Return the first match found
         } else {
           return(NULL)
         }

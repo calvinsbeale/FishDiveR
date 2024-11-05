@@ -32,12 +32,12 @@ test_that("process_tag_data() imports a tag archive", {
   ## Test the plot_TDR() function
 
   # Set test to use example dataset
-  tag <- "data"
+  rds <- "data/archive_days.rds"
 
   filepath <- system.file("extdata", package = "FishDiveR")
 
   TDR_plot <- plot_TDR(
-    tag_ID = tag,
+    rds_file = rds,
     data_folder = filepath,
     every_nth = 10, # 1-minute depth sampling interval. Plot every 10th data point = 10 minutes.
     every_s = 0,
@@ -46,11 +46,11 @@ test_that("process_tag_data() imports a tag archive", {
     Y_lim = c(0, 275, 50),
     date_breaks = "48 hour",
     dpi = 30,
-    output_folder = tempdir()
+    output_folder = file.path(tempdir(), "data")
   )
 
   TDR_plot <- plot_TDR(
-    tag_ID = tag,
+    rds_file = rds,
     data_folder = filepath,
     every_nth = 10,
     every_s = 600, # plot every 600th second (10 minutes)
@@ -59,10 +59,10 @@ test_that("process_tag_data() imports a tag archive", {
     Y_lim = c(0, 275, 50),
     date_breaks = "48 hour",
     dpi = 30,
-    output_folder = tempdir()
+    output_folder = file.path(tempdir(), "data")
   )
 
   # Check that the TDR file is created in the save directory
-  expected_filepath <- file.path(tempdir(), "data", paste0(tag, "_archive.png"))
+  expected_filepath <- file.path(tempdir(), "data", "tag_archive.png")
   expect_true(file.exists(expected_filepath))
 })

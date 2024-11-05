@@ -5,7 +5,7 @@
 \title{Plot the time-series depth dataset}
 \usage{
 plot_TDR(
-  tag_ID,
+  rds_file,
   data_folder = data_dir,
   every_nth = 20,
   every_s = 0,
@@ -18,8 +18,8 @@ plot_TDR(
 )
 }
 \arguments{
-\item{tag_ID}{Unique tag identification number in a vector of characters.
-E.g. "123456"}
+\item{rds_file}{Character vector file path of rds file.
+E.g. ("E:/data/archive_days.rds")}
 
 \item{data_folder}{Parent folder path with separate folders for each tag
 data. E.g. "C:/Tag data". Defaults to 'data_dir'}
@@ -62,7 +62,7 @@ filepath <- system.file("extdata", package = "FishDiveR")
 
 # Run depth_data function
 TDR_plot <- plot_TDR(
-  tag_ID = "data",
+  rds_file = "data/archive_days.rds",
   data_folder = filepath,
   every_nth = 10,
   every_s = 0,

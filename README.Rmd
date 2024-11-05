@@ -105,13 +105,13 @@ archive_days <- import_tag_data(
 )
 # Plot the depth time-series record
 TDR_plot <- plot_TDR(
-  tag_ID = "data",
+  rds_file = "data/archive_days.rds",
   data_folder = filepath,
   every_nth = 1 * 10, # 1 minute depth sampling frequency. Plot every 10th data point = 10 minutes.
-  every_s = 0,
+  every_s = 600,
   plot_size = c(12, 6),
   X_lim = NULL,
-  Y_lim = c(0, 300, 75),
+  Y_lim = c(0, 260, 50),
   date_breaks = "48 hour",
   output_folder = output_folder
 )

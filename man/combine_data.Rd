@@ -42,7 +42,7 @@ filepath <- system.file("extdata", package = "FishDiveR")
 # Load pc_results
 pc_scores <- readRDS(file.path(filepath, "data/4_PCA/pc_scores.rds"))
 
-# Run depth_data function
+# Run combine_data function
 combined_stats <- combine_data(
   tag_vector = "data",
   data_folder = filepath,

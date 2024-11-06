@@ -60,7 +60,7 @@ This function plots the time-series depth data from the imported tag.
 # Set file path
 filepath <- system.file("extdata", package = "FishDiveR")
 
-# Run depth_data function
+# Run plot_TDR function
 TDR_plot <- plot_TDR(
   rds_file = "data/archive_days.rds",
   data_folder = filepath,

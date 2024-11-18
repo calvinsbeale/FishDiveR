@@ -289,6 +289,15 @@ pca_results <- function(pc_data = data,
     LP <- attr(pc_data, "LP") # Lower bound in minutes (assuming already in minutes)
     SO <- attr(pc_data, "SO") # Suboctave interval
 
+    # Remove the prefixes (p and numbers) from the column names. Assumes no non-numerical columns remain
+    cleaned_colnames <- gsub("^p[0-9]+_", "", colnames(pc_results$call$X))
+
+    # Calculate the number of periods
+    No_periods <- length(pc_results$call$X) / length(unique(cleaned_colnames))
+
+    # Prepare a sequence for periods
+    periods <- seq(1, No_periods)
+
     # Calculate the rate of change per period to reach half value at each SO
     # Assuming exponential decay formula: N(t) = N0 * exp(-lambda * t)
     # To halve the value at each SO, we find lambda when t = SO and N(t) = N0/2
@@ -333,6 +342,15 @@ pca_results <- function(pc_data = data,
       labels <- rep("", length(x))
       labels[inds] <- x[inds]
       labels <- rev(labels)
+      return(labels)
+    }
+
+    # Helper function to display every nth tick mark
+    every_nth <- 12 # to plot every 12th, but multiply by number of waves.
+    every_nth_label <- function(x) {
+      inds <- seq(1, length(x), by = every_nth * waves)
+      labels <- rep("", length(x))
+      labels[inds] <- x[inds]
       return(labels)
     }
 

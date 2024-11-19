@@ -142,11 +142,16 @@ create_depth_stats <- function(archive = archive_days,
     as.POSIXct(paste(date, time_str), format = "%Y-%m-%d %H:%M:%S")
   }
 
-  # Function to check date format of 'gps' file
-  check_date_format <- function(date_column) {
-    # Ensure the date_column is a character vector
+  # Improved # Function to check date format of 'gps' file
+  check_date_format <- function(date_column, allowed_formats = c("dmy", "ymd", "mdy")) {
+    # If the column is Date or IDate, no need to check further
+    if (inherits(date_column, c("Date", "IDate"))) {
+      return(TRUE)
+    }
+
+    # If the column is not a character string, throw an error
     if (!is.character(date_column)) {
-      stop("GPS date must be a character string readable by ludridate, one of: dmy(), ymd(), or mdy() ")
+      stop("Date column must be a character string, Date, or IDate.")
     }
 
     # Function to attempt parsing with multiple formats
@@ -157,19 +162,21 @@ create_depth_stats <- function(archive = archive_days,
                               "ymd" = lubridate::ymd(date_str),
                               "mdy" = lubridate::mdy(date_str),
                               stop("Unsupported format specified."))
-        if (!any(is.na(parsed_date))) {
+        if (!all(is.na(parsed_date))) {
           return(parsed_date)
         }
       }
-      return(NA)
+      return(rep(NA, length(date_str)))
     }
 
     # Attempt to parse the column
-    parsed_dates <- sapply(date_column, try_parse_date, formats = allowed_formats)
+    parsed_dates <- try_parse_date(date_column, formats = allowed_formats)
 
-    # Check for any NA values in the parsed dates
     if (any(is.na(parsed_dates))) {
-      stop("GPS date must be in the format 'dd-mmm-yyyy'")
+      stop(paste0(
+        "Date column contains invalid or unsupported formats. ",
+        "Allowed formats: ", paste(allowed_formats, collapse = ", "), "."
+      ))
     }
 
     return(TRUE)
@@ -282,7 +289,31 @@ create_depth_stats <- function(archive = archive_days,
       check_date_format(gps$date)
 
       # Convert gps$date to a Date object
-      gps$date <- lubridate::dmy(gps$date)
+      # gps$date <- lubridate::dmy(gps$date)
+
+      # Ensure 'gps$date' is converted to a Date object if not already
+      if (!inherits(gps$date, c("Date", "IDate"))) {
+        # Try parsing the date column with allowed formats
+        parsed_date <- NULL
+        for (format in c("dmy", "ymd", "mdy")) {
+          parsed_date <- switch(format,
+                                "dmy" = lubridate::dmy(gps$date),
+                                "ymd" = lubridate::ymd(gps$date),
+                                "mdy" = lubridate::mdy(gps$date))
+          if (!all(is.na(parsed_date))) {
+            gps$date <- parsed_date
+            break
+          }
+        }
+
+        # If parsing fails for all formats
+        if (is.null(parsed_date) || all(is.na(parsed_date))) {
+          stop("Failed to parse dates. Please ensure the date format is supported.")
+        }
+      } else {
+        # If already a date, ensure it's a 'Date' class
+        gps$date <- as.Date(gps$date)
+      }
 
       # Add a day before the first date and after the last date
       first_date <- min(gps$date) - 1

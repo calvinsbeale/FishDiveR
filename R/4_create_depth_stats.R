@@ -146,11 +146,26 @@ create_depth_stats <- function(archive = archive_days,
   check_date_format <- function(date_column) {
     # Ensure the date_column is a character vector
     if (!is.character(date_column)) {
-      stop("GPS date must be a character string readable by ludridate::dmy()")
+      stop("GPS date must be a character string readable by ludridate, one of: dmy(), ymd(), or mdy() ")
     }
 
-    # Try to parse the dates with the expected format
-    parsed_dates <- lubridate::dmy(date_column)
+    # Function to attempt parsing with multiple formats
+    try_parse_date <- function(date_str, formats) {
+      for (format in formats) {
+        parsed_date <- switch(format,
+                              "dmy" = lubridate::dmy(date_str),
+                              "ymd" = lubridate::ymd(date_str),
+                              "mdy" = lubridate::mdy(date_str),
+                              stop("Unsupported format specified."))
+        if (!any(is.na(parsed_date))) {
+          return(parsed_date)
+        }
+      }
+      return(NA)
+    }
+
+    # Attempt to parse the column
+    parsed_dates <- sapply(date_column, try_parse_date, formats = allowed_formats)
 
     # Check for any NA values in the parsed dates
     if (any(is.na(parsed_dates))) {

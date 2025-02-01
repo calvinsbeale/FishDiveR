@@ -1,6 +1,6 @@
 Package: FishDiveR
 Title: Classify Aquatic Animal Behaviours from Vertical Movement Data
-Version: 0.9.9.9
+Version: 1.0.0
 Authors@R: 
     person(given = "Calvin", family = "Beale", email = "calvin.beale.8@gmail.com", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-3505-8929"))

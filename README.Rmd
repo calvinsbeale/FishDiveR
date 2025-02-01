@@ -24,7 +24,7 @@ The goal of FishDiveR is to provide a methodology for quantitatively analysing
 time-series depth data from animal tags. Ultimately allowing the user to cluster
 the data into behaviours which can be plotted and examined further. FishDiveR
 allows the user to import tag data from comma-separated-value (csv) archives
-which include a time-date stamp and a depth column. 
+which include a time-date stamp and a depth column.
 
 The various functions:
 - Import and crop the archive.

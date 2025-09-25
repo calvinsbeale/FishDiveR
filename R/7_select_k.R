@@ -130,14 +130,16 @@ select_k <- function(kmeans_data,
 
     # Calculate the silhouette scores, and average silhouette width for each k
     if (k > 1 && length(unique(kmeans_result$cluster)) > 1) {
+      # Calculate distance matrix
+      distance_matrix <- Rfast::Dist(kmeans_data)
+
       # Extract the summary of the silhouette widths using distance matrix computation on kmeans_data - the reduced dimension data
-      sil_summary <- summary(cluster::silhouette(as.numeric(kmeans_result$cluster), dist(kmeans_data)))
+      sil_summary <- summary(cluster::silhouette(as.numeric(kmeans_result$cluster), distance_matrix))
 
       # Extract the average width for k
       sil[k] <- sil_summary$avg.width
 
       # Compute silhouette scores
-      distance_matrix <- Rfast::Dist(kmeans_data)
       sil_scores <- cluster::silhouette(kmeans_result$cluster, distance_matrix)
 
       # Average silhouette width (higher is better, closer to 1)

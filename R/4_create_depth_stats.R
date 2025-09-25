@@ -272,7 +272,7 @@ create_depth_stats <- function(archive = archive_days,
       }
 
       # Select only the relevant columns
-      gps <- gps[, .(get(date_col), get(lat_col), get(lon_col))]
+      gps <- gps[, list(get(date_col), get(lat_col), get(lon_col))]
 
       # Rename the columns to standard names for further use
       data.table::setnames(gps, c("V1", "V2", "V3"), c("date", "lat", "lon"))

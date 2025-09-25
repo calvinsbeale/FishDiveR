@@ -14,8 +14,8 @@ test_that("select_k() creates the appropriate plot", {
     output_folder = tempdir()
   )
 
-  # Check if the output is a list
-  expect_true(is.list(selecting_k_plots))
+  # Check if the output is a ggplot object
+  expect_true(inherits(selecting_k_plots, c("ggplot","gg")))
 
   # Load combined data first using the example dataset
   kmeans_data_file <- system.file("extdata", "data/5_k-means/combined_stats.rds", package = "FishDiveR")
@@ -32,6 +32,6 @@ test_that("select_k() creates the appropriate plot", {
     output_folder = tempdir()
   )
 
-  # Check if the output is a list
-  expect_true(is.list(selecting_k_plots))
+  # Check if the output is a ggplot object
+  expect_true(inherits(selecting_k_plots, c("ggplot","gg")))
 })

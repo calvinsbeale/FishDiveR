@@ -14,30 +14,26 @@ knitr::opts_chunk$set(
 )
 ```
 
-# FishDiveR <img src="man/figures/logo.png" alt="FishDiveR logo" align="right" width="120"/>
+# FishDiveR <img src="man/figures/logo.png" alt="FishDiveR logo" align="right" width="150"/>
 
 <!-- badges: start -->
-
 <!-- build/check -->
 [![R-CMD-check](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml)
-
 <!-- project status + lifecycle -->
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-
 <!-- license + last commit -->
 [![License](https://img.shields.io/github/license/calvinsbeale/FishDiveR.svg)](LICENSE)
 [![Last-commit](https://img.shields.io/github/last-commit/calvinsbeale/FishDiveR.svg)](https://github.com/calvinsbeale/FishDiveR/commits/main)
-
 <!-- docs / site (pkgdown) -->
 [![Docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://calvinsbeale.github.io/FishDiveR/)
-
 <!-- badges: end -->
+
 **Vertical movement analysis of depth time-series data.**
 
-The goal of FishDiveR is to provide a methodology for quantitatively analysing
-time-series depth data from animal tags. Ultimately allowing the user to cluster
-the data into behaviours which can be plotted and examined further. FishDiveR
+The goal of `FishDiveR` is to provide a methodology for quantitatively analysing
+time-series depth data from animal tags in `R`. Ultimately allowing the user to cluster
+the data into behaviours which can be plotted and examined further. `FishDiveR`
 allows the user to import tag data from comma-separated-value (csv) archives
 which include a time-date stamp and a depth column.
 
@@ -45,8 +41,8 @@ The various functions:
 - Import and crop the archive.
 - Plot the depth time-series record.
 - Calculate daily and diel statistics for use in k-means clustering.
-- Perform wavelet analysis using the 'WaveletComp' package.
-- Perform principal component analysis using the 'FactoMineR' package.
+- Perform wavelet analysis using the `WaveletComp` package.
+- Perform principal component analysis using the `FactoMineR` package.
 - Combine PC scores and depth statistics.
 - Aid in the selection of k for K-means clustering.
 - Perform K-means clustering.
@@ -65,19 +61,24 @@ minute frequency. In general we recommend a bare-minimum of 5 minute time
 series frequency, with more active species requiring a higher frequency of 
 data collection.
 
-## Installation
+> **Note:**
+> `FishDiveR` is a new `R` package. Like all new packages, you should use it with a degree of caution. Please share feedback and issues.
 
-You can install the development version of FishDiveR from [GitHub](https://github.com/) with:
+## Installation
+> **Note:**
+> `FishDiveR` works on Windows, MacOS and Linux. On MacOS, some additional set up may be required, such as installing an OpenGL package. Please share your experience. In case of issues, please report on GitHub and I will endevour to fix ASAP!
+
+You can install the development version of `FishDiveR` from [GitHub](https://github.com/) with:
 
 ``` r
 # Development version (requires either the "remotes" or "devtools" package to install:
-# install.packages("remotes") # This is an R package, smaller and easier than installing devtools 
+# install.packages("remotes") # This is an `R` package, smaller and easier than installing devtools 
 remotes::install_github("calvinsbeale/FishDiveR")
 
 # install.packages("devtools")
 devtools::install_github("calvinsbeale/FishDiveR")
 
-# CRAN release:
+# CRAN release: (NOT YET LAUNCHED)
 install.packages("FishDiveR")
 ```
 

@@ -1,46 +1,38 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# FishDiveR <img src="man/figures/logo.png" alt="FishDiveR logo" align="right" width="120"/>
+# FishDiveR <img src="man/figures/logo.png" alt="FishDiveR logo" align="right" width="150"/>
 
 <!-- badges: start -->
 
 <!-- build/check -->
 
 [![R-CMD-check](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml)
-
-<!-- project status + lifecycle -->
-
-[![Project Status: Active – The project has reached a stable, usable
-state and is being actively
+<!-- project status + lifecycle --> [![Project Status: Active – The
+project has reached a stable, usable state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle:
 maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-
 <!-- license + last commit -->
-
 [![License](https://img.shields.io/github/license/calvinsbeale/FishDiveR.svg)](LICENSE)
 [![Last-commit](https://img.shields.io/github/last-commit/calvinsbeale/FishDiveR.svg)](https://github.com/calvinsbeale/FishDiveR/commits/main)
-
 <!-- docs / site (pkgdown) -->
-
 [![Docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://calvinsbeale.github.io/FishDiveR/)
-
 <!-- badges: end -->
 
 **Vertical movement analysis of depth time-series data.**
 
-The goal of FishDiveR is to provide a methodology for quantitatively
-analysing time-series depth data from animal tags. Ultimately allowing
-the user to cluster the data into behaviours which can be plotted and
-examined further. FishDiveR allows the user to import tag data from
-comma-separated-value (csv) archives which include a time-date stamp and
-a depth column.
+The goal of `FishDiveR` is to provide a methodology for quantitatively
+analysing time-series depth data from animal tags in `R`. Ultimately
+allowing the user to cluster the data into behaviours which can be
+plotted and examined further. `FishDiveR` allows the user to import tag
+data from comma-separated-value (csv) archives which include a time-date
+stamp and a depth column.
 
 The various functions: - Import and crop the archive. - Plot the depth
 time-series record. - Calculate daily and diel statistics for use in
-k-means clustering. - Perform wavelet analysis using the ‘WaveletComp’
-package. - Perform principal component analysis using the ‘FactoMineR’
+k-means clustering. - Perform wavelet analysis using the `WaveletComp`
+package. - Perform principal component analysis using the `FactoMineR`
 package. - Combine PC scores and depth statistics. - Aid in the
 selection of k for K-means clustering. - Perform K-means clustering. -
 Plot the depth time-series record, with days coloured by cluster
@@ -60,20 +52,29 @@ general we recommend a bare-minimum of 5 minute time series frequency,
 with more active species requiring a higher frequency of data
 collection.
 
+> **Note:** `FishDiveR` is a new `R` package. Like all new packages, you
+> should use it with a degree of caution. Please share feedback and
+> issues.
+
 ## Installation
 
-You can install the development version of FishDiveR from
+> **Note:** `FishDiveR` works on Windows, MacOS and Linux. On MacOS,
+> some additional set up may be required, such as installing an OpenGL
+> package. Please share your experience. In case of issues, please
+> report on GitHub and I will endevour to fix ASAP!
+
+You can install the development version of `FishDiveR` from
 [GitHub](https://github.com/) with:
 
 ``` r
 # Development version (requires either the "remotes" or "devtools" package to install:
-# install.packages("remotes") # This is an R package, smaller and easier than installing devtools 
+# install.packages("remotes") # This is an `R` package, smaller and easier than installing devtools 
 remotes::install_github("calvinsbeale/FishDiveR")
 
 # install.packages("devtools")
 devtools::install_github("calvinsbeale/FishDiveR")
 
-# CRAN release:
+# CRAN release: (NOT YET LAUNCHED)
 install.packages("FishDiveR")
 ```
 
@@ -138,7 +139,7 @@ archive_days <- import_tag_data(
 #> Maximum depth = 262.2
 #> Number of full days in dataset: 10
 #> 
-#> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/archive_days.rds
+#> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/archive_days.rds
 # Plot the depth time-series record
 TDR_plot <- plot_TDR(
   rds_file = "data/archive_days.rds",
@@ -161,7 +162,7 @@ TDR_plot <- plot_TDR(
 <img src="man/figures/README-Import-data-1.png" alt="Depth time-series for example tag 'data' (surface at top), cropped to deployment window." width="100%" />
 
     #> 
-    #> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/tag_archive.png
+    #> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/tag_archive.png
 
 The `create_wavelet()` function performs wavelet analysis on the
 processed tag archive using the ‘WaveletComp’ package
@@ -228,9 +229,9 @@ my.w <- create_wavelet(
 #> Class attributes are accessible through following names:
 #> series loess.span dt dj Wave Phase Ampl Power Power.avg Power.pval Power.avg.pval Ridge Period Scale nc nr coi.1 coi.2 axis.1 axis.2 date.format date.tz 
 #> 
-#> Wavelet saved to C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/1_Wavelets/data_wavelet.rds
+#> Wavelet saved to C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/1_Wavelets/data_wavelet.rds
 #> 
-#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/2_Wavelet_Figures/
+#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/2_Wavelet_Figures/
 ```
 
 The two functions `create_wavelet_stats()` and `create_depth_stats()`
@@ -251,7 +252,7 @@ waveStats <- create_wavelet_stats(
 #> 
 #> Running create_wavelet_stats() on tag ID data 
 #> 
-#> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/3_Stats/data_waveStats.csv
+#> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/3_Stats/data_waveStats.csv
 # Create daily and diel depth statistics
 depthStats <- create_depth_stats(
   archive = archive_days,
@@ -268,7 +269,7 @@ depthStats <- create_depth_stats(
 #> Reading in GPS locations. Using actual sunrise and sunset times to calculate diel statistics
 #> Archive updated with diel periods based on GPS calculated times
 #> 
-#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/3_Stats/data_depthStats.csv
+#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/3_Stats/data_depthStats.csv
 ```
 
 Performing Principal Component Analysis (PCA). PCA is performed to
@@ -324,7 +325,7 @@ pc_data <- pca_data(
   output_folder = output_folder
 )
 #> 
-#> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/4_PCA/pc_data.rds
+#> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/4_PCA/pc_data.rds
 # Run Principal Component Analysis on the data frame to calculate PC scores
 pc_results <- pca_results(
   pc_data = pc_data,
@@ -348,15 +349,15 @@ pc_results <- pca_results(
 #> 
 #> 7 principal components of 9 have eigenvalues >= 1 
 #> 
-#> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/4_PCA/eigenvalues_cum_var.csv
+#> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/4_PCA/eigenvalues_cum_var.csv
 #> Using cumulative variance threshold: Keeping 3 principal components to reach 90 % variance
 ```
 
 <img src="man/figures/README-Principal-Component-Analysis-1.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" /><img src="man/figures/README-Principal-Component-Analysis-2.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" />
 
-    #> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/4_PCA 
+    #> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/4_PCA 
     #> 
-    #> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/4_PCA/pc_results.rds contains the selected number of principal components.
+    #> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/4_PCA/pc_results.rds contains the selected number of principal components.
     # Extract the principal component scores.
     pc_scores <- pca_scores(
       pc_results = pc_results,
@@ -367,9 +368,9 @@ pc_results <- pca_results(
 <img src="man/figures/README-Principal-Component-Analysis-3.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" /><img src="man/figures/README-Principal-Component-Analysis-4.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" /><img src="man/figures/README-Principal-Component-Analysis-5.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" /><img src="man/figures/README-Principal-Component-Analysis-6.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" />
 
     #> 
-    #> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/4_PCA
+    #> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/4_PCA
     #> 
-    #> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/4_PCA/pc_scores.rds
+    #> Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/4_PCA/pc_scores.rds
 
 The PC scores and depth statistics calculated from the raw tag data are
 combined prior to clustering. `combine_data()` loads the depth
@@ -384,7 +385,7 @@ kmeans_features <- combine_data(
   output_folder = output_folder
 )
 #> 
-#> Saving combined metrics to: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/5_k-means/combined_stats.rds
+#> Saving combined metrics to: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/5_k-means/combined_stats.rds
 # Optionally at this stage the user may select to remove or add additional statistics. If data are modified, be sure to re-standardise the data frame.
 # kmeans_features <- kmeans_features[,c(1:8, 10:20)]
 ```
@@ -453,7 +454,7 @@ selecting_k <- select_k(
 #> 
 #> 1 2 3 4 5 6 7 8 
 #> 1 1 1 1 3 1 1 1
-#> Single tag output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/5_k-means/Select_k.3_PCs.png
+#> Single tag output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/5_k-means/Select_k.3_PCs.png
 ```
 
 <img src="man/figures/README-Kmeans-clustering-1.png" alt="Elbow and silhouette width plots showing best fit for number of clusters." width="100%" />
@@ -480,7 +481,7 @@ kmeans_result <- k_clustering(
 #> 2   data       2               1
 #> 3   data       3               2
 #> 4   data       4               5
-#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/5_k-means
+#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/5_k-means
 ```
 
 <img src="man/figures/README-Kmeans-clustering-2.png" alt="Elbow and silhouette width plots showing best fit for number of clusters." width="100%" />
@@ -526,7 +527,7 @@ TDR_plot <- plot_cluster_TDR(
 <img src="man/figures/README-Plot-TDR-1.png" alt="Figure generated by FishDiveR; see surrounding text for interpretation." width="100%" />
 
     #> 
-    #>  Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data_TDR_k=4.png
+    #>  Output file: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data_TDR_k=4.png
 
 Plot the depth time-series of the 24-hour segments closest to the centre
 of each cluster group. ‘No_days’ allows you to choose the number of
@@ -562,7 +563,7 @@ plots_list <- plot_clusters(
 #>  Cluster 3 dates 2000-01-03 Tag: data
 #> 
 #>  Cluster 4 dates 2000-01-04 Tag: data
-#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\RtmpK8pt3Q/data/6_Cluster-plots.K=4_shaded
+#> Output folder: C:\Users\User\AppData\Local\Temp\RtmpUxU2Rt\Rtmp4WMtWg/data/6_Cluster-plots.K=4_shaded
 ```
 
 <img src="man/figures/README-Plot-clusters-1.png" alt="Figure generated by FishDiveR; see surrounding text for interpretation." width="100%" />

@@ -17,15 +17,11 @@ knitr::opts_chunk$set(
 # FishDiveR <img src="man/figures/logo.png" alt="FishDiveR logo" align="right" width="150"/>
 
 <!-- badges: start -->
-<!-- build/check -->
 [![R-CMD-check](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml)
-<!-- project status + lifecycle -->
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-<!-- license + last commit -->
 [![License](https://img.shields.io/github/license/calvinsbeale/FishDiveR.svg)](LICENSE)
 [![Last-commit](https://img.shields.io/github/last-commit/calvinsbeale/FishDiveR.svg)](https://github.com/calvinsbeale/FishDiveR/commits/main)
-<!-- docs / site (pkgdown) -->
 [![Docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://calvinsbeale.github.io/FishDiveR/)
 <!-- badges: end -->
 

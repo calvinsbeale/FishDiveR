@@ -2,3 +2,5 @@
 *.Rhistory
 inst/doc
 docs
+FishDiveR_1.0.1.tar.gz
+FishDiveR.Rcheck

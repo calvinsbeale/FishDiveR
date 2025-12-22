@@ -42,7 +42,7 @@
 #'   tag_vector = "data",
 #'   data_folder = filepath,
 #'   kmeans_result = kmeans_result,
-#'   No_days = 3,
+#'   No_days = 1,
 #'   every_nth = 10,
 #'   every_s = 0,
 #'   Y_lim = c(0, 300, 50),

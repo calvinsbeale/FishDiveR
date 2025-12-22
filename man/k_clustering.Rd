@@ -8,7 +8,9 @@ k_clustering(
   kmeans_data,
   standardise = TRUE,
   k,
+  nstart = 50,
   polygon = FALSE,
+  output = TRUE,
   output_folder = data_dir
 )
 }
@@ -22,8 +24,13 @@ Defaults to TRUE.}
 
 \item{k}{Numerical. Value of k to use for analysis.}
 
+\item{nstart}{Numerical. Value of nstart for k-means analysis.}
+
 \item{polygon}{TRUE or FALSE. Plot polygons for cluster with more than 3 data
 points. Defaults to FALSE.}
+
+\item{output}{TRUE or FALSE. Whether or not to output the results.
+Defaults to TRUE.}
 
 \item{output_folder}{Parent folder path with separate folders for each tag
 data. E.g. "C:/Tag data". Defaults to 'data_dir'}
@@ -45,12 +52,16 @@ filepath <- system.file("extdata", package = "FishDiveR")
 kmeans_data <- readRDS(file.path(filepath, "data/5_k-means/combined_stats.rds"))
 
 \donttest{
-# Full example using the complete dataset
+# Full example using the complete dataset.
+# Set output to TRUE for real use!
+
 kmeans_result <- k_clustering(
   kmeans_data = kmeans_data,
   standardise = TRUE,
   k = 4,
+  nstart = 50,
   polygon = FALSE,
+  output = FALSE,
   output_folder = tempdir()
 )
 }

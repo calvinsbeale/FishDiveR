@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-[![License](https://img.shields.io/github/license/calvinsbeale/FishDiveR.svg)](see LICENSE file)
+[![License](https://img.shields.io/github/license/calvinsbeale/FishDiveR.svg)](LICENSE)
 [![Last-commit](https://img.shields.io/github/last-commit/calvinsbeale/FishDiveR.svg)](https://github.com/calvinsbeale/FishDiveR/commits/main)
 [![Docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://github.com/calvinsbeale/FishDiveR/)
 <!-- badges: end -->

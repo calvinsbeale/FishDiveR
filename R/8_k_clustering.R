@@ -24,6 +24,8 @@
 #' @param k Numerical. Value of k to use for analysis.
 #' @param polygon TRUE or FALSE. Plot polygons for cluster with more than 3 data
 #'   points. Defaults to FALSE.
+#' @param output TRUE or FALSE. Whether or not to output the results.
+#'   Defaults to TRUE.
 #'
 #' @returns An object of class 'kmeans' containing the k-means clustering data
 #'   for the data frame. Additionally plots a 3D cluster plot of the top three
@@ -39,12 +41,15 @@
 #' kmeans_data <- readRDS(file.path(filepath, "data/5_k-means/combined_stats.rds"))
 #'
 #' \donttest{
-#' # Full example using the complete dataset
+#' # Full example using the complete dataset.
+#' # Set output to TRUE for real use!
+#'
 #' kmeans_result <- k_clustering(
 #'   kmeans_data = kmeans_data,
 #'   standardise = TRUE,
 #'   k = 4,
 #'   polygon = FALSE,
+#'   output = FALSE,
 #'   output_folder = tempdir()
 #' )
 #' }
@@ -54,6 +59,7 @@ k_clustering <- function(kmeans_data,
                          standardise = TRUE,
                          k,
                          polygon = FALSE,
+                         output = TRUE,
                          output_folder = data_dir) {
   # Check if kmeans_data is a data frame
   if (!is.data.frame(kmeans_data)) {
@@ -176,123 +182,128 @@ k_clustering <- function(kmeans_data,
     }
   }
 
-  # Create the 3d plot of the top three PC's
-  if (length(existing_pcs) == length(desired_pcs)) {
-    top_3_pcs <- numeric_data[, existing_pcs]
+  # Skip all output to meet CRAN speed tests
+  if (output == TRUE) {
 
-    # Extract cluster assignments from k-means result
-    cluster_assignments <- kmeans_result$cluster
+    # Create the 3d plot of the top three PC's
+    if (length(existing_pcs) == length(desired_pcs)) {
+      top_3_pcs <- numeric_data[, existing_pcs]
 
-    # Create a vector of colours to represent each cluster
-    colours <- custom_palette[as.character(cluster_assignments)]
+      # Extract cluster assignments from k-means result
+      cluster_assignments <- kmeans_result$cluster
 
-    # Create the 3D scatter plot
-    rgl::plot3d(top_3_pcs,
-      col = colours,
-      xlab = "PC1", ylab = "PC2", zlab = "PC3",
-      size = 4
-    )
+      # Create a vector of colours to represent each cluster
+      colours <- custom_palette[as.character(cluster_assignments)]
 
-    # Add legend
-    unique_clusters <- sort(unique(cluster_assignments))
-    legend_colors <- custom_palette[as.character(unique_clusters)]
+      # Create the 3D scatter plot
+      rgl::plot3d(top_3_pcs,
+        col = colours,
+        xlab = "PC1", ylab = "PC2", zlab = "PC3",
+        size = 4
+      )
 
-    rgl::legend3d("topright", legend = paste("Cluster", unique_clusters), pch = 15, col = legend_colors)
+      # Add legend
+      unique_clusters <- sort(unique(cluster_assignments))
+      legend_colors <- custom_palette[as.character(unique_clusters)]
 
-    # Create polygon if required
-    if (polygon == TRUE) {
-      # Add a polygon for each cluster with more than 3 points
-      for (cluster in unique(cluster_assignments)) {
-        # Get the points belonging to the current cluster
-        cluster_points <- top_3_pcs[cluster_assignments == cluster, ]
+      rgl::legend3d("topright", legend = paste("Cluster", unique_clusters), pch = 15, col = legend_colors)
 
-        # Only proceed if the cluster has at least 4 points
-        if (nrow(cluster_points) >= 4) {
-          # Compute the convex hull
-          hull_indices <- geometry::convhulln(cluster_points)
+      # Create polygon if required
+      if (polygon == TRUE) {
+        # Add a polygon for each cluster with more than 3 points
+        for (cluster in unique(cluster_assignments)) {
+          # Get the points belonging to the current cluster
+          cluster_points <- top_3_pcs[cluster_assignments == cluster, ]
 
-          # Get the colour for the current cluster
-          cluster_colour <- custom_palette[as.character(cluster)]
+          # Only proceed if the cluster has at least 4 points
+          if (nrow(cluster_points) >= 4) {
+            # Compute the convex hull
+            hull_indices <- geometry::convhulln(cluster_points)
 
-          # Loop through each row of hull_indices (i.e., each triangle)
-          for (i in 1:nrow(hull_indices)) {
-            # Extract the indices of the three vertices of the triangle
-            triangle_indices <- hull_indices[i, ]
+            # Get the colour for the current cluster
+            cluster_colour <- custom_palette[as.character(cluster)]
 
-            # Get the coordinates of the three vertices
-            triangle_vertices <- cluster_points[triangle_indices, , drop = FALSE]
+            # Loop through each row of hull_indices (i.e., each triangle)
+            for (i in 1:nrow(hull_indices)) {
+              # Extract the indices of the three vertices of the triangle
+              triangle_indices <- hull_indices[i, ]
 
-            # Plot the triangle
-            rgl::triangles3d(triangle_vertices, col = alpha(cluster_colour, 0.5), lit = FALSE)
+              # Get the coordinates of the three vertices
+              triangle_vertices <- cluster_points[triangle_indices, , drop = FALSE]
+
+              # Plot the triangle
+              rgl::triangles3d(triangle_vertices, col = alpha(cluster_colour, 0.5), lit = FALSE)
+            }
           }
         }
       }
+    } else {
+      cat("One or more of PC1, PC2, PC3 do not exist. Skipping 3d cluster plot.\n")
     }
-  } else {
-    cat("One or more of PC1, PC2, PC3 do not exist. Skipping 3d cluster plot.\n")
-  }
 
-  # Create cluster_result data frame
-  cluster_result <- as.data.frame(kmeans_result$cluster)
-  cluster_result <- cbind(tag_day = rownames(cluster_result), cluster_result)
-  cluster_result$tag_ID <- kmeans_data$tag_ID
-  colnames(cluster_result)[2] <- "cluster"
+    # Create cluster_result data frame
+    cluster_result <- as.data.frame(kmeans_result$cluster)
+    cluster_result <- cbind(tag_day = rownames(cluster_result), cluster_result)
+    cluster_result$tag_ID <- kmeans_data$tag_ID
+    colnames(cluster_result)[2] <- "cluster"
 
-  # Create a complete data frame with all combinations of tag_ID and cluster
-  unique_tag_ids <- unique(cluster_result$tag_ID)
-  all_clusters <- expand.grid(tag_ID = unique_tag_ids, cluster = 1:k)
+    # Create a complete data frame with all combinations of tag_ID and cluster
+    unique_tag_ids <- unique(cluster_result$tag_ID)
+    all_clusters <- expand.grid(tag_ID = unique_tag_ids, cluster = 1:k)
 
-  # Summarise the cluster results
-  cluster_summary <- aggregate(tag_day ~ tag_ID + cluster, data = cluster_result, FUN = length)
-  colnames(cluster_summary)[3] <- "days_in_cluster"
+    # Summarise the cluster results
+    cluster_summary <- aggregate(tag_day ~ tag_ID + cluster, data = cluster_result, FUN = length)
+    colnames(cluster_summary)[3] <- "days_in_cluster"
 
-  # Join the complete data frame with the summary data frame
-  complete_cluster_summary <- merge(all_clusters, cluster_summary, by = c("tag_ID", "cluster"), all.x = TRUE)
+    # Join the complete data frame with the summary data frame
+    complete_cluster_summary <- merge(all_clusters, cluster_summary, by = c("tag_ID", "cluster"), all.x = TRUE)
 
-  # Replace NA values with 0
-  complete_cluster_summary$days_in_cluster[is.na(complete_cluster_summary$days_in_cluster)] <- 0
+    # Replace NA values with 0
+    complete_cluster_summary$days_in_cluster[is.na(complete_cluster_summary$days_in_cluster)] <- 0
 
-  # Sort the data frame by tag_ID and cluster
-  complete_cluster_summary <- complete_cluster_summary[order(complete_cluster_summary$tag_ID, complete_cluster_summary$cluster), ]
+    # Sort the data frame by tag_ID and cluster
+    complete_cluster_summary <- complete_cluster_summary[order(complete_cluster_summary$tag_ID, complete_cluster_summary$cluster), ]
 
-  # print(complete_cluster_summary)
-  print(cluster_summary)
+    # print(complete_cluster_summary)
+    print(cluster_summary)
 
-  # Save the cluster data
-  if (is.null(unique_tag_ID) == TRUE) {
-    # Set multiple tags save folder
-    save_folder <- file.path(output_folder, "Combined_tags/5_k-means")
+    # Save the cluster data
+    if (is.null(unique_tag_ID) == TRUE) {
+      # Set multiple tags save folder
+      save_folder <- file.path(output_folder, "Combined_tags/5_k-means")
 
-    # Create the directory if it doesn't exist
-    create_directory(save_folder)
+      # Create the directory if it doesn't exist
+      create_directory(save_folder)
 
-    # Save the cluster output as an excel sheet
-    write.csv(cluster_result, file = file.path(save_folder, paste0("Cluster_results_k=", k, ".csv")), row.names = FALSE)
+      # Save the cluster output as an excel sheet
+      write.csv(cluster_result, file = file.path(save_folder, paste0("Cluster_results_k=", k, ".csv")), row.names = FALSE)
 
-    # Save the cluster table as an excel sheet
-    write.csv(cluster_table, file = file.path(save_folder, paste0("Cluster_table_k=", k, ".csv")), row.names = FALSE)
+      # Save the cluster table as an excel sheet
+      write.csv(cluster_table, file = file.path(save_folder, paste0("Cluster_table_k=", k, ".csv")), row.names = FALSE)
 
-    # Write the summary to a CSV file
-    write.csv(complete_cluster_summary, file = file.path(save_folder, paste0("Cluster_summary_tag_k=", k, ".csv")), row.names = FALSE)
-    write.csv(cluster_summary, file = file.path(save_folder, paste0("Cluster_summary_cluster_k=", k, ".csv")), row.names = FALSE)
+      # Write the summary to a CSV file
+      write.csv(complete_cluster_summary, file = file.path(save_folder, paste0("Cluster_summary_tag_k=", k, ".csv")), row.names = FALSE)
+      write.csv(cluster_summary, file = file.path(save_folder, paste0("Cluster_summary_cluster_k=", k, ".csv")), row.names = FALSE)
 
-    # Message folder
-    cat(paste0("Output folder: ", save_folder, "\n"))
-  } else {
-    # Set single tag save folder
-    save_folder <- file.path(output_folder, unique_tag_ID, "5_k-means")
+      # Message folder
+      cat(paste0("Output folder: ", save_folder, "\n"))
+    } else {
+      # Set single tag save folder
+      save_folder <- file.path(output_folder, unique_tag_ID, "5_k-means")
 
-    # Create the directory if it doesn't exist
-    create_directory(save_folder)
+      # Create the directory if it doesn't exist
+      create_directory(save_folder)
 
-    # Save the cluster output as an excel sheet
-    write.csv(cluster_result, file = file.path(save_folder, paste0("Cluster_results_k=", k, ".csv")), row.names = FALSE)
+      # Save the cluster output as an excel sheet
+      write.csv(cluster_result, file = file.path(save_folder, paste0("Cluster_results_k=", k, ".csv")), row.names = FALSE)
 
-    # Save the cluster table as an excel sheet
-    write.csv(cluster_table, file = file.path(save_folder, paste0("Cluster_table_k=", k, ".csv")), row.names = FALSE)
+      # Save the cluster table as an excel sheet
+      write.csv(cluster_table, file = file.path(save_folder, paste0("Cluster_table_k=", k, ".csv")), row.names = FALSE)
 
-    # Message folder
-    cat(paste0("Output folder: ", save_folder, "\n"))
+      # Message folder
+      cat(paste0("Output folder: ", save_folder, "\n"))
+    }
+
   }
 
   ## This section for plotting the cluster means
@@ -306,129 +317,133 @@ k_clustering <- function(kmeans_data,
   # Ensure 'Variable' is an ordered factor based on its unique appearance order
   cluster_means$Variable <- factor(cluster_means$Variable, levels = unique(cluster_means$Variable))
 
-  # Output the data as a csv
-  write.csv(as.data.frame(cluster_means), file = file.path(save_folder, paste0("cluster_variables_k=", k, ".csv")), row.names = FALSE)
+  if (output == TRUE) {
 
-  # Create a new column 'RenamedVariable' with original names
-  cluster_means$RenamedVariable <- as.character(cluster_means$Variable)
+    # Output the data as a csv
+    write.csv(as.data.frame(cluster_means), file = file.path(save_folder, paste0("cluster_variables_k=", k, ".csv")), row.names = FALSE)
 
-  # Create a named vector for renaming the variables
-  rename_vars <- c(
-    "depth.mean" = "Mean Depth",
-    "depth.sd" = "S.D. Depth",
-    "depth.min" = "Minimum Depth",
-    "depth.max" = "Maximum Depth",
-    "mean.abs_vv" = "Mean Absolute\nVertical Velocity",
-    "max.dsc_vv" = "Max Descent\nVertical Velocity",
-    "max.asc_vv" = "Max Ascent\nVertical Velocity",
-    "skewness_depth" = "Depth Skewness",
-    "kurtosis_depth" = "Depth Kurtosis",
-    "surface_proportion" = "Surface Proportion",
-    "st_mean_diff" = "Diel Diff. Mean Depth",
-    "st_sd_diff" = "Diel Diff. S.D. Depth",
-    "st_range_diff" = "Diel Diff. Depth Range",
-    "st_absVV_diff" = "Diel Diff. Absolute\nVertical Velocity",
-    "st_ascVV_diff" = "Diel Diff. Ascent\nVertical Velocity",
-    "st_dscVV_diff" = "Diel Diff. Descent\nVertical Velocity",
-    "surf_prop_diff" = "Diel Diff. Surface\nProportion"
-  )
+    # Create a new column 'RenamedVariable' with original names
+    cluster_means$RenamedVariable <- as.character(cluster_means$Variable)
 
-  # Rename variables based on rename_vars, keeping original names for PC1, PC2, and PC3
-  cluster_means$RenamedVariable <- sapply(cluster_means$Variable, function(x) {
-    if (x %in% names(rename_vars)) {
-      rename_vars[[x]]
-    } else {
-      as.character(x)
-    }
-  })
-
-  # Ensure 'RenamedVariable' is an ordered factor based on its unique appearance order
-  cluster_means$RenamedVariable <- factor(cluster_means$RenamedVariable, levels = unique(cluster_means$RenamedVariable))
-
-  # Calculate the number of variables for each cluster
-  n_val <- length(unique(cluster_means$RenamedVariable))
-
-  # Function to create a gradient palette based on the cluster colours
-  generate_gradient_palette <- function(color, n) {
-    lighter_color <- scales::muted(color, l = 95) # Create a lighter version of the color
-    colorRampPalette(c(color, lighter_color))(n) # Use the original and lighter color to create the gradient
-  }
-
-  # Generate gradient palettes for each cluster
-  gradient_palettes <- lapply(custom_palette, generate_gradient_palette, n = n_val)
-
-  # Flatten the gradient palettes into a single vector with names
-  all_gradients <- unlist(gradient_palettes)
-
-  # Create names for the gradient colours that match the fill values in the plot
-  fill_levels <- interaction(rep(names(custom_palette), each = n_val), rep(levels(cluster_means$RenamedVariable), length(custom_palette)))
-  names(all_gradients) <- fill_levels
-
-  # Define the first n_val variables for the legend
-  legend_levels <- levels(cluster_means$RenamedVariable)[1:n_val]
-
-  # Create the custom legend breaks for cluster 1
-  custom_legend_breaks <- interaction(rep(1, n_val), legend_levels)
-
-  # Calculate the range of y-axis values to determine the breaks
-  y_range <- range(cluster_means$Mean, na.rm = TRUE)
-  y_breaks <- seq(floor(y_range[1]), ceiling(y_range[2]), by = 1)
-
-  # Plot colour version
-  plot_colour <- ggplot(data = cluster_means, aes(x = as.factor(cluster), y = Mean, fill = interaction(cluster, RenamedVariable))) +
-    geom_bar(stat = "identity", position = "dodge") +
-    labs(
-      x = "Cluster",
-      y = "Mean Standardised Value"
-    ) +
-    scale_x_discrete() +
-    scale_y_continuous(breaks = y_breaks) + # Set y-axis breaks to every whole number
-    theme_classic() +
-    theme(
-      axis.text.x = element_text(size = 20, hjust = 1),
-      axis.text.y = element_text(size = 20),
-      text = element_text(size = 20) ## change all text size in figure
-    ) +
-    guides(fill = guide_legend(title = "Variable", ncol = 1, override.aes = list(alpha = 1)))
-
-  # Create a custom fill scale that uses the gradient colours
-  plot_colour_scaled <- plot_colour +
-    scale_fill_manual(
-      values = all_gradients,
-      breaks = custom_legend_breaks, # Only show legend for cluster 1
-      labels = legend_levels # Labels without cluster prefix
+    # Create a named vector for renaming the variables
+    rename_vars <- c(
+      "depth.mean" = "Mean Depth",
+      "depth.sd" = "S.D. Depth",
+      "depth.min" = "Minimum Depth",
+      "depth.max" = "Maximum Depth",
+      "mean.abs_vv" = "Mean Absolute\nVertical Velocity",
+      "max.dsc_vv" = "Max Descent\nVertical Velocity",
+      "max.asc_vv" = "Max Ascent\nVertical Velocity",
+      "skewness_depth" = "Depth Skewness",
+      "kurtosis_depth" = "Depth Kurtosis",
+      "surface_proportion" = "Surface Proportion",
+      "st_mean_diff" = "Diel Diff. Mean Depth",
+      "st_sd_diff" = "Diel Diff. S.D. Depth",
+      "st_range_diff" = "Diel Diff. Depth Range",
+      "st_absVV_diff" = "Diel Diff. Absolute\nVertical Velocity",
+      "st_ascVV_diff" = "Diel Diff. Ascent\nVertical Velocity",
+      "st_dscVV_diff" = "Diel Diff. Descent\nVertical Velocity",
+      "surf_prop_diff" = "Diel Diff. Surface\nProportion"
     )
 
-  # Save the plot
-  ggsave(file.path(save_folder, paste0("cluster_variables_k=", k, "_colour.png")), plot = plot_colour_scaled, height = 12, width = 16, dpi = 600)
+    # Rename variables based on rename_vars, keeping original names for PC1, PC2, and PC3
+    cluster_means$RenamedVariable <- sapply(cluster_means$Variable, function(x) {
+      if (x %in% names(rename_vars)) {
+        rename_vars[[x]]
+      } else {
+        as.character(x)
+      }
+    })
 
-  # Plot black and white version
-  plot_bw_scaled <- ggplot(cluster_means, aes(x = as.factor(cluster), y = Mean, fill = RenamedVariable)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    scale_fill_grey(start = 0.2, end = 0.8) + # Use greyscale for filling bars
-    labs(
-      x = "Cluster",
-      y = "Mean Standardised Value"
-    ) +
-    scale_x_discrete() +
-    scale_y_continuous(breaks = y_breaks) + # Set y-axis breaks to every whole number
-    theme_classic() +
-    theme(
-      axis.text.x = element_text(size = 20, hjust = 1),
-      axis.text.y = element_text(size = 20),
-      text = element_text(size = 20) ## change all text size in figure
-    ) +
-    guides(fill = guide_legend(title = "Variable", ncol = 1, override.aes = list(alpha = 1)))
+    # Ensure 'RenamedVariable' is an ordered factor based on its unique appearance order
+    cluster_means$RenamedVariable <- factor(cluster_means$RenamedVariable, levels = unique(cluster_means$RenamedVariable))
 
-  # Save the plot
-  ggsave(file.path(save_folder, paste0("cluster_variables_k=", k, "_bw.png")), plot = plot_bw_scaled, height = 12, width = 16, dpi = 600)
+    # Calculate the number of variables for each cluster
+    n_val <- length(unique(cluster_means$RenamedVariable))
 
-  print(plot_bw_scaled)
+    # Function to create a gradient palette based on the cluster colours
+    generate_gradient_palette <- function(color, n) {
+      lighter_color <- scales::muted(color, l = 95) # Create a lighter version of the color
+      colorRampPalette(c(color, lighter_color))(n) # Use the original and lighter color to create the gradient
+    }
 
-  kmeans_result$cluster_means <- cluster_means
+    # Generate gradient palettes for each cluster
+    gradient_palettes <- lapply(custom_palette, generate_gradient_palette, n = n_val)
 
-  # Save the 'kmeans_result' object as kmeans_result.rds to save_folder
-  saveRDS(kmeans_result, file = file.path(save_folder, "kmeans_result.rds"))
+    # Flatten the gradient palettes into a single vector with names
+    all_gradients <- unlist(gradient_palettes)
 
-  return(kmeans_result)
+    # Create names for the gradient colours that match the fill values in the plot
+    fill_levels <- interaction(rep(names(custom_palette), each = n_val), rep(levels(cluster_means$RenamedVariable), length(custom_palette)))
+    names(all_gradients) <- fill_levels
+
+    # Define the first n_val variables for the legend
+    legend_levels <- levels(cluster_means$RenamedVariable)[1:n_val]
+
+    # Create the custom legend breaks for cluster 1
+    custom_legend_breaks <- interaction(rep(1, n_val), legend_levels)
+
+    # Calculate the range of y-axis values to determine the breaks
+    y_range <- range(cluster_means$Mean, na.rm = TRUE)
+    y_breaks <- seq(floor(y_range[1]), ceiling(y_range[2]), by = 1)
+
+    # Plot colour version
+    plot_colour <- ggplot(data = cluster_means, aes(x = as.factor(cluster), y = Mean, fill = interaction(cluster, RenamedVariable))) +
+      geom_bar(stat = "identity", position = "dodge") +
+      labs(
+        x = "Cluster",
+        y = "Mean Standardised Value"
+      ) +
+      scale_x_discrete() +
+      scale_y_continuous(breaks = y_breaks) + # Set y-axis breaks to every whole number
+      theme_classic() +
+      theme(
+        axis.text.x = element_text(size = 20, hjust = 1),
+        axis.text.y = element_text(size = 20),
+        text = element_text(size = 20) ## change all text size in figure
+      ) +
+      guides(fill = guide_legend(title = "Variable", ncol = 1, override.aes = list(alpha = 1)))
+
+    # Create a custom fill scale that uses the gradient colours
+    plot_colour_scaled <- plot_colour +
+      scale_fill_manual(
+        values = all_gradients,
+        breaks = custom_legend_breaks, # Only show legend for cluster 1
+        labels = legend_levels # Labels without cluster prefix
+      )
+
+    # Save the plot
+    ggsave(file.path(save_folder, paste0("cluster_variables_k=", k, "_colour.png")), plot = plot_colour_scaled, height = 12, width = 16, dpi = 600)
+
+    # Plot black and white version
+    plot_bw_scaled <- ggplot(cluster_means, aes(x = as.factor(cluster), y = Mean, fill = RenamedVariable)) +
+      geom_bar(stat = "identity", position = "dodge") +
+      scale_fill_grey(start = 0.2, end = 0.8) + # Use greyscale for filling bars
+      labs(
+        x = "Cluster",
+        y = "Mean Standardised Value"
+      ) +
+      scale_x_discrete() +
+      scale_y_continuous(breaks = y_breaks) + # Set y-axis breaks to every whole number
+      theme_classic() +
+      theme(
+        axis.text.x = element_text(size = 20, hjust = 1),
+        axis.text.y = element_text(size = 20),
+        text = element_text(size = 20) ## change all text size in figure
+      ) +
+      guides(fill = guide_legend(title = "Variable", ncol = 1, override.aes = list(alpha = 1)))
+
+    # Save the plot
+    ggsave(file.path(save_folder, paste0("cluster_variables_k=", k, "_bw.png")), plot = plot_bw_scaled, height = 12, width = 16, dpi = 600)
+
+    print(plot_bw_scaled)
+
+    kmeans_result$cluster_means <- cluster_means
+
+    # Save the 'kmeans_result' object as kmeans_result.rds to save_folder
+    saveRDS(kmeans_result, file = file.path(save_folder, "kmeans_result.rds"))
+
+    return(kmeans_result)
+  }
+
 }

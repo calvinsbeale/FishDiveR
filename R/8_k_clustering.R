@@ -7,6 +7,7 @@
 #'
 #' @import ggplot2
 #' @importFrom scales muted
+#' @importFrom scales alpha
 #' @importFrom rgl plot3d
 #' @importFrom rgl triangles3d
 #' @importFrom rgl legend3d
@@ -22,6 +23,7 @@
 #'
 #' @inheritParams select_k
 #' @param k Numerical. Value of k to use for analysis.
+#' @param nstart Numerical. Value of nstart for k-means analysis.
 #' @param polygon TRUE or FALSE. Plot polygons for cluster with more than 3 data
 #'   points. Defaults to FALSE.
 #' @param output TRUE or FALSE. Whether or not to output the results.
@@ -48,6 +50,7 @@
 #'   kmeans_data = kmeans_data,
 #'   standardise = TRUE,
 #'   k = 4,
+#'   nstart = 50,
 #'   polygon = FALSE,
 #'   output = FALSE,
 #'   output_folder = tempdir()
@@ -58,6 +61,7 @@
 k_clustering <- function(kmeans_data,
                          standardise = TRUE,
                          k,
+                         nstart = 50,
                          polygon = FALSE,
                          output = TRUE,
                          output_folder = data_dir) {
@@ -71,6 +75,9 @@ k_clustering <- function(kmeans_data,
   if ((!is.numeric(k) || k <= 0)) {
     stop("k must a positive integer.")
   }
+  if ((!is.numeric(nstart) || nstart <= 0)) {
+    stop("nstart must a positive integer. We recommend to use >= 50.")
+  }
   if (!is.logical(polygon)) {
     stop("polygon must be TRUE or FALSE.")
   }
@@ -81,7 +88,7 @@ k_clustering <- function(kmeans_data,
   }
 
   # Set the random seed for reproducable results in the function
-  withr::local_options(set.seed(123))
+  withr::local_seed(123)
 
   # Set unique_tag_ID as the unique tag id attribute if it exists
   unique_tag_ID <- attr(kmeans_data, "unique_tag_ID")
@@ -111,7 +118,7 @@ k_clustering <- function(kmeans_data,
   }
 
   # Run K-means with selected number of clusters
-  kmeans_result <- stats::kmeans(numeric_data, centers = k, nstart = 1500, iter.max = 50)
+  kmeans_result <- stats::kmeans(numeric_data, centers = k, nstart = nstart, iter.max = 50)
 
   # Extract the centroids and cluster assignments
   centroids <- kmeans_result$centers
@@ -304,20 +311,16 @@ k_clustering <- function(kmeans_data,
       cat(paste0("Output folder: ", save_folder, "\n"))
     }
 
-  }
+    ## This section for plotting the cluster means
 
-  ## This section for plotting the cluster means
+    # Calculate the mean value of each variable within each cluster
+    cluster_means <- aggregate(numeric_data, by = list(cluster = kmeans_result$cluster), FUN = mean)
 
-  # Calculate the mean value of each variable within each cluster
-  cluster_means <- aggregate(numeric_data, by = list(cluster = kmeans_result$cluster), FUN = mean)
+    # Reshape data to long format for ggplot
+    cluster_means <- tidyr::pivot_longer(cluster_means, -cluster, names_to = "Variable", values_to = "Mean")
 
-  # Reshape data to long format for ggplot
-  cluster_means <- tidyr::pivot_longer(cluster_means, -cluster, names_to = "Variable", values_to = "Mean")
-
-  # Ensure 'Variable' is an ordered factor based on its unique appearance order
-  cluster_means$Variable <- factor(cluster_means$Variable, levels = unique(cluster_means$Variable))
-
-  if (output == TRUE) {
+    # Ensure 'Variable' is an ordered factor based on its unique appearance order
+    cluster_means$Variable <- factor(cluster_means$Variable, levels = unique(cluster_means$Variable))
 
     # Output the data as a csv
     write.csv(as.data.frame(cluster_means), file = file.path(save_folder, paste0("cluster_variables_k=", k, ".csv")), row.names = FALSE)
@@ -443,7 +446,7 @@ k_clustering <- function(kmeans_data,
     # Save the 'kmeans_result' object as kmeans_result.rds to save_folder
     saveRDS(kmeans_result, file = file.path(save_folder, "kmeans_result.rds"))
 
-    return(kmeans_result)
   }
 
+  return(kmeans_result)
 }

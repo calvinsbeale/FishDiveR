@@ -265,6 +265,7 @@ kmeans_result <- k_clustering(
   kmeans_data = kmeans_features,
   standardise = TRUE,
   k = 4,
+  nstart = 50,
   polygon = TRUE,
   output_folder = output_folder
 )

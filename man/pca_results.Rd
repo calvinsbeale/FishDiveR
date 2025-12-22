@@ -50,6 +50,20 @@ filepath <- system.file("extdata", package = "FishDiveR")
 # Load pc_data
 pc_data <- readRDS(file.path(filepath, "data/4_PCA/pc_data.rds"))
 
+
+# Run a minimal, fast pca_results example
+pc_results <- pca_results(
+  pc_data = pc_data,
+  standardise = TRUE,
+  No_pcs = 1,
+  PCV = NULL,
+  plot_eigenvalues = FALSE,
+  output_folder = tempdir(),
+  interactive_mode = FALSE
+)
+
+\donttest{
+# Full example using the complete dataset
 # Run pca_results function
 pc_results <- pca_results(
   pc_data = pc_data,
@@ -60,5 +74,6 @@ pc_results <- pca_results(
   output_folder = tempdir(),
   interactive_mode = FALSE
 )
+}
 
 }

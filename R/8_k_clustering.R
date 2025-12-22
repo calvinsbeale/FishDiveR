@@ -38,7 +38,8 @@
 #' # Load kmeans_data
 #' kmeans_data <- readRDS(file.path(filepath, "data/5_k-means/combined_stats.rds"))
 #'
-#' # Run k_clustering function
+#' \donttest{
+#' # Full example using the complete dataset
 #' kmeans_result <- k_clustering(
 #'   kmeans_data = kmeans_data,
 #'   standardise = TRUE,
@@ -46,6 +47,7 @@
 #'   polygon = FALSE,
 #'   output_folder = tempdir()
 #' )
+#' }
 #'
 # Function to perform k-means clustering on the PC scores with the selected value of K
 k_clustering <- function(kmeans_data,

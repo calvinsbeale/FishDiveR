@@ -44,7 +44,8 @@ filepath <- system.file("extdata", package = "FishDiveR")
 # Load kmeans_data
 kmeans_data <- readRDS(file.path(filepath, "data/5_k-means/combined_stats.rds"))
 
-# Run k_clustering function
+\donttest{
+# Full example using the complete dataset
 kmeans_result <- k_clustering(
   kmeans_data = kmeans_data,
   standardise = TRUE,
@@ -52,5 +53,6 @@ kmeans_result <- k_clustering(
   polygon = FALSE,
   output_folder = tempdir()
 )
+}
 
 }

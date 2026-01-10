@@ -6,6 +6,7 @@
 #'
 #' @name pca_data
 #'
+#' @inheritParams import_tag_data
 #' @param tag_vector A character vector of tag IDs. E.g. 'c("123456", "456283",
 #'   "AB98XJ").
 #' @param data_folder Parent folder path with separate folders for each tag
@@ -24,8 +25,6 @@
 #'   Default TRUE
 #' @param amplitude_variance TRUE or FALSE to include this wavelet statistic.
 #'   Default FALSE
-#' @param output_folder Parent folder path with separate folders for each tag
-#'   data. E.g. "C:/Tag data". Defaults to 'data_dir'
 #'
 #' @returns A data frame with the combined data for all tag ID's listed,
 #'   containing the wavelet statistics to be used in Principal Component
@@ -48,7 +47,9 @@
 #'   mean_sq_power = FALSE,
 #'   amplitude_mean = TRUE,
 #'   amplitude_variance = FALSE,
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # New function not including depth statistics in pc_data, for all tags listed
@@ -61,7 +62,9 @@ pca_data <- function(tag_vector,
                      mean_sq_power = FALSE,
                      amplitude_mean = TRUE,
                      amplitude_variance = FALSE,
-                     output_folder = data_dir) {
+                     output = FALSE,
+                     output_folder = NULL,
+                     verbose = FALSE) {
   # Check if tag_vector is a character vector
   if (!is.character(tag_vector)) {
     stop(" tag_vector should be a vector of characters. Check input.")
@@ -85,6 +88,10 @@ pca_data <- function(tag_vector,
       stop(sprintf("%s must be TRUE or FALSE.", param_name))
     }
   })
+
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
+  }
 
   # Initialize an empty list to store the data frames
   pc_data <- list()
@@ -110,7 +117,7 @@ pca_data <- function(tag_vector,
       # Read in the wavelet meta and carry it forward
       wavelet_meta <- readRDS(file = file.path(data_folder, tag_ID, "1_Wavelets/wavelet_meta.rds"))
     } else {
-      message("\n Files do not exist for tag ", tag_ID)
+      if (verbose) message("Files do not exist for tag ", tag_ID)
     }
   }
 
@@ -198,7 +205,7 @@ pca_data <- function(tag_vector,
 
   # Save the 'pc_data' object as pc_data.rds to the output_folder
   saveRDS(pc_data, file = file.path(save_folder, "pc_data.rds"))
-  cat(paste0("\nOutput file: ", save_folder, "/pc_data.rds\n"))
+  if (verbose) message(paste0("Output file: ", save_folder, "/pc_data.rds"))
 
   return(pc_data)
 }

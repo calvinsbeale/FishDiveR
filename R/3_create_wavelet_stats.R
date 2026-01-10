@@ -38,14 +38,18 @@
 #' waveStats <- create_wavelet_stats(
 #'   wavelet = my.w,
 #'   tag_ID = "data",
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # Function to aggregate the nine wavelet statistics on a daily time frame
 create_wavelet_stats <- function(wavelet = my.w,
                                  tag_ID,
-                                 output_folder = data_dir) {
-  cat("\nRunning create_wavelet_stats() on tag ID", tag_ID, "\n")
+                                 output = FALSE,
+                                 output_folder = NULL,
+                                 verbose = FALSE) {
+  if (verbose) message(paste0("Running create_wavelet_stats() on tag ID", tag_ID))
   # Check if 'wavelet' is a list
   if (!is.list(wavelet)) {
     stop("Wavelet must be a list")
@@ -64,6 +68,9 @@ create_wavelet_stats <- function(wavelet = my.w,
   # Validate 'tag_ID' (Must be a single character string)
   if (!is.character(tag_ID) || length(tag_ID) != 1) {
     stop("tag_ID must be a single character string.")
+  }
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
   }
 
   # Creating daily blocks
@@ -157,7 +164,7 @@ create_wavelet_stats <- function(wavelet = my.w,
   create_directory(file.path(output_folder, tag_ID, "3_Stats"))
 
   utils::write.csv(waveStats, file = file.path(output_folder, tag_ID, "3_Stats", paste0(tag_ID, "_waveStats.csv")), row.names = FALSE)
-  cat(paste0("\nOutput file: ", output_folder, "/", tag_ID, "/3_Stats/", tag_ID, "_waveStats.csv \n"))
+  if (verbose) message(paste0("\nOutput file: ", output_folder, "/", tag_ID, "/3_Stats/", tag_ID, "_waveStats.csv \n"))
 
   # Combine the attributes into a list
   # wavelet_meta <- list(LP = attr(wavelet, "LP"), UP = attr(wavelet, "UP"), SO = attr(wavelet, "SO"))

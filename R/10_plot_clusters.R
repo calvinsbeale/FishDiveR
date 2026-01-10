@@ -49,12 +49,14 @@
 #'   color = TRUE,
 #'   diel_shade = FALSE,
 #'   dpi = 100,
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # Function to prints to file one figure for each Cluster with a fixed y-axis. Additionally outputs a facet plot of all clusters, and a free y-axis version of all plots.
 plot_clusters <- function(tag_vector = tag_list,
-                          data_folder = data_dir,
+                          data_folder = NULL,
                           kmeans_result,
                           No_days = 1,
                           every_nth = 10,
@@ -63,11 +65,14 @@ plot_clusters <- function(tag_vector = tag_list,
                           color = TRUE,
                           diel_shade = FALSE,
                           dpi = 300,
-                          output_folder = data_dir) {
+                          output = FALSE,
+                          output_folder = NULL,
+                          verbose = FALSE) {
   # Check if tag_vector is a character vector
   if (!is.character(tag_vector)) {
     stop("tag_vector should be a vector of characters. Check input.")
   }
+  if (is.null(data_folder)) stop("data_folder must be provided.")
   if (!is.list(kmeans_result)) {
     stop("kmeans_result must be a data frame. \n")
   }
@@ -93,6 +98,9 @@ plot_clusters <- function(tag_vector = tag_list,
   if ((!is.numeric(dpi) || dpi <= 0)) {
     stop("dpi must be a positive integer.")
   }
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
+  }
 
   # Check k-means and tag vector match
   unique_tags <- unique(kmeans_result$tag_ID)
@@ -108,16 +116,16 @@ plot_clusters <- function(tag_vector = tag_list,
     # Identify any tags that are in tag_vector but not in unique_tags
     missing_from_kmeans <- setdiff(tag_vector, unique_tags)
     if (length(missing_from_kmeans) > 0) {
-      cat("Tags in tag_vector but not in kmeans_result: ", missing_from_kmeans, "\n")
+      if (verbose) message("Tags in tag_vector but not in kmeans_result: ", missing_from_kmeans)
     }
 
     # Identify any tags that are in unique_tags but not in tag_vector
     missing_from_tag_vector <- setdiff(unique_tags, tag_vector)
     if (length(missing_from_tag_vector) > 0) {
-      cat("Tags in kmeans_result but not in tag_vector: ", missing_from_tag_vector, "\n")
+      if (verbose) message("Tags in kmeans_result but not in tag_vector: ", missing_from_tag_vector)
     }
 
-    stop("There is a mismatch between tag_vector and the tags in kmeans_result.\n")
+    stop("There is a mismatch between tag_vector and the tags in kmeans_result.")
   }
 
   # Initialize an empty list for storing data frames from each tag
@@ -136,7 +144,7 @@ plot_clusters <- function(tag_vector = tag_list,
       archive_days$tag_ID <- tag # Add tag_ID column
 
       # Print maximum depth
-      cat(paste0("\nTag ", tag, " Maximum depth is ", max(archive_days$depth)))
+      if (verbose) message(paste0("Tag ", tag, " Maximum depth is ", max(archive_days$depth)))
 
       # Calculate the time differences between consecutive records
       time_diffs <- diff(as.numeric(archive_days$date, units = "secs"))
@@ -149,7 +157,7 @@ plot_clusters <- function(tag_vector = tag_list,
       }
 
       # Print sampling interval
-      cat(paste0("\nData sampling interval is ", sampling_interval, " seconds\n"))
+      if (verbose) message(paste0("Data sampling interval is ", sampling_interval, " seconds"))
 
       if (every_s != 0) {
         # Using time, rather than number of rows to plot data.
@@ -167,7 +175,7 @@ plot_clusters <- function(tag_vector = tag_list,
         archive_days <- archive_days[as.numeric(archive_days$date - start_time) %% every_s == 0, ]
 
         # Print sampling interval
-        cat("Plotting every", every_s, "seconds \n")
+        if (verbose) message("Plotting every", every_s, "seconds")
       } else {
         if (every_nth != 1) {
           # Subset to every nth record
@@ -175,10 +183,10 @@ plot_clusters <- function(tag_vector = tag_list,
           archive_days <- archive_days[crop_sq, ]
 
           # Print sampling interval
-          cat("Plotting every", every_nth, "records \n")
+          if (verbose) message("Plotting every", every_nth, "records")
         } else {
           # Print sampling interval
-          cat("Plotting every record \n")
+          if (verbose) message("Plotting every record")
         }
       }
 
@@ -207,7 +215,7 @@ plot_clusters <- function(tag_vector = tag_list,
     archive_days <- readRDS(file.path(data_folder, tag_vector, "archive_days.rds"))
     archive_days$tag_ID <- tag_vector # Add tag_ID column
 
-    cat(paste0("\nMaximum depth is ", max(archive_days$depth)))
+    if (verbose) message(paste0("Maximum depth is ", max(archive_days$depth)))
 
     # Calculate the time differences between consecutive records
     time_diffs <- diff(as.numeric(archive_days$date, units = "secs"))
@@ -220,7 +228,7 @@ plot_clusters <- function(tag_vector = tag_list,
     }
 
     # Print sampling interval
-    cat(paste0("\nData sampling interval is ", sampling_interval, " seconds\n"))
+    if (verbose) message(paste0("Data sampling interval is ", sampling_interval, " seconds"))
 
     if (every_s != 0) { # Using time, rather than number of rows to plot data.
 
@@ -237,7 +245,7 @@ plot_clusters <- function(tag_vector = tag_list,
       archive_days <- archive_days[as.numeric(archive_days$date - start_time) %% every_s == 0, ]
 
       # Print sampling interval
-      cat("Plotting every", every_s, "seconds \n")
+      if (verbose) message("Plotting every", every_s, "seconds")
     } else {
       if (every_nth != 1) {
         # Subset to every nth record
@@ -245,10 +253,10 @@ plot_clusters <- function(tag_vector = tag_list,
         archive_days <- archive_days[crop_sq, ]
 
         # Print sampling interval
-        cat("Plotting every", every_nth, "records \n")
+        if (verbose) message("Plotting every", every_nth, "records")
       } else {
         # Print sampling interval
-        cat("Plotting every record \n")
+        if (verbose) message("Plotting every record")
       }
     }
 
@@ -273,7 +281,7 @@ plot_clusters <- function(tag_vector = tag_list,
   total_unique_dates <- sum(unique_dates_by_tag$unique_dates)
 
   if (total_unique_dates != length(kmeans_result$cluster)) {
-    cat("\n Data length and number of clusters do not match. Cluster assignment may be incorrect. This error should only be ignored for readme data. \n")
+    if (verbose) message("Data length and number of clusters do not match. Cluster assignment may be incorrect. This error should only be ignored for readme data.")
 
     # Get length of all_archive_ts
     l <- length(unique(all_archive_ts$date_only))
@@ -316,7 +324,7 @@ plot_clusters <- function(tag_vector = tag_list,
 
     # Check if the required number of days exist
     if (nrow(cluster_representatives) < No_days) {
-      cat(paste0("\n There are less than ", No_days, " representatives available for cluster ", i, "\n"))
+      if (verbose) message(paste0("There are less than ", No_days, " representatives available for cluster ", i))
     }
   }
 
@@ -406,7 +414,7 @@ plot_clusters <- function(tag_vector = tag_list,
     #  Rename the column for matching
     dates$date <- as.Date(dates$date_only)
 
-    cat(paste0("\n Cluster ", i, " dates ", dates$date, " Tag: ", dates$tag_ID, "\n"))
+    if (verbose) message(paste0("Cluster ", i, " dates ", dates$date, " Tag: ", dates$tag_ID))
 
     # Initialize an empty list to store the extracted data
     data_list <- list()
@@ -419,7 +427,7 @@ plot_clusters <- function(tag_vector = tag_list,
 
       # Check if plot_data exists
       if (nrow(plot_data) == 0) {
-        cat(paste0("\n Cluster ", i, " date ", dates$date[j], " does not exist in the tag archive. Skipping this plot.\n"))
+        if (verbose) message(paste0("Cluster ", i, " date ", dates$date[j], " does not exist in the tag archive. Skipping this plot."))
       } else {
         # Add plot_data to data_list
         data_list[[j]] <- plot_data
@@ -431,7 +439,7 @@ plot_clusters <- function(tag_vector = tag_list,
 
     # If data_list is empty, skip the current iteration of i
     if (length(data_list) == 0) {
-      cat(paste0("\n No data collected for Cluster ", i, ". Skipping this cluster.\n"))
+      if (verbose) message(paste0("No data collected for Cluster ", i, ". Skipping this cluster."))
       next
     }
 
@@ -440,7 +448,7 @@ plot_clusters <- function(tag_vector = tag_list,
 
     # If plot_data is empty, skip the current iteration of i
     if (length(plot_data) == 0) {
-      cat(paste0("\n No data available for plotting Cluster ", i, ". Skipping this cluster.\n"))
+      if (verbose) message(paste0("No data available for plotting Cluster ", i, ". Skipping this cluster."))
       next
     }
 
@@ -578,20 +586,20 @@ plot_clusters <- function(tag_vector = tag_list,
     ggsave(file.path(save_folder, paste0("FreeY.Cluster_", i, ".png")), plot = cluster_plot_free_y, width = 14.22, height = 10, dpi = dpi)
   }
 
-  cat(paste0("Output folder: ", save_folder, "\n"))
+  if (verbose) message(paste0("Output folder: ", save_folder))
 
   # ensure lists contain valid ggplot objects
   plots_list <- Filter(function(x) !is.null(x), plots_list)
   plots_list_free_Y <- Filter(function(x) !is.null(x), plots_list_free_Y)
 
   if (length(plots_list) == 1) {
-    cat("\n Only one cluster of plots exists. Cannot facet clusters. Check dates or number of clusters \n")
+    if (verbose) message("Only one cluster of plots exists. Cannot facet clusters. Check dates or number of clusters")
     # print(plots_list[[1]])
   }
 
   # If plots_list is empty, stop the function here
   if (length(plots_list) == 0) {
-    cat("\n Plot list is empty. Check dates exist in tag archive. \n")
+    if (verbose) message("Plot list is empty. Check dates exist in tag archive.")
     return(NULL)
   }
 
@@ -654,7 +662,7 @@ plot_clusters <- function(tag_vector = tag_list,
   facet_plot_k_freey <- patchwork::wrap_plots(plots_list_free_Y, ncol = ncol)
   ggsave(file.path(save_folder, "Cluster_facet_freeY.png"), plot = facet_plot_k_freey, width = width, height = 21, dpi = dpi)
 
-  print(facet_plot_k_freey)
+  #print(facet_plot_k_freey)
 
   return(plots_list)
 }

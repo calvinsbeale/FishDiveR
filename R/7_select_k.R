@@ -10,7 +10,6 @@
 #' @importFrom cluster clusGap
 #' @importFrom stats dist
 #' @importFrom cowplot plot_grid
-#' @importFrom withr local_options
 #' @importFrom Rfast Dist
 #'
 #' @inheritParams pca_data
@@ -26,6 +25,11 @@
 #'   Defaults to FALSE
 #' @param plot_gap TRUE or FALSE. Whether or not to plot the gap statistic.
 #'   Defaults to FALSE.
+#'
+#' @details
+#' This function relies on random initialisation in k-means clustering.
+#'   For reproducible results, users may wish to set a random seed
+#'   prior to calling this function using \code{set.seed()}.
 #'
 #' @returns A 'ggplot' class object and creates a figure containing both the
 #'   within-cluster sum of squares plot (elbow) and the average silhouette width
@@ -48,7 +52,9 @@
 #'   v_line = 4,
 #'   calc_gap = FALSE,
 #'   plot_gap = FALSE,
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # Function to create the elbow and silhouette width plots for selecting K
@@ -58,7 +64,9 @@ select_k <- function(kmeans_data,
                      v_line = NULL,
                      calc_gap = FALSE,
                      plot_gap = FALSE,
-                     output_folder = data_dir) {
+                     output = FALSE,
+                     output_folder = NULL,
+                     verbose = FALSE) {
   # Check if kmeans_data is a data frame
   if (!is.data.frame(kmeans_data)) {
     stop("kmeans_data must be a data frame. \n")
@@ -78,9 +86,12 @@ select_k <- function(kmeans_data,
   if (!is.logical(plot_gap)) {
     stop("plot_gap must be TRUE or FALSE.")
   }
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
+  }
 
   # Set the random seed for reproducible results in the function
-  withr::local_options(set.seed(123))
+  # withr::local_options(set.seed(123))
 
   # Check that Max.k does not exceed the number of kmeans_data
   if (Max.k >= nrow(kmeans_data)) {
@@ -92,7 +103,7 @@ select_k <- function(kmeans_data,
   unique_tag_ID <- attr(kmeans_data, "unique_tag_ID")
 
   if (standardise == TRUE) {
-    cat("\n Standardising k-means input. \n")
+    if (verbose) message("Standardising k-means input.")
 
     # Remove any non-numerical columns in kmeans_data. Identifying numeric columns
     numeric_cols <- sapply(kmeans_data, is.numeric)
@@ -105,11 +116,11 @@ select_k <- function(kmeans_data,
       if (length(unique(kmeans_data[[i]])) > 1) {
         kmeans_data[[i]] <- scale(kmeans_data[[i]])
       } else {
-        cat("\nCaution - cannot standardise a column with a unique value: ", colnames(kmeans_data[i]), "\n")
+        if (verbose) message("Caution - cannot standardise a column with a unique value: ", colnames(kmeans_data[i]))
       }
     }
   } else {
-    cat("\n If kmeans_data is a combination of PC scores and depth data. Please standardise the data as this can greatly impact the reliability of the results. \n")
+    if (verbose) message("If kmeans_data is a combination of PC scores and depth data. Please standardise the data as this can greatly impact the reliability of the results.")
   }
 
   # set up data and loop for k-means
@@ -144,10 +155,10 @@ select_k <- function(kmeans_data,
 
       # Average silhouette width (higher is better, closer to 1)
       avg_sil_width <- round(mean(sil_scores[, 3]), 3)
-      cat(paste0("\n K = ", k, " Average silhouette width = ", avg_sil_width, "\n"))
+      if (verbose) message(paste0("K = ", k, " Average silhouette width = ", avg_sil_width))
 
       # Check number of days in each cluster
-      print(table(kmeans_result$cluster))
+      # print(table(kmeans_result$cluster))
 
       # Add to list
       sil_values[[paste0("K_", k)]] <- avg_sil_width
@@ -173,7 +184,7 @@ select_k <- function(kmeans_data,
       return(k)
     }
     optimal_k_gap <- firstSEmax(gap_stat, se_sim)
-    cat(paste0("\nOptimal number of clusters according to gap statistic: ", optimal_k_gap, "\n"))
+    if (verbose) message(paste0("Optimal number of clusters according to gap statistic: ", optimal_k_gap))
   }
 
   # Create the within-cluster sum of squares plot "Elbow method"
@@ -232,7 +243,7 @@ select_k <- function(kmeans_data,
     combined_k_plot <- cowplot::plot_grid(Elbow_plot, Silhouette_plot, Gap_plot, labels = c("A", "B", "C"), label_size = 10)
   } else {
     if (plot_gap) {
-      cat("'calc_gap' must be True to plot the gap statistic")
+      if (verbose) message("'calc_gap' must be True to plot the gap statistic")
     }
 
     # Combine the elbow and silhouette width plots
@@ -240,7 +251,7 @@ select_k <- function(kmeans_data,
   }
 
   # Print the combined plot
-  print(combined_k_plot)
+  #print(combined_k_plot)
 
   # Count the number of columns starting with "PC" in combined_data
   pc_columns_count <- length(grep("^PC", names(kmeans_data)))
@@ -251,13 +262,13 @@ select_k <- function(kmeans_data,
     save_folder <- file.path(output_folder, "Combined_tags/5_k-means")
 
     # Message
-    cat(paste0("Multiple tags output file: ", save_folder, "/Select_k.", pc_columns_count, "_PCs.png\n"))
+    if (verbose) message(paste0("Multiple tags output file: ", save_folder, "/Select_k.", pc_columns_count, "_PCs.png"))
   } else {
     # Single tag save folder - unique_unique_tag_ID
     save_folder <- file.path(output_folder, unique_tag_ID, "5_k-means")
 
     # Message
-    cat(paste0("Single tag output file: ", save_folder, "/Select_k.", pc_columns_count, "_PCs.png\n"))
+    if (verbose) message(paste0("Single tag output file: ", save_folder, "/Select_k.", pc_columns_count, "_PCs.png\n"))
   }
 
   # Create the directory if it doesn't exist

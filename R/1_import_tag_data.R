@@ -4,9 +4,10 @@
 #' Data to import should be a csv file with a 'date_time' column and a depth
 #' column. Data is cropped by deployment and release times.
 #'
-#' @details Creates and additionally outputs a data frame `archive_days.rds`
-#'   containing the cropped data. Data is cropped to full days from midnight to
-#'   midnight in local time based on the time zone supplied.
+#' @details
+#' Data are cropped to full days from midnight to midnight in local time based on
+#' the time zone supplied. If \code{output = TRUE}, the cropped data are saved as
+#' \code{archive_days.rds} within \code{output_folder}.
 #'
 #' @name import_tag_data
 #'
@@ -27,8 +28,11 @@
 #' @param depth_col Column number of the depth series
 #' @param temp_col (Optional) Column number of temperature series
 #' @param time_zone Time zone of the data. E.g. "Asia/Tokyo"
-#' @param output_folder Output folder path. E.g. "C:/Tag data". Defaults to
-#'   'data_dir'
+#' @param output Logical. If TRUE, \code{archive_days.rds} is saved to \code{output_folder}.
+#'   Defaults to FALSE.
+#' @param output_folder Output folder path. If \code{output = TRUE},
+#'   \code{output_folder} must be provided. Defaults to NULL.
+#' @param verbose Logical. If TRUE, progress messages are shown. Defaults to FALSE.
 #'
 #' @returns A data frame of processed tag data. Columns kept are:
 #'   * 'date' a POSIXct date_time object in format "yyyy-mm-dd hh:mm:ss"
@@ -53,7 +57,9 @@
 #'   depth_col = 2,
 #'   temp_col = NA,
 #'   time_zone = "Asia/Tokyo",
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # Function to import tag data from csv file. Crop to deployment length then crop by desired time period (e.g. 24 hours)
@@ -65,7 +71,9 @@ import_tag_data <- function(tag_ID,
                             depth_col = 2,
                             temp_col = NA,
                             time_zone,
-                            output_folder = data_dir) {
+                            output = FALSE,
+                            output_folder = NULL,
+                            verbose = FALSE) {
   # Check format of inputs, on error stop
   if (!is.character(tag_ID)) {
     stop("tag_ID must be a character string.")
@@ -106,7 +114,7 @@ import_tag_data <- function(tag_ID,
   }
 
   # Print tag ID
-  cat(paste0("\nTag ID = ", tag_ID, "\n"))
+  if (verbose) message(paste0("\nTag ID = ", tag_ID, "\n"))
 
   # Remove rows where Depth column is NA
   tag_archive <- tag_archive[!is.na(tag_archive$depth), ]
@@ -147,8 +155,8 @@ import_tag_data <- function(tag_ID,
 
   if (nrow(duplicated_dates) > 0) {
     # Printing rows with duplicated dates
-    cat("\nWARNING - DUPLICATE DATES DETECTED after removing blank depth data rows in archive date_time: \n")
-    print(duplicated_dates)
+    warning("Duplicate date_time values detected after removing NA depths.")
+    if (verbose) message("Number of duplicated timestamps: ", nrow(duplicated_dates))
 
     # Count the number of occurrences of each date
     date_counts <- table(tag_archive$date)
@@ -163,7 +171,7 @@ import_tag_data <- function(tag_ID,
       # Safely remove the second occurrence of each duplicate
       tag_archive <- tag_archive[-duplicated_dates_indices, ]
 
-      cat("The second date_time has been removed. If this is a wildlife computers tag, this may be the corrosion release interval. Please check before continuing \n")
+      warning("The second date_time has been removed. If this is a wildlife computers tag, this may be the corrosion release interval. Please check before continuing.")
     }
   }
 
@@ -185,7 +193,7 @@ import_tag_data <- function(tag_ID,
 
   # Metadata from tag deployment
   sampling_interval <- as.numeric(difftime(tag_archive$date[2], tag_archive$date[1], units = "secs"))
-  cat(paste0("\nDepth sampling interval is ", sampling_interval, " seconds \n"))
+  if (verbose) message(paste0("\nDepth sampling interval is ", sampling_interval, " seconds \n"))
 
   # Count values less than 0 in the depth column before correction
   values_above_zero <- sum(tag_archive$depth < 0)
@@ -194,15 +202,15 @@ import_tag_data <- function(tag_ID,
   tag_archive$depth <- ifelse(tag_archive$depth < 0, 0, tag_archive$depth)
 
   # Report the number of values changed
-  cat("\nNumber of depth values corrected (above 0):", values_above_zero, "\n")
+  if (verbose) message("\nNumber of depth values corrected (above 0):", values_above_zero, "\n")
 
   # Print mean, SD and maximum depths
-  cat(paste0(
+  if (verbose) message(paste0(
     "Mean depth = ", round(mean(tag_archive$depth), 1),
     " SD = ", round(sd(tag_archive$depth), 1), "\n"
   ))
 
-  cat(paste0("Maximum depth = ", max(tag_archive$depth), "\n"))
+  if (verbose) message(paste0("Maximum depth = ", max(tag_archive$depth), "\n"))
 
   # Calculate the number of days between the first and last data points
   first_date <- as.Date(format(tag_archive$date[1], format = "%Y-%m-%d", tz = time_zone))
@@ -210,7 +218,7 @@ import_tag_data <- function(tag_ID,
   num_days <- as.numeric(difftime(last_date, first_date, units = "days"))
 
   # Print the number of days in the full days data set
-  cat(paste0("Number of full days in dataset: ", num_days + 1, "\n"))
+  if (verbose) message(paste0("Number of full days in dataset: ", num_days + 1, "\n"))
 
   # Create date_only column
   tag_archive$date_only <- as.Date(format(lubridate::with_tz(tag_archive$date, tzone = time_zone), "%Y-%m-%d"))
@@ -218,12 +226,18 @@ import_tag_data <- function(tag_ID,
   # Set time zone attribute
   attr(tag_archive, "time_zone") <- time_zone
 
-  # Create the directory if it doesn't exist
-  create_directory(file.path(output_folder, tag_ID))
+  if (isTRUE(output)) {
+    if (is.null(output_folder)) {
+      stop("When output = TRUE, output_folder must be provided.")
+    }
 
-  # Save the 'tag_archive' object to output_folder
-  saveRDS(tag_archive, file = file.path(output_folder, tag_ID, "archive_days.rds"))
-  cat(paste0("\nOutput file: ", output_folder, "/", tag_ID, "/archive_days.rds\n"))
+    dir.create(file.path(output_folder, tag_ID), recursive = TRUE, showWarnings = FALSE)
+
+    # Save the 'tag_archive' object to output_folder
+    saveRDS(tag_archive, file = file.path(output_folder, tag_ID, "archive_days.rds"))
+
+    if (verbose) message(paste0("\nOutput file: ", output_folder, "/", tag_ID, "/archive_days.rds\n"))
+  }
 
   # Return the cropped dataset
   return(tag_archive)
@@ -257,6 +271,9 @@ import_tag_data <- function(tag_ID,
 #' @param date_breaks X-axis ggplot2 date breaks. E.g, "24 hour, "3 day",
 #'   "2 week".
 #' @param dpi Numerical. DPI to use for 'ggsave()' output. E.g, 600
+#' @param output Logical. If TRUE, a plot file is saved to \code{output_folder}. Defaults to FALSE.
+#' @param output_folder Output folder path used when \code{output = TRUE}. Defaults to NULL.
+#' @param verbose Logical. If TRUE, progress messages are shown. Defaults to FALSE.
 #'
 #' @returns A data frame of plot data
 #'
@@ -277,12 +294,14 @@ import_tag_data <- function(tag_ID,
 #'   Y_lim = c(0, 300, 50),
 #'   date_breaks = "24 hour",
 #'   dpi = 100,
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # Utility function to combine the depth statistics and the pc scores for input to k-means clustering
 plot_TDR <- function(rds_file,
-                     data_folder = data_dir,
+                     data_folder = NULL,
                      every_nth = 20,
                      every_s = 0,
                      plot_size = c(12, 6),
@@ -290,11 +309,14 @@ plot_TDR <- function(rds_file,
                      Y_lim = c(0, 1500, 100),
                      date_breaks = "14 day",
                      dpi = 300,
-                     output_folder = data_dir) {
+                     output = FALSE,
+                     output_folder = NULL,
+                     verbose = FALSE) {
   # Check format of inputs, on error stop
   if (!is.character(rds_file)) {
     stop("rds_file must be a character string.")
   }
+  if (is.null(data_folder)) stop("data_folder must be provided.")
   if (!is.numeric(every_nth) || every_nth <= 0) {
     stop("every_nth must be a positive integer.")
   }
@@ -304,13 +326,6 @@ plot_TDR <- function(rds_file,
   # Check that plot_size is numeric, positive and exactly 2 elements long
   if (!is.numeric(plot_size) || length(plot_size) != 2 || any(plot_size <= 0)) {
     stop("plot_size must be a numeric vector of length 2 with positive values.")
-  }
-  # Check that Y_lim is numeric, positive and exactly 3 elements long
-  if (!is.numeric(Y_lim) || length(Y_lim) != 3 || any(Y_lim < 0)) {
-    stop("Y_lim must be a numeric vector of length 3 with non-negative values.")
-  }
-  if ((!is.numeric(dpi) || dpi <= 0)) {
-    stop("dpi must be a positive integer.")
   }
   # Check X_lim if provided
   if (!is.null(X_lim)) {
@@ -323,19 +338,27 @@ plot_TDR <- function(rds_file,
       stop("Invalid dates in X_lim. Ensure they are in 'YYYY-MM-DD' format.")
     }
   }
+  # Check that Y_lim is numeric, positive and exactly 3 elements long
+  if (!is.numeric(Y_lim) || length(Y_lim) != 3 || any(Y_lim < 0)) {
+    stop("Y_lim must be a numeric vector of length 3 with non-negative values.")
+  }
+  if ((!is.numeric(dpi) || dpi <= 0)) {
+    stop("dpi must be a positive integer.")
+  }
+  if (is.null(output_folder)) stop("When output = TRUE, output_folder must be provided.")
 
   # Read in tag archive
   archive_days <- readRDS(file = file.path(data_folder, rds_file))
 
   # Calculate the time differences between consecutive records
-  time_diffs <- diff(as.numeric(archive_days$date, units = "secs"))
+  time_diffs <- diff(as.numeric(archive_days$date))
+
+  if (length(unique(time_diffs)) != 1) {
+    stop("Error: The original data does not have a consistent sampling frequency.")
+  }
 
   # Check if the original sampling frequency is consistent
   sampling_interval <- unique(time_diffs)
-
-  if (length(sampling_interval) != 1) {
-    stop("Error: The original data does not have a consistent sampling frequency.")
-  }
 
   # Check X_lim if provided
   if (!is.null(X_lim)) {
@@ -344,11 +367,11 @@ plot_TDR <- function(rds_file,
     if (nrow(archive_days) == 0) {
       stop("No data available within the specified X_lim date range.")
     }
-    cat("Data has been filtered between X-axis limits \n")
+    if (verbose) message("Data has been filtered between X-axis limits \n")
   }
 
   # Print sampling interval
-  cat(paste0("\nData sampling interval is ", sampling_interval, " seconds\n"))
+  if (verbose) message(paste0("\nData sampling interval is ", sampling_interval, " seconds\n"))
 
   if (every_s != 0) { # Using time, rather than number of rows to plot data.
     # Check if every_s is a multiple of the original sampling frequency
@@ -364,7 +387,7 @@ plot_TDR <- function(rds_file,
     archive_days <- archive_days[as.numeric(archive_days$date - start_time) %% every_s == 0, ]
 
     # Print sampling interval
-    cat("Plotting every", every_s, "seconds \n")
+    if (verbose) message("Plotting every ", every_s, " seconds \n")
   } else {
     if (every_nth != 1) {
       # Subset to every nth record
@@ -372,20 +395,20 @@ plot_TDR <- function(rds_file,
       archive_days <- archive_days[crop_sq, ]
 
       # Print sampling interval
-      cat("Plotting every", every_nth, "records \n")
+      if (verbose) message("Plotting every ", every_nth, " records \n")
     } else {
       # Print sampling interval
-      cat("Plotting every record \n")
+      if (verbose) message("Plotting every record \n")
     }
   }
 
   # Messages
-  cat("\nMaximum depth is", max(archive_days$depth), "meters\n")
+  if (verbose) message("\nMaximum depth is ", max(archive_days$depth), " meters\n")
 
   # Select plot data
   plot_data <- archive_days[, c("date", "depth")]
 
-  TDR_plot <- ggplot(plot_data, aes(x = date, y = depth)) +
+  TDR_plot <- ggplot2::ggplot(plot_data, aes(x = date, y = depth)) +
     geom_path() +
     scale_y_reverse(limits = c(Y_lim[2], Y_lim[1]), breaks = seq(Y_lim[1], Y_lim[2], Y_lim[3]), expand = c(0, 0)) +
     scale_x_datetime(date_breaks = date_breaks, date_labels = "%Y-%m-%d", expand = c(0, 0, 0, 0), position = "top") +
@@ -399,10 +422,27 @@ plot_TDR <- function(rds_file,
       axis.title = element_text(size = 16), # Set font size and style for x-axis label
       # plot.margin = unit(c(0, 3, 0.1, 0.1), "lines") # top, right, bottom, left
     )
-  print(TDR_plot)
 
-  ggsave(file.path(output_folder, paste0("tag_archive.png")), plot = TDR_plot, width = plot_size[1], height = plot_size[2], dpi = dpi, create.dir = TRUE)
-  cat("\nOutput file:", file.path(output_folder, paste0("tag_archive.png")))
+  if (isTRUE(verbose) && interactive()) {
+    print(TDR_plot)
+  }
+
+  if (isTRUE(output)) {
+    if (is.null(output_folder)) {
+      stop("When output = TRUE, output_folder must be provided.")
+    }
+
+    ggplot2::ggsave(
+      file.path(output_folder, paste0("tag_archive.png")),
+      plot = TDR_plot,
+      width = plot_size[1],
+      height = plot_size[2],
+      dpi = dpi,
+      create.dir = TRUE
+    )
+
+    if (verbose) message("\nOutput file:", file.path(output_folder, paste0("tag_archive.png")))
+  }
 
   return(plot_data)
 }

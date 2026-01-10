@@ -13,7 +13,6 @@
 #' @importFrom rgl legend3d
 #' @importFrom colorspace qualitative_hcl
 #' @importFrom geometry convhulln
-#' @importFrom withr local_options
 #' @importFrom stats kmeans
 #' @importFrom grDevices rainbow
 #' @importFrom tidyr replace_na
@@ -28,6 +27,11 @@
 #'   points. Defaults to FALSE.
 #' @param output TRUE or FALSE. Whether or not to output the results.
 #'   Defaults to TRUE.
+#'
+#' @details
+#' This function relies on random initialisation in k-means clustering.
+#'   For reproducible results, users may wish to set a random seed
+#'   prior to calling this function using \code{set.seed()}.
 #'
 #' @returns An object of class 'kmeans' containing the k-means clustering data
 #'   for the data frame. Additionally plots a 3D cluster plot of the top three
@@ -54,6 +58,7 @@
 #'   polygon = FALSE,
 #'   output = FALSE,
 #'   output_folder = tempdir()
+#'   verbose = TRUE
 #' )
 #' }
 #'
@@ -64,7 +69,9 @@ k_clustering <- function(kmeans_data,
                          nstart = 50,
                          polygon = FALSE,
                          output = TRUE,
-                         output_folder = data_dir) {
+                         output_folder = NULL,
+                         verbose = FALSE
+                         ) {
   # Check if kmeans_data is a data frame
   if (!is.data.frame(kmeans_data)) {
     stop("kmeans_data must be a data frame. \n")
@@ -81,6 +88,9 @@ k_clustering <- function(kmeans_data,
   if (!is.logical(polygon)) {
     stop("polygon must be TRUE or FALSE.")
   }
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
+  }
 
   # Check if k > number of distinct data points
   if (k >= nrow(kmeans_data)) {
@@ -88,7 +98,7 @@ k_clustering <- function(kmeans_data,
   }
 
   # Set the random seed for reproducable results in the function
-  withr::local_seed(123)
+  # withr::local_seed(123)
 
   # Set unique_tag_ID as the unique tag id attribute if it exists
   unique_tag_ID <- attr(kmeans_data, "unique_tag_ID")
@@ -103,18 +113,18 @@ k_clustering <- function(kmeans_data,
   numeric_data <- kmeans_data[, numeric_cols]
 
   if (standardise == TRUE) {
-    cat("\n Standardising k-means input. \n")
+    if (verbose) message("Standardising k-means input.")
 
     # Apply scaling only to columns that have more than one unique value to avoid division by zero
     for (i in 1:ncol(numeric_data)) {
       if (length(unique(numeric_data[[i]])) > 1) {
         numeric_data[[i]] <- scale(numeric_data[[i]])
       } else {
-        cat("\nCaution - cannot standardise a column with a unique value: ", colnames(numeric_data[i]), "=", print(numeric_data[1, i]), "\n")
+        if (verbose) message("Caution - cannot standardise a column with a unique value: ", colnames(numeric_data[i]), "=", message(numeric_data[1, i]))
       }
     }
   } else {
-    cat("\n If kmeans_data is a combination of PC scores and depth data. Please standardise the data as this can greatly impact the reliability of the results. \n")
+    if (verbose) message("If kmeans_data is a combination of PC scores and depth data. Please standardise the data as this can greatly impact the reliability of the results.")
   }
 
   # Run K-means with selected number of clusters
@@ -140,8 +150,8 @@ k_clustering <- function(kmeans_data,
   names(cluster_table) <- c("Cluster", "Days in Cluster")
 
   # Print number of days in each cluster
-  print(cluster_table)
-  print(paste0("Total of ", sum(cluster_table[, 2]), " days of data"))
+  #print(cluster_table)
+  if (verbose) message(paste0("Total of ", sum(cluster_table[, 2]), " days of data"))
 
   # Define the desired columns
   desired_pcs <- c("PC1", "PC2", "PC3")
@@ -245,7 +255,7 @@ k_clustering <- function(kmeans_data,
         }
       }
     } else {
-      cat("One or more of PC1, PC2, PC3 do not exist. Skipping 3d cluster plot.\n")
+      if (verbose) message("One or more of PC1, PC2, PC3 do not exist. Skipping 3d cluster plot.")
     }
 
     # Create cluster_result data frame
@@ -272,7 +282,7 @@ k_clustering <- function(kmeans_data,
     complete_cluster_summary <- complete_cluster_summary[order(complete_cluster_summary$tag_ID, complete_cluster_summary$cluster), ]
 
     # print(complete_cluster_summary)
-    print(cluster_summary)
+    # print(cluster_summary)
 
     # Save the cluster data
     if (is.null(unique_tag_ID) == TRUE) {
@@ -293,7 +303,7 @@ k_clustering <- function(kmeans_data,
       write.csv(cluster_summary, file = file.path(save_folder, paste0("Cluster_summary_cluster_k=", k, ".csv")), row.names = FALSE)
 
       # Message folder
-      cat(paste0("Output folder: ", save_folder, "\n"))
+      if (verbose) message(paste0("Output folder: ", save_folder))
     } else {
       # Set single tag save folder
       save_folder <- file.path(output_folder, unique_tag_ID, "5_k-means")
@@ -308,7 +318,7 @@ k_clustering <- function(kmeans_data,
       write.csv(cluster_table, file = file.path(save_folder, paste0("Cluster_table_k=", k, ".csv")), row.names = FALSE)
 
       # Message folder
-      cat(paste0("Output folder: ", save_folder, "\n"))
+      if (verbose) message(paste0("Output folder: ", save_folder))
     }
 
     ## This section for plotting the cluster means
@@ -439,7 +449,7 @@ k_clustering <- function(kmeans_data,
     # Save the plot
     ggsave(file.path(save_folder, paste0("cluster_variables_k=", k, "_bw.png")), plot = plot_bw_scaled, height = 12, width = 16, dpi = 600)
 
-    print(plot_bw_scaled)
+    #print(plot_bw_scaled)
 
     kmeans_result$cluster_means <- cluster_means
 

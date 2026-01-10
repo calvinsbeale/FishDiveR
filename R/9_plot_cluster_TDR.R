@@ -44,12 +44,14 @@
 #'   legend = TRUE,
 #'   plot_size = c(12, 6),
 #'   dpi = 100,
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # Function to print to file one figure for each cluster with a fixed y-axis. Additionally outputs a facet plot of all clusters, and a free y-axis version of all plots.
 plot_cluster_TDR <- function(tag_ID,
-                             data_folder = data_dir,
+                             data_folder = NULL,
                              kmeans_result,
                              every_nth = 10,
                              every_s = 0,
@@ -59,11 +61,14 @@ plot_cluster_TDR <- function(tag_ID,
                              legend = TRUE,
                              plot_size = c(12, 6),
                              dpi = 300,
-                             output_folder = data_dir) {
+                             output = FALSE,
+                             output_folder = NULL,
+                             verbose = FALSE) {
   # Check if tag_IDs is a character vector
   if (!is.character(tag_ID) || length(tag_ID) != 1) {
     stop("tag_ID must be a single character string.")
   }
+  if (is.null(data_folder)) stop("data_folder must be provided.")
   if (!is.list(kmeans_result)) {
     stop("kmeans_result must be a data frame. \n")
   }
@@ -72,6 +77,17 @@ plot_cluster_TDR <- function(tag_ID,
   }
   if ((!is.numeric(every_s) || every_s < 0)) {
     stop("every_s must be a positive integer.")
+  }
+  # Check X_lim if provided
+  if (!is.null(X_lim)) {
+    if (!is.character(X_lim) || length(X_lim) != 2) {
+      stop("X_lim must be a character vector of two dates in 'YYYY-MM-DD' format.")
+    }
+    # Convert to Date format for subsetting
+    X_lim <- as.Date(X_lim)
+    if (any(is.na(X_lim))) {
+      stop("Invalid dates in X_lim. Ensure they are in 'YYYY-MM-DD' format.")
+    }
   }
   # Check that Y_lim is numeric, positive and exactly 3 elements long
   if (!is.numeric(Y_lim) || length(Y_lim) != 3 || any(Y_lim < 0)) {
@@ -87,32 +103,24 @@ plot_cluster_TDR <- function(tag_ID,
   if ((!is.numeric(dpi) || dpi <= 0)) {
     stop("dpi must be a positive integer.")
   }
-  # Check X_lim if provided
-  if (!is.null(X_lim)) {
-    if (!is.character(X_lim) || length(X_lim) != 2) {
-      stop("X_lim must be a character vector of two dates in 'YYYY-MM-DD' format.")
-    }
-    # Convert to Date format for subsetting
-    X_lim <- as.Date(X_lim)
-    if (any(is.na(X_lim))) {
-      stop("Invalid dates in X_lim. Ensure they are in 'YYYY-MM-DD' format.")
-    }
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
   }
 
   # Tag info:
-  cat(paste0("\n Loading tag ", tag_ID, " TDR \n"))
+  if (verbose) message(paste0("Loading tag ", tag_ID, " TDR"))
 
   # Load archive_days
   archive_days <- readRDS(file.path(data_folder, tag_ID, "archive_days.rds"))
 
   # Load k-means result
   if (length(unique(kmeans_result$tag_ID)) > 1) {
-    cat("\n Combined tag k-means loaded \n")
+    if (verbose) message("Combined tag k-means loaded")
   } else {
-    cat("\n Single tag k-means loaded \n")
+    if (verbose) message("Single tag k-means loaded")
   }
 
-  cat(paste0("\nMaximum depth is ", max(archive_days$depth)))
+  if (verbose) message(paste0("Maximum depth is ", max(archive_days$depth)))
 
   # Extract the cluster and tag_ID
   tag_data <- as.data.frame(kmeans_result$cluster)
@@ -132,7 +140,7 @@ plot_cluster_TDR <- function(tag_ID,
 
   # Check lengths of unique_dates and cluster map
   if (length(unique_dates) != length(cluster_assignments)) {
-    cat("\n Length of unique dates in archive is not equal to cluster assignment length. Please check.\n")
+    if (verbose) message("Length of unique dates in archive is not equal to cluster assignment length. Please check.")
     l <- length(unique_dates)
     date_cluster_mapping <- data.table::data.table(date_only = unique_dates, cluster = cluster_assignments[l])
   } else {
@@ -153,7 +161,7 @@ plot_cluster_TDR <- function(tag_ID,
   }
 
   # Print sampling interval
-  cat(paste0("\nData sampling interval is ", sampling_interval, " seconds\n"))
+  if (verbose) message(paste0("Data sampling interval is ", sampling_interval, " seconds"))
 
   # Check X_lim if provided
   if (!is.null(X_lim)) {
@@ -162,7 +170,7 @@ plot_cluster_TDR <- function(tag_ID,
     if (nrow(archive_days) == 0) {
       stop("No data available within the specified X_lim date range.")
     }
-    cat("Data has been filtered between X-axis limits \n")
+    if (verbose) message("Data has been filtered between X-axis limits")
   }
 
   if (every_s != 0) { # Using time, rather than number of rows to plot data.
@@ -179,7 +187,7 @@ plot_cluster_TDR <- function(tag_ID,
     archive_days <- archive_days[as.numeric(archive_days$date - start_time) %% every_s == 0, ]
 
     # Print sampling interval
-    cat("Plotting every", every_s, "seconds \n")
+    if (verbose) message("Plotting every", every_s, "seconds")
   } else {
     if (every_nth != 1) {
       # Subset to every nth record
@@ -187,10 +195,10 @@ plot_cluster_TDR <- function(tag_ID,
       archive_days <- archive_days[crop_sq, ]
 
       # Print sampling interval
-      cat("Plotting every", every_nth, "records \n")
+      if (verbose) message("Plotting every", every_nth, "records")
     } else {
       # Print sampling interval
-      cat("Plotting every record \n")
+      if (verbose) message("Plotting every record")
     }
   }
 
@@ -274,7 +282,7 @@ plot_cluster_TDR <- function(tag_ID,
       )
   }
 
-  print(plot)
+  #print(plot)
 
   # Create the directory if it doesn't exist
   create_directory(output_folder)
@@ -283,7 +291,7 @@ plot_cluster_TDR <- function(tag_ID,
   ggsave(filename = file.path(output_folder, paste0(tag_ID, "_TDR_k=", k, ".png")), plot = plot, width = plot_size[1], height = plot_size[2], dpi = dpi)
 
   # Message output
-  cat(paste0("\n Output file: ", output_folder, "/", tag_ID, "_TDR_k=", k, ".png \n"))
+  if (verbose) message(paste0("Output file: ", output_folder, "/", tag_ID, "_TDR_k=", k, ".png"))
 
   return(plot)
 }

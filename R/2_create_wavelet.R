@@ -1,7 +1,7 @@
 #' Create and plot the wavelet power spectrum
 #'
 #' `create_wavelet` creates the a wavelet spectrum using WaveletComp package.
-#' Skips creation if my.w is already in the global environment.
+#' Optionally loads and plots an existing my.w object.
 #'
 #' @details Uses [WaveletComp::analyze.wavelet()] to create a univariate wavelet
 #'   power spectrum for the depth data imported, see
@@ -25,6 +25,10 @@
 #'   to investigate daily diving behaviour. Defaults to 24.
 #' @param sampling_frequency Sampling frequency of depth data in seconds. Defaults
 #'   to time between first and second depth record. Recommended to leave blank.
+#' @param allow_irregular_sampling Allows irregular sampling interval in the
+#'   dataset. Not recommended. Defaults to FALSE.
+#' @param load_existing_wavelet Load an existing my.w wavelet object from the
+#'   output_folder. Defaults to FALSE.
 #' @param suboctaves number of suboctaves between each logarithmic period. E.g.
 #'   between 24 and 12 hours. Highly recommended to use 12, for easy of
 #'   interpretation of hours and signal present (daily, diel, tidal).
@@ -43,9 +47,9 @@
 #'   400.
 #' @param interactive_mode Used for testing the package only. Defaults to TRUE.
 #'
-#' @returns An object of class "analyze.wavelet" from package 'WaveletComp'.
-#'   Additionally outputs a plot of the wavelet spectrum, and a plot of the mean
-#'   power per period
+#' @returns When output = TRUE, returns an object of class "analyze.wavelet"
+#'   from package 'WaveletComp'. Additionally outputs a plot of the wavelet
+#'   spectrum, and a plot of the mean power per period.
 #'
 #' @export
 #'
@@ -62,11 +66,15 @@
 #'   tag_ID = "data",
 #'   wv_period_hours = 24,
 #'   sampling_frequency = NULL,
+#'   allow_irregular_sampling = FALSE,
+#'   load_existing_wavelet = TRUE,
 #'   suboctaves = 12,
 #'   lower_period_mins = 30,
 #'   upper_period_hours = 24,
 #'   pval = FALSE,
+#'   output = TRUE,
 #'   output_folder = tempdir(),
+#'   verbose = TRUE,
 #'   plot_wavelet = FALSE,
 #'   max_period_ticks = 10,
 #'   plot_width = 800,
@@ -79,18 +87,22 @@ create_wavelet <- function(archive,
                            tag_ID,
                            wv_period_hours = 24,
                            sampling_frequency = NULL,
+                           allow_irregular_sampling = FALSE,
+                           load_existing_wavelet = FALSE,
                            suboctaves = 12,
                            lower_period_mins = 5,
                            upper_period_hours = 24,
                            pval = FALSE,
-                           output_folder = data_dir,
+                           output = FALSE,
+                           output_folder = NULL,
+                           verbose = FALSE,
                            plot_wavelet = TRUE,
                            max_period_ticks = 10,
                            plot_width = 800,
                            plot_height = 400,
                            interactive_mode = TRUE) {
   # Tag info:
-  cat(paste0("\nAnalysing tag ID ", tag_ID, "\n"))
+  if (verbose) message(paste0("\nAnalysing tag ID ", tag_ID, "\n"))
 
   # 1. Check if archive is a data frame
   if (!is.data.frame(archive)) {
@@ -127,7 +139,7 @@ create_wavelet <- function(archive,
   }
   # Check range of periods
   if (upper_period_hours == 24 && lower_period_mins < 5 && suboctaves == 12) {
-    cat("Using an upper period of 24 hours and lower period of less than 5 minutes can result in a long processing time and very large wavelet file (>20 GB).
+    if (verbose) message("Using an upper period of 24 hours and lower period of less than 5 minutes can result in a long processing time and very large wavelet file (>20 GB).
         Some computers will not be able to render the power spectrum plot at default size and resolution. If receiving vector allocation errors,
         see details in ?FishDiveR::create_wavelet \n")
   }
@@ -165,6 +177,12 @@ create_wavelet <- function(archive,
   if (!is.logical(pval)) {
     stop("pval must be TRUE or FALSE.")
   }
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
+  }
+  if (!is.logical(allow_irregular_sampling)) {
+    stop("allow_irregular_sampling must be TRUE or FALSE.")
+  }
   if (!is.logical(plot_wavelet)) {
     stop("plot_wavelet must be TRUE or FALSE.")
   }
@@ -182,49 +200,45 @@ create_wavelet <- function(archive,
     stop("interactive_mode must be TRUE or FALSE.")
   }
 
-  # Helper function to handle readline based on interactive mode. Used for testing package functions
-  get_response <- function(prompt, default_response, interactive_mode) {
-    if (interactive_mode) {
-      return(tolower(readline(prompt = prompt)))
-    } else {
-      return(default_response)
-    }
-  }
-
   # Helper function to check constant sampling frequency
   check_sampling_frequency <- function(archive) {
-    # Create sample_length metric for each consecutive set of time records
-    archive$sample_length <- c(NA, as.numeric(diff(archive$date), units = "secs"))
+    # Differences in seconds between consecutive timestamps
+    diffs <- as.numeric(diff(archive$date), units = "secs")
 
-    # Warn user if sampling frequency is not constant
-    if (length(unique(archive$sample_length)) != 2) {
-      message("\n Warning: Sampling frequency is not constant over tag deployment.")
-      filtered_archive_days <- archive[-1, ]
-      time_frequency_table <- table(filtered_archive_days$sample_length)
-      time_frequency_df <- as.data.frame(time_frequency_table)
-      names(time_frequency_df) <- c("Time_frequency_in_Seconds", "Number_of_Records")
-      print(time_frequency_df)
+    # Remove non-finite values (defensive)
+    diffs <- diffs[is.finite(diffs)]
 
-      # Ask user for input. Require the correct input
-      while (TRUE) {
-        # Set readline input for package testing purposes - Replaced with get_response
-        response <- get_response(
-          prompt = "Do you want to continue creating a new wavelet? (Yes/No): ",
-          default_response = "no",
-          interactive_mode = interactive_mode
+    is_constant <- length(unique(diffs)) == 1L
+
+    time_frequency_df <- as.data.frame(table(diffs), stringsAsFactors = FALSE)
+    names(time_frequency_df) <- c("Time_frequency_in_Seconds", "Number_of_Records")
+    time_frequency_df$Time_frequency_in_Seconds <- as.numeric(time_frequency_df$Time_frequency_in_Seconds)
+
+    # attach for the user to inspect later
+    attr(archive, "sampling_frequency_table") <- time_frequency_df
+
+    if (!is_constant) {
+      if (isTRUE(verbose)) {
+        msg <- paste(
+          apply(time_frequency_df, 1, function(x) paste0(x[1], "s: ", x[2], " records")),
+          collapse = "; "
         )
-
-        if (response %in% c("yes", "no")) {
-          break
-        } else {
-          cat("\n Please answer 'Yes' or 'No'.\n")
-        }
+        message("Sampling frequency is not constant. Intervals detected: ", msg)
       }
-      if (response == "no") {
-        stop("\nUser chose not to create a new wavelet.")
+
+      if (!isTRUE(allow_irregular_sampling)) {
+        stop("Sampling frequency is not constant and allow_irregular_sampling is FALSE.", call. = FALSE)
       }
     }
+
+    archive
   }
+
+  # Calculate actual sub_octaves from input
+  sub_octaves <- (1 / suboctaves)
+
+  # Calculate the wavelet upper period in days
+  upper_period_days <- upper_period_hours / 24
 
   # Helper function to perform wavelet analysis
   perform_wavelet_analysis <- function() {
@@ -253,15 +267,14 @@ create_wavelet <- function(archive,
       file.path(output_folder, tag_ID, "1_Wavelets", paste0(tag_ID, "_wavelet.rds"))
     }
 
-    # Create the directory if it doesn't exist
-    create_directory(file.path(output_folder, tag_ID, "1_Wavelets"))
-    saveRDS(my.w, file = wavelet_file_path)
+    if (isTRUE(output)) {
+      # Create the directory if it doesn't exist
+      dir.create(file.path(output_folder, tag_ID, "1_Wavelets"), recursive = TRUE, showWarnings = FALSE)
+      saveRDS(my.w, file = wavelet_file_path)
 
-    cat(paste0("\nWavelet saved to ", wavelet_file_path, "\n"))
+      if (verbose) message(paste0("\nWavelet saved to ", wavelet_file_path, "\n"))
+    }
   }
-
-  # Calculate the wavelet upper period in days
-  upper_period_days <- upper_period_hours / 24
 
   # Calculate the lower period in seconds
   lp_seconds <- lower_period_mins * 60
@@ -272,7 +285,7 @@ create_wavelet <- function(archive,
       sampling_frequency <- as.numeric(difftime(archive$date[2], archive$date[1], units = "secs"))
 
       if (sampling_frequency < 5) {
-        cat(" Warning: Depth sampling frequency is < 5 seconds. This will increase computational time and file size.\n")
+        warning("Depth sampling frequency is < 5 seconds. This will increase computational time and file size.")
       }
     } else {
       stop("\nInsufficient data to calculate sampling_frequency or 'date' column missing/not in correct format.")
@@ -281,16 +294,15 @@ create_wavelet <- function(archive,
 
   # Check lower period length against sampling frequency
   if (lp_seconds < sampling_frequency) {
-    cat(paste0("\n Warning: The lower period chosen (", lp_seconds, " seconds) is less than the depth data sampling frequency (", sampling_frequency, " seconds). \n"))
+    warning(paste0("The lower period chosen (", lp_seconds, " seconds) is less than the depth data sampling frequency (", sampling_frequency, " seconds)."))
     # stop("Adjust lower period to equal or greater than the sampling frequency")
   }
 
-  # Calculate actual sub_octaves from input
-  sub_octaves <- (1 / suboctaves)
-
-  # Check if my.w is in global environment
-  if (!exists("my.w", where = globalenv())) {
-    cat("\nNo 'my.w' in global environment. ")
+  # Load an existing, or create a new wavelet
+  if (load_existing_wavelet) {
+    if (is.null(output_folder)) {
+      stop("When load_existing_wavelet = TRUE, output_folder must be provided.")
+    }
 
     # Set the wavelet file path
     wavelet_file_path <- if (pval) {
@@ -299,84 +311,44 @@ create_wavelet <- function(archive,
       file.path(output_folder, tag_ID, "1_Wavelets", paste0(tag_ID, "_wavelet.rds"))
     }
 
-    # Check if the wavelet exists in the output folder
+    # Check if the file exists
     if (file.exists(wavelet_file_path)) {
-      # Ask the user if they want to load the existing file. Require the correct input
-      while (TRUE) {
-        response <- get_response(
-          prompt = "Do you want to load the existing wavelet spectrum? (Yes/No): ",
-          default_response = "yes",
-          interactive_mode = interactive_mode
-        )
-
-        if (response %in% c("yes", "no")) {
-          break
-        } else {
-          cat("Please answer 'Yes' or 'No'.\n")
-        }
-      }
-
-      if (response == "yes") {
-        # Load the existing wavelet
-        cat("\nLoading existing wavelet. ")
-        my.w <- readRDS(file = wavelet_file_path)
-
-        # Message
-        cat("Existing wavelet loaded.\n")
-      } else {
-        # Message
-        cat("\nCreating new wavelet.\n")
-
-        # Check the sampling frequency is constant throughout the dataset
-        check_sampling_frequency(archive)
-
-        # Create new wavelet
-        my.w <- perform_wavelet_analysis()
-
-        # Add LP, UP and SO attributes to the wavelet
-        attr(my.w, "LP") <- lower_period_mins
-        attr(my.w, "UP") <- upper_period_days
-        attr(my.w, "SO") <- suboctaves
-        attr(my.w, "tag_ID") <- tag_ID
-
-        # Save the wavelet
-        save_wavelet(my.w, tag_ID, pval)
-      }
+      # Load the existing wavelet
+      if (verbose) message("\nLoading existing wavelet.")
+      my.w <- readRDS(file = wavelet_file_path)
     } else {
-      # No wavelet in output_folder. Message
-      cat("\nCreating new wavelet.\n")
-
-      # Check sampling frequency is constant
-      check_sampling_frequency(archive)
-
-      # Create new wavelet
-      my.w <- perform_wavelet_analysis()
-
-      # Add LP, UP and SO attributes to the wavelet
-      attr(my.w, "LP") <- lower_period_mins
-      attr(my.w, "UP") <- upper_period_days
-      attr(my.w, "SO") <- suboctaves
-      attr(my.w, "tag_ID") <- tag_ID
-
-      # Save the wavelet
-      save_wavelet(my.w, tag_ID, pval)
+      stop("Wavelet was not found in output_folder")
     }
   } else {
-    # Message
-    cat("\nUsing 'my.w' in global environment.\n")
+    if (verbose) message("\nCreating new wavelet.\n")
+
+    # Check the sampling frequency is constant throughout the dataset
+    check_sampling_frequency(archive)
+
+    # Create new wavelet
+    my.w <- perform_wavelet_analysis()
+
+    # Add LP, UP and SO attributes to the wavelet
+    attr(my.w, "LP") <- lower_period_mins
+    attr(my.w, "UP") <- upper_period_days
+    attr(my.w, "SO") <- suboctaves
+    attr(my.w, "tag_ID") <- tag_ID
+
+    # Save the wavelet
+    save_wavelet(my.w, tag_ID, pval)
   }
 
   # Check for LP, UP and SO attributes
   if (lower_period_mins != attr(my.w, "LP")) {
-    cat("\n Warning: 'lower_period_mins', is different from wavelet lower period:", attr(my.w, "LP"), ". Using lower period from wavelet. \n")
+    warning(paste0("'lower_period_mins', is different from wavelet lower period:", attr(my.w, "LP"), ". Using lower period from wavelet."))
     lower_period_mins <- attr(my.w, "LP")
   }
   if (upper_period_days != attr(my.w, "UP")) {
-    cat("\n Warning: 'upper_period_hours' is different from wavelet upper period:", attr(my.w, "UP") * 24, "hours. Using upper period from wavelet. \n")
+    warning(paste0("'upper_period_hours' is different from wavelet upper period:", attr(my.w, "UP") * 24, "hours. Using upper period from wavelet."))
     upper_period_days <- attr(my.w, "UP")
   }
   if (suboctaves != attr(my.w, "SO")) {
-    cat("\n Warning: 'suboctaves' is different from wavelet suboctaves:", attr(my.w, "SO"), ". Using suboctaves from wavelet. \n")
+    warning(paste0("'suboctaves' is different from wavelet suboctaves:", attr(my.w, "SO"), ". Using suboctaves from wavelet."))
     suboctaves <- attr(my.w, "SO")
     sub_octaves <- 1 / suboctaves
   }
@@ -384,14 +356,15 @@ create_wavelet <- function(archive,
   # Combine the attributes into a list
   wavelet_meta <- list(LP = attr(my.w, "LP"), UP = attr(my.w, "UP"), SO = attr(my.w, "SO"))
 
-  # Save the list as an RDS file
-  saveRDS(wavelet_meta, file = file.path(output_folder, tag_ID, "1_Wavelets/wavelet_meta.rds"))
+  if (isTRUE(output)) {
+    # Save the list as an RDS file
+    saveRDS(wavelet_meta, file = file.path(output_folder, tag_ID, "1_Wavelets/wavelet_meta.rds"))
 
-  # Convert the list to a data frame & save as csv
-  wavelet_meta_df <- as.data.frame(wavelet_meta)
-  write.csv(wavelet_meta_df, file = file.path(output_folder, tag_ID, "1_Wavelets/wavelet_meta.csv"), row.names = FALSE)
+    # Convert the list to a data frame & save as csv
+    wavelet_meta_df <- as.data.frame(wavelet_meta)
+    write.csv(wavelet_meta_df, file = file.path(output_folder, tag_ID, "1_Wavelets/wavelet_meta.csv"), row.names = FALSE)
 
-  if (plot_wavelet == TRUE) {
+    if (plot_wavelet == TRUE) {
     # Set the upper limit of period_range
     period_range_days <- c(upper_period_days)
 
@@ -447,7 +420,7 @@ create_wavelet <- function(archive,
     }
 
     # Create the directory if it doesn't exist
-    create_directory(file.path(output_folder, tag_ID, "2_Wavelet_Figures"))
+    dir.create(file.path(output_folder, tag_ID, "2_Wavelet_Figures"), recursive = TRUE, showWarnings = FALSE)
 
     # Define the output file for saving
     if (pval == FALSE) {
@@ -512,10 +485,10 @@ create_wavelet <- function(archive,
         )
 
         # Message
-        cat(paste0("\nOutput folder: ", output_folder, "/", tag_ID, "/2_Wavelet_Figures/ \n"))
+        if (verbose) message(paste0("\nOutput folder: ", output_folder, "/", tag_ID, "/2_Wavelet_Figures/ \n"))
       },
       error = function(e) {
-        cat("Error:", conditionMessage(e), "\n")
+        if (verbose) message("Error:", conditionMessage(e), "\n")
       },
       finally = {
         # Close the device in the finally block to ensure it happens regardless of error
@@ -544,7 +517,7 @@ create_wavelet <- function(archive,
         )
       },
       error = function(e) {
-        cat("Error:", conditionMessage(e), "\n")
+        if (verbose) message("Error:", conditionMessage(e), "\n")
       },
       finally = {
         # Close the device in the finally block to ensure it happens regardless of error
@@ -566,7 +539,55 @@ create_wavelet <- function(archive,
 
     # Save mean wavelet power as a csv file
     write.csv(mean_wavelet_power_df, file = file.path(output_folder, tag_ID, "2_Wavelet_Figures", paste0(tag_ID, "_wavelet_mean_power.csv")))
+    }
   }
 
   return(my.w)
 }
+
+
+filepath <- system.file("extdata", package = "FishDiveR")
+
+# Load archive_days
+archive_days <- readRDS(file.path(filepath, "data/archive_days.rds"))
+
+# Run create_wavelet function
+ my.w <- create_wavelet(
+   archive = archive_days,
+   tag_ID = "data",
+   wv_period_hours = 24,
+   sampling_frequency = NULL,
+   allow_irregular_sampling = FALSE,
+   load_existing_wavelet = FALSE,
+   suboctaves = 12,
+   lower_period_mins = 30,
+   upper_period_hours = 24,
+   pval = FALSE,
+   output = TRUE,
+   output_folder = tempdir(),
+   verbose = TRUE,
+   plot_wavelet = FALSE,
+   max_period_ticks = 10,
+   plot_width = 800,
+   plot_height = 400,
+   interactive_mode = FALSE
+ )
+
+archive = archive_days
+tag_ID = "data"
+wv_period_hours = 24
+sampling_frequency = NULL
+allow_irregular_sampling = FALSE
+load_existing_wavelet = FALSE
+suboctaves = 12
+lower_period_mins = 30
+upper_period_hours = 24
+pval = FALSE
+output = TRUE
+output_folder = tempdir()
+verbose = TRUE
+plot_wavelet = FALSE
+max_period_ticks = 10
+plot_width = 800
+plot_height = 400
+interactive_mode = FALSE

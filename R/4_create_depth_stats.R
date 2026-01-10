@@ -53,7 +53,9 @@
 #'   sunset_time = "18:00:00",
 #'   GPS = file.path(filepath, "data/GPS.csv"),
 #'   sunset_type = "civil",
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # Function to create the depth statistics on the daily time frame
@@ -64,8 +66,10 @@ create_depth_stats <- function(archive = archive_days,
                                sunset_time = NULL,
                                GPS = FALSE,
                                sunset_type = "civil",
-                               output_folder = data_dir) {
-  cat("\nRunning create_depth_stats() on tag ID", tag_ID, "\n")
+                               output = FALSE,
+                               output_folder = NULL,
+                               verbose = FALSE) {
+  if (verbose) message(paste0("Running create_depth_stats() on tag ID", tag_ID))
   # Check format of inputs, on error stop
   if (!is.data.frame(archive)) {
     stop("archive must be a data frame.")
@@ -92,6 +96,9 @@ create_depth_stats <- function(archive = archive_days,
   # Additional check for diel == TRUE and GPS == FALSE
   if (diel == TRUE && GPS == FALSE && (is.null(sunrise_time) || is.null(sunset_time))) {
     stop("Please input either a GPS file or both sunrise_time and sunset_time.")
+  }
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
   }
 
   # Save time zone attribute
@@ -239,7 +246,7 @@ create_depth_stats <- function(archive = archive_days,
         stop("When importing a GPS file for daylight calculations, a sunset type must be chosen. Please select one of 'nautical', 'astronomical', or 'civil'")
       }
 
-      cat("Reading in GPS locations. Using actual sunrise and sunset times to calculate diel statistics\n")
+      if (verbose) message("Reading in GPS locations. Using actual sunrise and sunset times to calculate diel statistics")
 
       # Define possible names for date, latitude, and longitude
       possible_columns <- list(
@@ -361,12 +368,12 @@ create_depth_stats <- function(archive = archive_days,
       # Save the 'tag_archive' object to output_folder
       archive_path <- file.path(output_folder, tag_ID, "archive_days.rds")
       if (file.exists(archive_path)) {
-        cat("Archive updated with diel periods based on GPS calculated times\n")
+        if (verbose) message("Archive updated with diel periods based on GPS calculated times")
       }
       create_directory(file.path(output_folder, tag_ID))
       saveRDS(object = archive, file = archive_path)
     } else if (!is.null(sunrise_time) & !is.null(sunset_time)) {
-      cat("\nUsing fixed sunrise and sunset times to calculate diel statistics\n")
+      if (verbose) message("Using fixed sunrise and sunset times to calculate diel statistics")
 
       # Convert sunrise and sunset times for each date
       archive[, sunrise := convert_time(sunrise_time, date_tz_adjusted)]
@@ -388,7 +395,7 @@ create_depth_stats <- function(archive = archive_days,
       # Save the 'tag_archive' object to output_folder
       archive_path <- file.path(output_folder, tag_ID, "archive_days.rds")
       if (file.exists(archive_path)) {
-        cat("Archive updated with diel periods\n")
+        if (verbose) message("Archive updated with diel periods")
       }
 
       create_directory(file.path(output_folder, tag_ID))
@@ -439,7 +446,7 @@ create_depth_stats <- function(archive = archive_days,
   create_directory(file.path(output_folder, tag_ID, "3_Stats"))
 
   utils::write.csv(depthStats, file = file.path(output_folder, tag_ID, "3_Stats", paste0(tag_ID, "_depthStats.csv")), row.names = FALSE)
-  cat(paste0("\nOutput folder: ", output_folder, "/", tag_ID, "/3_Stats/", tag_ID, "_depthStats.csv \n"))
+  if (verbose) message(paste0("Output folder: ", output_folder, "/", tag_ID, "/3_Stats/", tag_ID, "_depthStats.csv"))
 
   return(depthStats)
 }

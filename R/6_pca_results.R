@@ -44,7 +44,9 @@
 #'   No_pcs = 1,
 #'   PCV = NULL,
 #'   plot_eigenvalues = FALSE,
+#'   output = TRUE,
 #'   output_folder = tempdir(),
+#'   verbose = TRUE,
 #'   interactive_mode = FALSE
 #' )
 #'
@@ -57,7 +59,9 @@
 #'   No_pcs = 3,
 #'   PCV = NULL,
 #'   plot_eigenvalues = TRUE,
+#'   output = TRUE,
 #'   output_folder = tempdir(),
+#'   verbose = TRUE,
 #'   interactive_mode = FALSE
 #' )
 #' }
@@ -68,7 +72,9 @@ pca_results <- function(pc_data = data,
                         No_pcs = NULL,
                         PCV = NULL,
                         plot_eigenvalues = TRUE,
-                        output_folder = data_dir,
+                        output = FALSE,
+                        output_folder = NULL,
+                        verbose = FALSE,
                         interactive_mode = TRUE) {
   # Check if pc_data is a data frame
   if (!is.data.frame(pc_data)) {
@@ -85,6 +91,9 @@ pca_results <- function(pc_data = data,
   }
   if (!is.logical(plot_eigenvalues)) {
     stop("plot_eigenvalues must be TRUE or FALSE.")
+  }
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
   }
   if (!is.logical(interactive_mode)) {
     stop("interactive_mode must be TRUE or FALSE.")
@@ -114,7 +123,7 @@ pca_results <- function(pc_data = data,
     if (!is.null(attr(data_frame, "unique_tag_ID"))) {
       # Single tag
       return(file.path(output_folder, attr(data_frame, "unique_tag_ID"), "4_PCA"))
-      print("unique")
+      if (verbose) message("unique")
     } else {
       # Multiple tags combined
       return(file.path(output_folder, "Combined_tags/4_PCA"))
@@ -141,8 +150,8 @@ pca_results <- function(pc_data = data,
   non_numeric_col_names <- names(pc_data)[non_numeric_cols]
 
   # Report the names of non-numerical columns being excluded
-  message("\nNon-numerical columns being excluded: ")
-  print(non_numeric_col_names)
+  if (verbose) message("Non-numerical columns being excluded: ")
+  if (verbose) message(non_numeric_col_names)
 
   # Create a new data frame without non-numerical columns
   temp_data <- pc_data[, !non_numeric_cols]
@@ -161,17 +170,17 @@ pca_results <- function(pc_data = data,
   if ((exists("interactive_mode") && interactive_mode) || !exists("interactive_mode")) {
     print(utils::head(eigenvalues, ev))
   }
-  cat(paste0("\n", ev, " principal components of ", nrow(eigenvalues), " have eigenvalues >= 1 \n"))
+  if (verbose) message(paste0(ev, " principal components of ", nrow(eigenvalues), " have eigenvalues >= 1"))
 
   # Save the eigenvalues and cumulative variance in a csv in the data folder
   write.csv(head(eigenvalues, ev), file = file.path(save_folder, "eigenvalues_cum_var.csv"))
-  cat(paste0("\nOutput file: ", save_folder, "/eigenvalues_cum_var.csv", "\n"))
+  if (verbose) message(paste0("\nOutput file: ", save_folder, "/eigenvalues_cum_var.csv", "\n"))
 
   # Determine the number of principal components to keep
   if (!is.null(PCV)) {
     # Calculate the number of components required to reach the desired cumulative variance
     Max.C <- which(eigenvalues$`cumulative percentage of variance` >= PCV)[1]
-    cat("Using cumulative variance threshold: Keeping", Max.C, "principal components to reach", PCV, "% variance\n")
+    if (verbose) message("Using cumulative variance threshold: Keeping", Max.C, "principal components to reach", PCV, "% variance")
   } else if (is.null(No_pcs)) {
     # Ask the user how many components to keep if No_pcs is NULL and PCV is not provided
     valid_input <- FALSE
@@ -183,11 +192,11 @@ pca_results <- function(pc_data = data,
         Max.C <- as.integer(Max.C_input)
         valid_input <- TRUE
       } else {
-        cat("Invalid input. Please enter a valid integer.\n")
+        warning("Invalid input. Please enter a valid integer.\n")
       }
     }
     # Print cumulative variance being kept
-    cat("Keeping", Max.C, "PC's contributing to a cumulative", eigenvalues[Max.C, "cumulative percentage of variance"], "% of variance\n")
+    if (verbose) message("Keeping", Max.C, "PC's contributing to a cumulative", eigenvalues[Max.C, "cumulative percentage of variance"], "% of variance")
   } else {
     if (is.numeric(No_pcs)) {
       Max.C <- No_pcs
@@ -195,7 +204,7 @@ pca_results <- function(pc_data = data,
       stop("Please enter a valid integer for No_pcs")
     }
     # Print cumulative variance being kept
-    cat("Keeping", Max.C, "PC's contributing to a cumulative", eigenvalues[Max.C, "cumulative percentage of variance"], "% of variance\n")
+    if (verbose) message("Keeping", Max.C, "PC's contributing to a cumulative", eigenvalues[Max.C, "cumulative percentage of variance"], "% of variance")
   }
 
   # Run PCA on the data frame, keeping the top 'Max.c' principal components
@@ -271,7 +280,7 @@ pca_results <- function(pc_data = data,
       )
 
     # Print the plot to 'Plots' tab
-    print(eigenplot)
+    #print(eigenplot)
 
     # Save the plot to the data folder
     ggsave(file.path(save_folder, "PC_Eigenvalues_cum_var.png"), plot = eigenplot, width = 14.22, height = 8.43, dpi = 600)
@@ -401,13 +410,13 @@ pca_results <- function(pc_data = data,
       facet_wrap(~Principal.Component, ncol = 1, strip.position = "right")
 
     # Print the plot to 'Plots' tab
-    print(loadings_plot)
+    #print(loadings_plot)
 
     # Save the plot to the main folder
     ggsave(file.path(save_folder, "PC_Loadings_ALL_wavelet_variables.png"), plot = loadings_plot, width = 14.22, height = 14.22, dpi = 600)
 
-    # Message for folder location
-    cat(paste0("Output folder: ", save_folder), "\n")
+    # Output folder location
+    if (verbose) message(paste0("Output folder: ", save_folder))
   }
 
   # Add an attribute for the number of PC's kept
@@ -428,7 +437,7 @@ pca_results <- function(pc_data = data,
 
   # Save the 'pc_results' object with selected number of principal components
   saveRDS(pc_results, file = file.path(save_folder, "pc_results.rds"))
-  cat(paste0("\nOutput file: ", save_folder, "/pc_results.rds contains the selected number of principal components.\n"))
+  if (verbose) message(paste0("Output file: ", save_folder, "/pc_results.rds contains the selected number of principal components."))
 
   return(pc_results)
 }
@@ -472,14 +481,18 @@ pca_results <- function(pc_data = data,
 #'   pc_results = pc_results,
 #'   plot_loadings = FALSE,
 #'   every_nth = 12,
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # Function to extract the principal component scores and plot loadings
 pca_scores <- function(pc_results = results,
                        plot_loadings = TRUE,
                        every_nth = 12,
-                       output_folder = data_dir) {
+                       output = FALSE,
+                       output_folder = NULL,
+                       verbose = FALSE) {
   # Check if pc_results is from FactoMineR PCA
   if ("PCA" %in% class(pc_results)) {
     # Check for required components 'eig', 'var', 'ind'
@@ -495,6 +508,9 @@ pca_scores <- function(pc_results = results,
   }
   if ((!is.numeric(every_nth) || every_nth <= 0)) {
     stop("every_nth must be a positive number.")
+  }
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
   }
 
   # Helper function for setting save folder for taglist data.
@@ -515,7 +531,7 @@ pca_scores <- function(pc_results = results,
     )
   } else {
     # Attribute does not exist
-    cat("\n No unique_tag_ID. Multiple tags included in pc_results. \n")
+    if (verbose) message("No unique_tag_ID. Multiple tags included in pc_results.")
 
     # Set the save folder location
     save_folder <- file.path(output_folder, "Combined_tags/4_PCA")
@@ -703,7 +719,7 @@ pca_scores <- function(pc_results = results,
         )
 
       # Print to 'Plots' tab
-      print(wavelet_loadings_plot)
+      #print(wavelet_loadings_plot)
 
       ggsave(file.path(save_folder, paste0("PC", c, "_Loadings.png")), plot = wavelet_loadings_plot, width = 15, height = 10, dpi = 600)
 
@@ -763,13 +779,13 @@ pca_scores <- function(pc_results = results,
       )
 
     # Print the plot
-    print(mean_power_plot)
+    #print(mean_power_plot)
 
     # Save the mean power line plot
     ggsave(file.path(save_folder, "PCA_mean_power_line_plot.png"), plot = mean_power_plot, width = 15, height = 10, dpi = 600)
 
     # Report save folder dependant on the number of tags
-    cat(paste0("\nOutput folder: ", save_folder, "\n"))
+    if (verbose) message(paste0("Output folder: ", save_folder))
   }
 
   # Add an attribute to pc_scores with unique Tag_ID if processing one tag
@@ -780,7 +796,7 @@ pca_scores <- function(pc_results = results,
 
   # Save the 'pc_scores' object to output_folder
   saveRDS(pc_scores, file = file.path(save_folder, "pc_scores.rds"))
-  cat(paste0("\nOutput file: ", save_folder, "/pc_scores.rds\n"))
+  if (verbose) message(paste0("Output file: ", save_folder, "/pc_scores.rds"))
 
   return(pc_scores)
 }
@@ -816,18 +832,26 @@ pca_scores <- function(pc_results = results,
 #'   tag_vector = "data",
 #'   data_folder = filepath,
 #'   pc_scores = pc_scores,
-#'   output_folder = tempdir()
+#'   output = TRUE,
+#'   output_folder = tempdir(),
+#'   verbose = TRUE
 #' )
 #'
 # Function to load the depth statistics from tags listed in tag_vector, to be added into k-means clustering directly
 combine_data <- function(
     tag_vector = tag_list,
-    data_folder = data_dir,
+    data_folder = NULL,
     pc_scores = scores,
-    output_folder = data_dir) {
+    output = FALSE,
+    output_folder = NULL,
+    verbose = FALSE) {
   # Check if tag_vector is a character vector
   if (!is.character(tag_vector)) {
     stop("tag_vector should be a vector of characters. Check input.")
+  }
+  if (is.null(data_folder)) stop("data_folder must be provided.")
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
   }
 
   # Initialize empty lists to store the data frames
@@ -860,7 +884,7 @@ combine_data <- function(
       # Append to the list
       depth_data[[tag_ID]] <- combined_stats
     } else {
-      message("Files do not exist for tag ", tag_ID)
+      warning("Files do not exist for tag ", tag_ID)
     }
   }
 
@@ -869,13 +893,13 @@ combine_data <- function(
     # More than one tag.
     # Check if includes_diel is true and if depth_length is uneven
     if (includes_diel && length(unique(unlist(depth_length))) != 1) {
-      message("Diel data is not available for all tags. \n")
+      warning("Diel data is not available for all tags. \n")
       for (tag in names(depth_data)) {
         # For each tag_ID check the number of columns against the minimum in the list
         if (ncol(depth_data[[tag]]) > min(unlist(depth_length)) + 1) {
           # Remove diel columns from list (13 - surface proportion:20 - surface proportion diel difference) from the data frame
           depth_data[[tag]] <- depth_data[[tag]][, -c(13:20)]
-          message(paste0("Diel data removed from Tag ", tag, "\n"))
+          if (verbose) message(paste0("Diel data removed from Tag ", tag))
         }
       }
     }
@@ -883,7 +907,7 @@ combine_data <- function(
     # Check if all data frames in depth_data have the same column names
     all_names <- lapply(depth_data, names)
     if (!all(sapply(all_names, identical, all_names[[1]]))) {
-      stop("Data frames have inconsistent column names, cannot combine.\n")
+      stop("Data frames have inconsistent column names, cannot combine.")
     }
 
     # Combine all data frames
@@ -921,7 +945,7 @@ combine_data <- function(
   saveRDS(combined_data, file.path(output_folder, folder_name, "5_k-means/combined_stats.rds"))
 
   # Message about saving combined stats
-  cat("\nSaving combined metrics to:", file.path(output_folder, folder_name, "5_k-means/combined_stats.rds\n"))
+  if (verbose) message("Saving combined metrics to:", file.path(output_folder, folder_name, "5_k-means/combined_stats.rds"))
 
   return(combined_data)
 }

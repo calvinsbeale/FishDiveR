@@ -24,10 +24,10 @@
 #' @param diel_shade TRUE or FALSE. Output plot with night-time shading. Can
 #'   be slow! Defaults to FALSE.
 #'
-#' @returns A plot list of all plots created of each cluster in the data. Prints
-#'   to file one figure for each Cluster with a fixed y-axis. Additionally
-#'   outputs a facet plot of all clusters, and a free y-axis version of all
-#'   plots.
+#' @returns A plot list of all plots created of each cluster in the data. When
+#'   output == TRUE this prints to file one figure for each Cluster with a fixed
+#'   y-axis. Additionally outputs a facet plot of all clusters, and a free
+#'   y-axis version of all plots.
 #'
 #' @export
 #'
@@ -75,7 +75,7 @@ plot_clusters <- function(tag_vector = tag_list,
   }
   if (is.null(data_folder)) stop("data_folder must be provided.")
   if (!is.list(kmeans_result)) {
-    stop("kmeans_result must be a data frame. \n")
+    stop("kmeans_result must be a list. \n")
   }
   if ((!is.numeric(No_days) || No_days <= 0)) {
     stop("No_days must be a positive integer.")

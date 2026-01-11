@@ -200,7 +200,7 @@ k_clustering <- function(kmeans_data,
   }
 
   # Skip all output to meet CRAN speed tests
-  if (output == TRUE) {
+  if (output) {
 
     # Create the 3d plot of the top three PC's
     if (length(existing_pcs) == length(desired_pcs)) {
@@ -290,7 +290,7 @@ k_clustering <- function(kmeans_data,
       save_folder <- file.path(output_folder, "Combined_tags/5_k-means")
 
       # Create the directory if it doesn't exist
-      create_directory(save_folder)
+      dir.create(save_folder, recursive = TRUE, showWarnings = FALSE)
 
       # Save the cluster output as an excel sheet
       write.csv(cluster_result, file = file.path(save_folder, paste0("Cluster_results_k=", k, ".csv")), row.names = FALSE)
@@ -309,7 +309,7 @@ k_clustering <- function(kmeans_data,
       save_folder <- file.path(output_folder, unique_tag_ID, "5_k-means")
 
       # Create the directory if it doesn't exist
-      create_directory(save_folder)
+      dir.create(save_folder, recursive = TRUE, showWarnings = FALSE)
 
       # Save the cluster output as an excel sheet
       write.csv(cluster_result, file = file.path(save_folder, paste0("Cluster_results_k=", k, ".csv")), row.names = FALSE)

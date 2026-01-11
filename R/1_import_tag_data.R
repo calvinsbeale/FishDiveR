@@ -28,7 +28,7 @@
 #' @param depth_col Column number of the depth series
 #' @param temp_col (Optional) Column number of temperature series
 #' @param time_zone Time zone of the data. E.g. "Asia/Tokyo"
-#' @param output Logical. If TRUE, \code{archive_days.rds} is saved to \code{output_folder}.
+#' @param output Logical. If TRUE, output is saved to \code{output_folder}.
 #'   Defaults to FALSE.
 #' @param output_folder Output folder path. If \code{output = TRUE},
 #'   \code{output_folder} must be provided. Defaults to NULL.
@@ -345,7 +345,9 @@ plot_TDR <- function(rds_file,
   if ((!is.numeric(dpi) || dpi <= 0)) {
     stop("dpi must be a positive integer.")
   }
-  if (is.null(output_folder)) stop("When output = TRUE, output_folder must be provided.")
+  if (isTRUE(output) && is.null(output_folder)) {
+    stop("When output = TRUE, output_folder must be provided.")
+  }
 
   # Read in tag archive
   archive_days <- readRDS(file = file.path(data_folder, rds_file))

@@ -9,6 +9,7 @@
 #'
 #' @import ggplot2
 #' @importFrom colorspace qualitative_hcl
+#' @importFrom data.table setDT
 #'
 #' @inheritParams pca_data
 #' @inheritParams plot_TDR
@@ -130,7 +131,7 @@ plot_cluster_TDR <- function(tag_ID,
   list_of_dataframes <- split(tag_data, tag_data$tag_ID)
 
   # Ensure 'archive_days' is treated as a data.table for efficient operations
-  setDT(archive_days)
+  data.table::setDT(archive_days)
 
   # Create a data frame or data.table mapping each unique date to its cluster assignment
   unique_dates <- unique(archive_days$date_only)

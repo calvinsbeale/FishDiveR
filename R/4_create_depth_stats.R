@@ -100,12 +100,13 @@ create_depth_stats <- function(archive,
   if (isTRUE(output) && is.null(output_folder)) {
     stop("When output = TRUE, output_folder must be provided.")
   }
-  if (is.null(time_zone) || !is.character(time_zone) || length(time_zone) != 1 || is.na(time_zone)) {
-    stop("archive must have a valid 'time_zone' attribute (single character string).")
-  }
 
   # Save time zone attribute
   time_zone <- attr(archive, "time_zone")
+
+  if (is.null(time_zone) || !is.character(time_zone) || length(time_zone) != 1 || is.na(time_zone)) {
+    stop("archive must have a valid 'time_zone' attribute (single character string).")
+  }
 
   # Keep only 'date', 'depth' , and 'date_only' columns
   archive <- as.data.frame(archive)[c("date", "depth", "date_only")]

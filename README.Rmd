@@ -84,7 +84,6 @@ install.packages("FishDiveR")
 library(FishDiveR)
 # Set file path
 filepath <- system.file("extdata", package = "FishDiveR")
-output_folder <- tempdir()
 
 # Set RGL to use null device to suppress graphical output to pass CRAN checks
 Sys.setenv(RGL_USE_NULL = TRUE)
@@ -113,7 +112,9 @@ archive_days <- import_tag_data(
   depth_col = 2,
   temp_col = NA,
   time_zone = "UTC",
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 # Plot the depth time-series record
 TDR_plot <- plot_TDR(
@@ -125,7 +126,9 @@ TDR_plot <- plot_TDR(
   X_lim = NULL,
   Y_lim = c(0, 260, 50),
   date_breaks = "48 hour",
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 ```
 The `create_wavelet()` function performs wavelet analysis on the processed tag archive using the 'WaveletComp' package (`WaveletComp::analyze.wavelet()` function).
@@ -147,11 +150,15 @@ my.w <- create_wavelet(
   tag_ID = "data",
   wv_period_hours = 24,
   sampling_frequency = NULL,
+  allow_irregular_sampling = FALSE,
+  load_existing_wavelet = FALSE,
   suboctaves = 12,
   lower_period_mins = 30,
   upper_period_hours = 24,
   pval = FALSE,
-  output_folder = output_folder,
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE,
   plot_wavelet = TRUE,
   max_period_ticks = 10,
   plot_width = 800,
@@ -169,7 +176,9 @@ The two functions `create_wavelet_stats()` and `create_depth_stats()` are used t
 waveStats <- create_wavelet_stats(
   wavelet = my.w,
   tag_ID = "data",
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 # Create daily and diel depth statistics
 depthStats <- create_depth_stats(
@@ -180,7 +189,9 @@ depthStats <- create_depth_stats(
   sunset_time = "18:00:00",
   GPS = file.path(filepath, "data/GPS.csv"),
   sunset_type = "civil",
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 ```
 Performing Principal Component Analysis (PCA). PCA is performed to reduce the high dimensionality and collinearity resulting from having many wavelet periods which are similar in length. PCA allows the user to manipulate the two-dimensional matrices which are output from the wavelet analysis. The user first selects which wavelet metrics to include, we recommend using the three which default to TRUE (mean power, mean amplitude, and variance of power). These are chosen to maximise the cumulative percentage variance in the fewest resulting principal components. When choosing the number of PC's to keep, we recommend a minimum of 70% cumulative variance, consult the literature in your subject area for further information.
@@ -210,7 +221,9 @@ pc_data <- pca_data(
   mean_sq_power = FALSE,
   amplitude_mean = TRUE,
   amplitude_variance = FALSE,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 # Run Principal Component Analysis on the data frame to calculate PC scores
 pc_results <- pca_results(
@@ -219,13 +232,17 @@ pc_results <- pca_results(
   No_pcs = 3,
   PCV = 90,
   plot_eigenvalues = TRUE,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 # Extract the principal component scores.
 pc_scores <- pca_scores(
   pc_results = pc_results,
   plot_loadings = TRUE,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 ```
 
@@ -238,7 +255,9 @@ kmeans_features <- combine_data(
   tag_vector = tag_list,
   data_folder = filepath,
   pc_scores = pc_scores,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 # Optionally at this stage the user may select to remove or add additional statistics. If data are modified, be sure to re-standardise the data frame.
 # kmeans_features <- kmeans_features[,c(1:8, 10:20)]
@@ -258,7 +277,9 @@ selecting_k <- select_k(
   v_line = 4,
   calc_gap = FALSE,
   plot_gap = FALSE,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 # Run k-means with the selected number of clusters
 kmeans_result <- k_clustering(
@@ -267,7 +288,9 @@ kmeans_result <- k_clustering(
   k = 4,
   nstart = 50,
   polygon = TRUE,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 ```
 Note: After clustering, the user may find the mean standardised values plot hard to interpret due to one cluster vastly different to the others. This may happen if the animal is captured during tag deployment, or performs an 'extreme' movement pattern such as unusually fast deep dive - common in most large marine predators. In this case, you may wish to plot the k-means features with a split y-axis or remove this day's statistics from the k-means features.
@@ -287,7 +310,9 @@ TDR_plot <- plot_cluster_TDR(
   legend = TRUE,
   plot_size = c(12, 6),
   dpi = 100,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 ```
 
@@ -305,6 +330,8 @@ plots_list <- plot_clusters(
   color = TRUE,
   diel_shade = TRUE,
   dpi = 100,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 ```

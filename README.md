@@ -82,7 +82,6 @@ library(FishDiveR)
 #>  Type 'citation("FishDiveR")' for citing this R package in publications.
 # Set file path
 filepath <- system.file("extdata", package = "FishDiveR")
-output_folder <- tempdir()
 
 # Set RGL to use null device to suppress graphical output to pass CRAN checks
 Sys.setenv(RGL_USE_NULL = TRUE)
@@ -123,19 +122,18 @@ archive_days <- import_tag_data(
   depth_col = 2,
   temp_col = NA,
   time_zone = "UTC",
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 #> 
 #> Tag ID = data
-#> 
-#> Depth sampling interval is 60 seconds 
-#> 
-#> Number of depth values corrected (above 0): 0 
+#> Depth sampling interval is 60 seconds
+#> Number of depth values corrected (above 0):0
 #> Mean depth = 81.5 SD = 87.6
 #> Maximum depth = 262.2
 #> Number of full days in dataset: 10
-#> 
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/archive_days.rds
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/archive_days.rds
 # Plot the depth time-series record
 TDR_plot <- plot_TDR(
   rds_file = "data/archive_days.rds",
@@ -146,19 +144,15 @@ TDR_plot <- plot_TDR(
   X_lim = NULL,
   Y_lim = c(0, 260, 50),
   date_breaks = "48 hour",
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
-#> 
 #> Data sampling interval is 60 seconds
-#> Plotting every 600 seconds 
-#> 
+#> Plotting every 600 seconds
 #> Maximum depth is 252.5 meters
+#> Output file:C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/tag_archive.png
 ```
-
-<img src="man/figures/README-Import-data-1.png" alt="Depth time-series for example tag 'data' (surface at top), cropped to deployment window." width="100%" />
-
-    #> 
-    #> Output file: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/tag_archive.png
 
 The `create_wavelet()` function performs wavelet analysis on the
 processed tag archive using the ‘WaveletComp’ package
@@ -205,11 +199,15 @@ my.w <- create_wavelet(
   tag_ID = "data",
   wv_period_hours = 24,
   sampling_frequency = NULL,
+  allow_irregular_sampling = FALSE,
+  load_existing_wavelet = FALSE,
   suboctaves = 12,
   lower_period_mins = 30,
   upper_period_hours = 24,
   pval = FALSE,
-  output_folder = output_folder,
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE,
   plot_wavelet = TRUE,
   max_period_ticks = 10,
   plot_width = 800,
@@ -219,15 +217,14 @@ my.w <- create_wavelet(
 #> 
 #> Analysing tag ID data
 #> 
-#> No 'my.w' in global environment. 
 #> Creating new wavelet.
 #> Starting wavelet transformation...
 #> Class attributes are accessible through following names:
-#> series loess.span dt dj Wave Phase Ampl Power Power.avg Power.pval Power.avg.pval Ridge Period Scale nc nr coi.1 coi.2 axis.1 axis.2 date.format date.tz 
+#> series loess.span dt dj Wave Phase Ampl Power Power.avg Power.pval Power.avg.pval Ridge Period Scale nc nr coi.1 coi.2 axis.1 axis.2 date.format date.tz
 #> 
-#> Wavelet saved to C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/1_Wavelets/data_wavelet.rds
+#> Wavelet saved to C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/1_Wavelets/data_wavelet.rds
 #> 
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/2_Wavelet_Figures/
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/2_Wavelet_Figures/
 ```
 
 The two functions `create_wavelet_stats()` and `create_depth_stats()`
@@ -243,12 +240,13 @@ time-series.
 waveStats <- create_wavelet_stats(
   wavelet = my.w,
   tag_ID = "data",
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
+#> Running create_wavelet_stats() on tag ID data
 #> 
-#> Running create_wavelet_stats() on tag ID data 
-#> 
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/3_Stats/data_waveStats.csv
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/3_Stats/data_waveStats.csv
 # Create daily and diel depth statistics
 depthStats <- create_depth_stats(
   archive = archive_days,
@@ -258,14 +256,14 @@ depthStats <- create_depth_stats(
   sunset_time = "18:00:00",
   GPS = file.path(filepath, "data/GPS.csv"),
   sunset_type = "civil",
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
-#> 
-#> Running create_depth_stats() on tag ID data 
+#> Running create_depth_stats() on tag ID data
 #> Reading in GPS locations. Using actual sunrise and sunset times to calculate diel statistics
 #> Archive updated with diel periods based on GPS calculated times
-#> 
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/3_Stats/data_depthStats.csv
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/3_Stats/data_depthStats.csv
 ```
 
 Performing Principal Component Analysis (PCA). PCA is performed to
@@ -318,10 +316,11 @@ pc_data <- pca_data(
   mean_sq_power = FALSE,
   amplitude_mean = TRUE,
   amplitude_variance = FALSE,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
-#> 
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/4_PCA/pc_data.rds
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA/pc_data.rds
 # Run Principal Component Analysis on the data frame to calculate PC scores
 pc_results <- pca_results(
   pc_data = pc_data,
@@ -329,11 +328,12 @@ pc_results <- pca_results(
   No_pcs = 3,
   PCV = 90,
   plot_eigenvalues = TRUE,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
-#> 
 #> Non-numerical columns being excluded:
-#> [1] "tag_ID"    "date_only"
+#> tag_IDdate_only
 #>        eigenvalue percentage of variance cumulative percentage of variance
 #> comp 1 142.382404             47.9402034                          47.94020
 #> comp 2 103.975584             35.0086141                          82.94882
@@ -342,31 +342,22 @@ pc_results <- pca_results(
 #> comp 5   7.276460              2.4499865                          98.25726
 #> comp 6   3.341829              1.1251948                          99.38245
 #> comp 7   1.225305              0.4125604                          99.79501
-#> 
-#> 7 principal components of 9 have eigenvalues >= 1 
-#> 
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/4_PCA/eigenvalues_cum_var.csv
-#> Using cumulative variance threshold: Keeping 3 principal components to reach 90 % variance
+#> 7 principal components of 9 have eigenvalues >= 1
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA/eigenvalues_cum_var.csv
+#> Using cumulative variance threshold: Keeping3principal components to reach90% variance
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA/pc_results.rds contains the selected number of principal components.
+# Extract the principal component scores.
+pc_scores <- pca_scores(
+  pc_results = pc_results,
+  plot_loadings = TRUE,
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
+)
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA/pc_scores.rds
 ```
-
-<img src="man/figures/README-Principal-Component-Analysis-1.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" /><img src="man/figures/README-Principal-Component-Analysis-2.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" />
-
-    #> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/4_PCA 
-    #> 
-    #> Output file: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/4_PCA/pc_results.rds contains the selected number of principal components.
-    # Extract the principal component scores.
-    pc_scores <- pca_scores(
-      pc_results = pc_results,
-      plot_loadings = TRUE,
-      output_folder = output_folder
-    )
-
-<img src="man/figures/README-Principal-Component-Analysis-3.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" /><img src="man/figures/README-Principal-Component-Analysis-4.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" /><img src="man/figures/README-Principal-Component-Analysis-5.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" /><img src="man/figures/README-Principal-Component-Analysis-6.png" alt="Various figures depicting Eigenvalues and principal component loadings by variable." width="100%" />
-
-    #> 
-    #> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/4_PCA
-    #> 
-    #> Output file: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/4_PCA/pc_scores.rds
 
 The PC scores and depth statistics calculated from the raw tag data are
 combined prior to clustering. `combine_data()` loads the depth
@@ -378,10 +369,11 @@ kmeans_features <- combine_data(
   tag_vector = tag_list,
   data_folder = filepath,
   pc_scores = pc_scores,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
-#> 
-#> Saving combined metrics to: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/5_k-means/combined_stats.rds
+#> Saving combined metrics to:C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/5_k-means/combined_stats.rds
 # Optionally at this stage the user may select to remove or add additional statistics. If data are modified, be sure to re-standardise the data frame.
 # kmeans_features <- kmeans_features[,c(1:8, 10:20)]
 ```
@@ -411,51 +403,19 @@ selecting_k <- select_k(
   v_line = 4,
   calc_gap = FALSE,
   plot_gap = FALSE,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
-#> 
-#>  Standardising k-means input. 
-#> 
-#>  K = 2 Average silhouette width = 0.499
-#> 
-#> 1 2 
-#> 5 5 
-#> 
-#>  K = 3 Average silhouette width = 0.586
-#> 
-#> 1 2 3 
-#> 5 2 3 
-#> 
-#>  K = 4 Average silhouette width = 0.642
-#> 
-#> 1 2 3 4 
-#> 2 2 5 1 
-#> 
-#>  K = 5 Average silhouette width = 0.518
-#> 
-#> 1 2 3 4 5 
-#> 2 3 1 2 2 
-#> 
-#>  K = 6 Average silhouette width = 0.392
-#> 
-#> 1 2 3 4 5 6 
-#> 1 1 3 1 2 2 
-#> 
-#>  K = 7 Average silhouette width = 0.243
-#> 
-#> 1 2 3 4 5 6 7 
-#> 1 3 2 1 1 1 1 
-#> 
-#>  K = 8 Average silhouette width = 0.154
-#> 
-#> 1 2 3 4 5 6 7 8 
-#> 1 1 1 1 3 1 1 1
-#> Single tag output file: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/5_k-means/Select_k.3_PCs.png
-```
-
-<img src="man/figures/README-Kmeans-clustering-1.png" alt="Elbow and silhouette width plots showing best fit for number of clusters." width="100%" />
-
-``` r
+#> Standardising k-means input.
+#> K = 2 Average silhouette width = 0.499
+#> K = 3 Average silhouette width = 0.586
+#> K = 4 Average silhouette width = 0.642
+#> K = 5 Average silhouette width = 0.518
+#> K = 6 Average silhouette width = 0.392
+#> K = 7 Average silhouette width = 0.243
+#> K = 8 Average silhouette width = 0.154
+#> Single tag output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/5_k-means/Select_k.3_PCs.png
 # Run k-means with the selected number of clusters
 kmeans_result <- k_clustering(
   kmeans_data = kmeans_features,
@@ -463,25 +423,15 @@ kmeans_result <- k_clustering(
   k = 4,
   nstart = 50,
   polygon = TRUE,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
-#> 
-#>  Standardising k-means input. 
-#>   Cluster Days in Cluster
-#> 1       1               2
-#> 2       2               1
-#> 3       3               2
-#> 4       4               5
-#> [1] "Total of 10 days of data"
-#>   tag_ID cluster days_in_cluster
-#> 1   data       1               2
-#> 2   data       2               1
-#> 3   data       3               2
-#> 4   data       4               5
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/5_k-means
+#> Standardising k-means input.
+#> Total of 10 days of data
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/5_k-means
 ```
 
-<img src="man/figures/README-Kmeans-clustering-2.png" alt="Elbow and silhouette width plots showing best fit for number of clusters." width="100%" />
 Note: After clustering, the user may find the mean standardised values
 plot hard to interpret due to one cluster vastly different to the
 others. This may happen if the animal is captured during tag deployment,
@@ -509,22 +459,17 @@ TDR_plot <- plot_cluster_TDR(
   legend = TRUE,
   plot_size = c(12, 6),
   dpi = 100,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
-#> 
-#>  Loading tag data TDR 
-#> 
-#>  Single tag k-means loaded 
-#> 
+#> Loading tag data TDR
+#> Single tag k-means loaded
 #> Maximum depth is 262.2
 #> Data sampling interval is 60 seconds
-#> Plotting every 600 seconds
+#> Plotting every600seconds
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data_TDR_k=4.png
 ```
-
-<img src="man/figures/README-Plot-TDR-1.png" alt="Figure generated by FishDiveR; see surrounding text for interpretation." width="100%" />
-
-    #> 
-    #>  Output file: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data_TDR_k=4.png
 
 Plot the depth time-series of the 24-hour segments closest to the centre
 of each cluster group. ‘No_days’ allows you to choose the number of
@@ -546,21 +491,16 @@ plots_list <- plot_clusters(
   color = TRUE,
   diel_shade = TRUE,
   dpi = 100,
-  output_folder = output_folder
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
-#> 
 #> Maximum depth is 262.2
 #> Data sampling interval is 60 seconds
-#> Plotting every 300 seconds 
-#> 
-#>  Cluster 1 dates 2000-01-08 Tag: data
-#> 
-#>  Cluster 2 dates 2000-01-10 Tag: data
-#> 
-#>  Cluster 3 dates 2000-01-03 Tag: data
-#> 
-#>  Cluster 4 dates 2000-01-04 Tag: data
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpkpjecf/data/6_Cluster-plots.K=4_shaded
+#> Plotting every300seconds
+#> Cluster 1 dates 2000-01-10 Tag: data
+#> Cluster 2 dates 2000-01-08 Tag: data
+#> Cluster 3 dates 2000-01-03 Tag: data
+#> Cluster 4 dates 2000-01-04 Tag: data
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/6_Cluster-plots.K=4_shaded
 ```
-
-<img src="man/figures/README-Plot-clusters-1.png" alt="Figure generated by FishDiveR; see surrounding text for interpretation." width="100%" />

@@ -200,12 +200,14 @@ pca_data <- function(tag_vector,
   attr(pc_data, "UP") <- wavelet_meta$UP
   attr(pc_data, "SO") <- wavelet_meta$SO
 
-  # Create save folder
-  create_directory(save_folder)
+  if (output) {
+    # Create the directory if it doesn't exist
+    dir.create(save_folder, recursive = TRUE, showWarnings = FALSE)
 
-  # Save the 'pc_data' object as pc_data.rds to the output_folder
-  saveRDS(pc_data, file = file.path(save_folder, "pc_data.rds"))
-  if (verbose) message(paste0("Output file: ", save_folder, "/pc_data.rds"))
+    # Save the 'pc_data' object as pc_data.rds to the output_folder
+    saveRDS(pc_data, file = file.path(save_folder, "pc_data.rds"))
+    if (verbose) message(paste0("Output file: ", save_folder, "/pc_data.rds"))
+  }
 
   return(pc_data)
 }

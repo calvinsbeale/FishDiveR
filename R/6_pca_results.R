@@ -67,7 +67,7 @@
 #' }
 #'
 # Function to run Principal Component Analysis on the wavelet statistics data frame
-pca_results <- function(pc_data = data,
+pca_results <- function(pc_data,
                         standardise = TRUE,
                         No_pcs = NULL,
                         PCV = NULL,
@@ -136,8 +136,10 @@ pca_results <- function(pc_data = data,
     data_frame = pc_data
   )
 
-  # Create the directory if it doesn't exist
-  create_directory(save_folder)
+  if (output) {
+    # Create the directory if it doesn't exist
+    dir.create(save_folder, recursive = TRUE, showWarnings = FALSE)
+  }
 
   # Identify non-numerical columns
   non_numeric_cols <- sapply(pc_data, function(x) !is.numeric(x))
@@ -172,9 +174,11 @@ pca_results <- function(pc_data = data,
   }
   if (verbose) message(paste0(ev, " principal components of ", nrow(eigenvalues), " have eigenvalues >= 1"))
 
-  # Save the eigenvalues and cumulative variance in a csv in the data folder
-  write.csv(head(eigenvalues, ev), file = file.path(save_folder, "eigenvalues_cum_var.csv"))
-  if (verbose) message(paste0("\nOutput file: ", save_folder, "/eigenvalues_cum_var.csv", "\n"))
+  if (output) {
+    # Save the eigenvalues and cumulative variance in a csv in the data folder
+    write.csv(head(eigenvalues, ev), file = file.path(save_folder, "eigenvalues_cum_var.csv"))
+    if (verbose) message(paste0("Output file: ", save_folder, "/eigenvalues_cum_var.csv"))
+  }
 
   # Determine the number of principal components to keep
   if (!is.null(PCV)) {
@@ -211,7 +215,7 @@ pca_results <- function(pc_data = data,
   pc_results <- FactoMineR::PCA(temp_data, scale.unit = standardise, graph = FALSE, ncp = Max.C)
 
   # Plot the eigenvalues if plot_eigenvalues == TRUE
-  if (plot_eigenvalues == TRUE) {
+  if (plot_eigenvalues && output) {
     # Extract the eigenvalues and variance explained
     eigenvalues <- as.data.frame(pc_results$eig)
 
@@ -435,9 +439,11 @@ pca_results <- function(pc_data = data,
     attr(pc_results, "unique_tag_ID") <- unique_tag_ID
   }
 
-  # Save the 'pc_results' object with selected number of principal components
-  saveRDS(pc_results, file = file.path(save_folder, "pc_results.rds"))
-  if (verbose) message(paste0("Output file: ", save_folder, "/pc_results.rds contains the selected number of principal components."))
+  if (output) {
+    # Save the 'pc_results' object with selected number of principal components
+    saveRDS(pc_results, file = file.path(save_folder, "pc_results.rds"))
+    if (verbose) message(paste0("Output file: ", save_folder, "/pc_results.rds contains the selected number of principal components."))
+  }
 
   return(pc_results)
 }
@@ -550,7 +556,9 @@ pca_scores <- function(pc_results = results,
     if (length(existing_plots) > 0) {
       # Facet with arrangeGrob from gridExtra
       grob <- do.call(gridExtra::arrangeGrob, c(existing_plots, list(ncol = 1)))
-      ggsave(file.path(save_folder, paste0("PC", c, name_suffix)), plot = grob, width = 10, height = 15, dpi = 600)
+      if (output) {
+        ggsave(file.path(save_folder, paste0("PC", c, name_suffix)), plot = grob, width = 10, height = 15, dpi = 600)
+      }
     }
   }
 
@@ -583,7 +591,7 @@ pca_scores <- function(pc_results = results,
   loadings_long$Principal.Component <- factor(loadings_long$Principal.Component, levels = pc_order)
 
   #### Plotting the Loading statistics per PC
-  if (plot_loadings == TRUE) {
+  if (plot_loadings && output) {
     # Helper function to display every other tick mark
     every_other <- function(x) {
       inds <- seq(1, length(x), by = 2)
@@ -794,9 +802,11 @@ pca_scores <- function(pc_results = results,
   # Add an attribute for the number of PC's kept
   attr(pc_scores, "No.Components") <- Max.C
 
-  # Save the 'pc_scores' object to output_folder
-  saveRDS(pc_scores, file = file.path(save_folder, "pc_scores.rds"))
-  if (verbose) message(paste0("Output file: ", save_folder, "/pc_scores.rds"))
+  if (output) {
+    # Save the 'pc_scores' object to output_folder
+    saveRDS(pc_scores, file = file.path(save_folder, "pc_scores.rds"))
+    if (verbose) message(paste0("Output file: ", save_folder, "/pc_scores.rds"))
+  }
 
   return(pc_scores)
 }
@@ -938,14 +948,16 @@ combine_data <- function(
     folder_name <- tag_vector
   }
 
-  save_folder <- file.path(output_folder, folder_name, "5_k-means")
-  create_directory(save_folder)
+  if (output) {
+    save_folder <- file.path(output_folder, folder_name, "5_k-means")
+    dir.create(save_folder, recursive = TRUE, showWarnings = FALSE)
 
-  # Save combined_data
-  saveRDS(combined_data, file.path(output_folder, folder_name, "5_k-means/combined_stats.rds"))
+    # Save combined_data
+    saveRDS(combined_data, file.path(output_folder, folder_name, "5_k-means/combined_stats.rds"))
 
-  # Message about saving combined stats
-  if (verbose) message("Saving combined metrics to:", file.path(output_folder, folder_name, "5_k-means/combined_stats.rds"))
+    # Message about saving combined stats
+    if (verbose) message("Saving combined metrics to:", file.path(output_folder, folder_name, "5_k-means/combined_stats.rds"))
+  }
 
   return(combined_data)
 }

@@ -345,7 +345,7 @@ plot_clusters <- function(tag_vector = tag_list,
   }
 
   # Create the directory if it doesn't exist
-  create_directory(save_folder)
+  dir.create(save_folder, recursive = TRUE, showWarnings = FALSE)
 
   # Save the list of clusters with dates (best_k_representatives, date and tag)
   write.csv(best_k_representatives, file = file.path(save_folder, "cluster_dates.csv"))
@@ -518,7 +518,7 @@ plot_clusters <- function(tag_vector = tag_list,
     plots_list[[i]] <- fixed_Y_plot #+ ggtitle(paste0("Cluster ", i))
 
     # Save the plot
-    ggsave(file.path(save_folder, paste0("Cluster_", i, ".png")), plot = fixed_Y_plot, width = 14.22, height = 10, dpi = dpi)
+    ggplot2::ggsave(file.path(save_folder, paste0("Cluster_", i, ".png")), plot = fixed_Y_plot, width = 14.22, height = 10, dpi = dpi)
 
     ## Plotting the free Y-axis version of TDR
 
@@ -583,7 +583,7 @@ plot_clusters <- function(tag_vector = tag_list,
     plots_list_free_Y[[i]] <- cluster_plot_free_y
 
     # Save the plot
-    ggsave(file.path(save_folder, paste0("FreeY.Cluster_", i, ".png")), plot = cluster_plot_free_y, width = 14.22, height = 10, dpi = dpi)
+    ggplot2::ggsave(file.path(save_folder, paste0("FreeY.Cluster_", i, ".png")), plot = cluster_plot_free_y, width = 14.22, height = 10, dpi = dpi)
   }
 
   if (verbose) message(paste0("Output folder: ", save_folder))
@@ -654,15 +654,17 @@ plot_clusters <- function(tag_vector = tag_list,
     width <- 21
   }
 
-  # Facet the fixed Y-axis plots
-  facet_plot_k <- patchwork::wrap_plots(plots_list, ncol = ncol)
-  ggsave(file.path(save_folder, "Cluster_facet.png"), plot = facet_plot_k, width = width, height = 21, dpi = dpi)
+  if (output) {
+    # Facet the fixed Y-axis plots
+    facet_plot_k <- patchwork::wrap_plots(plots_list, ncol = ncol)
+    ggplot2::ggsave(file.path(save_folder, "Cluster_facet.png"), plot = facet_plot_k, width = width, height = 21, dpi = dpi)
 
-  # Facet the free Y-axis plots
-  facet_plot_k_freey <- patchwork::wrap_plots(plots_list_free_Y, ncol = ncol)
-  ggsave(file.path(save_folder, "Cluster_facet_freeY.png"), plot = facet_plot_k_freey, width = width, height = 21, dpi = dpi)
+    # Facet the free Y-axis plots
+    facet_plot_k_freey <- patchwork::wrap_plots(plots_list_free_Y, ncol = ncol)
+    ggplot2::ggsave(file.path(save_folder, "Cluster_facet_freeY.png"), plot = facet_plot_k_freey, width = width, height = 21, dpi = dpi)
 
-  #print(facet_plot_k_freey)
+    #print(facet_plot_k_freey)
+  }
 
   return(plots_list)
 }

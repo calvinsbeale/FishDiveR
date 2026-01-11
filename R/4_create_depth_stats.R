@@ -28,7 +28,7 @@
 #' @param GPS Either FALSE or the location of the GPS file containing columns
 #'   'date', 'lat' (latitude) and 'lon' (longitude) if one exists. 'date'
 #'   columns must be in a format readable by lubridate::dmy()
-#' @param sunset_type Choose which type of sunset to include 'NULL', civil',
+#' @param sunset_type Choose which type of sunset to include 'NULL', 'civil',
 #'   'nautical', or 'astronomical'
 #'
 #' @returns A set of statistics calculated daily for the depth data. If diel
@@ -59,7 +59,7 @@
 #' )
 #'
 # Function to create the depth statistics on the daily time frame
-create_depth_stats <- function(archive = archive_days,
+create_depth_stats <- function(archive,
                                tag_ID,
                                diel = FALSE,
                                sunrise_time = NULL,
@@ -69,7 +69,7 @@ create_depth_stats <- function(archive = archive_days,
                                output = FALSE,
                                output_folder = NULL,
                                verbose = FALSE) {
-  if (verbose) message(paste0("Running create_depth_stats() on tag ID", tag_ID))
+  if (verbose) message(paste0("Running create_depth_stats() on tag ID ", tag_ID))
   # Check format of inputs, on error stop
   if (!is.data.frame(archive)) {
     stop("archive must be a data frame.")
@@ -87,7 +87,7 @@ create_depth_stats <- function(archive = archive_days,
     stop("sunset_time must be a string in 'HH:MM:SS' format.")
   }
   if (!is.null(sunset_type) && !(sunset_type %in% c("civil", "nautical", "astronomical"))) {
-    stop("sunset_type must be NULL or one of 'civil', 'nautical', or 'astronomical'")
+    stop("sunset_type must be 'NULL' or one of 'civil', 'nautical', or 'astronomical'")
   }
   # Test for GPS
   if (GPS != FALSE && !(is.character(GPS) && file.exists(GPS))) {
@@ -99,6 +99,9 @@ create_depth_stats <- function(archive = archive_days,
   }
   if (isTRUE(output) && is.null(output_folder)) {
     stop("When output = TRUE, output_folder must be provided.")
+  }
+  if (is.null(time_zone) || !is.character(time_zone) || length(time_zone) != 1 || is.na(time_zone)) {
+    stop("archive must have a valid 'time_zone' attribute (single character string).")
   }
 
   # Save time zone attribute
@@ -370,8 +373,12 @@ create_depth_stats <- function(archive = archive_days,
       if (file.exists(archive_path)) {
         if (verbose) message("Archive updated with diel periods based on GPS calculated times")
       }
-      create_directory(file.path(output_folder, tag_ID))
-      saveRDS(object = archive, file = archive_path)
+
+      if (output) {
+        dir.create(file.path(output_folder, tag_ID), recursive = TRUE, showWarnings = FALSE)
+        saveRDS(object = archive, file = archive_path)
+      }
+
     } else if (!is.null(sunrise_time) & !is.null(sunset_time)) {
       if (verbose) message("Using fixed sunrise and sunset times to calculate diel statistics")
 
@@ -398,8 +405,11 @@ create_depth_stats <- function(archive = archive_days,
         if (verbose) message("Archive updated with diel periods")
       }
 
-      create_directory(file.path(output_folder, tag_ID))
-      saveRDS(object = archive, file = archive_path)
+      if (output) {
+        dir.create(file.path(output_folder, tag_ID), recursive = TRUE, showWarnings = FALSE)
+        saveRDS(object = archive, file = archive_path)
+      }
+
     }
 
     # Initialise data frame
@@ -442,11 +452,13 @@ create_depth_stats <- function(archive = archive_days,
     attr(depthStats, "diel") <- TRUE
   }
 
-  # Create the directory if it doesn't exist
-  create_directory(file.path(output_folder, tag_ID, "3_Stats"))
+  if (output) {
+    # Create the directory if it doesn't exist
+    dir.create(file.path(output_folder, tag_ID, "3_Stats"), recursive = TRUE, showWarnings = FALSE)
 
-  utils::write.csv(depthStats, file = file.path(output_folder, tag_ID, "3_Stats", paste0(tag_ID, "_depthStats.csv")), row.names = FALSE)
-  if (verbose) message(paste0("Output folder: ", output_folder, "/", tag_ID, "/3_Stats/", tag_ID, "_depthStats.csv"))
+    utils::write.csv(depthStats, file = file.path(output_folder, tag_ID, "3_Stats", paste0(tag_ID, "_depthStats.csv")), row.names = FALSE)
+    if (verbose) message(paste0("Output folder: ", output_folder, "/", tag_ID, "/3_Stats/", tag_ID, "_depthStats.csv"))
+  }
 
   return(depthStats)
 }

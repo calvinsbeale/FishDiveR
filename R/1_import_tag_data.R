@@ -12,7 +12,6 @@
 #' @name import_tag_data
 #'
 #' @importFrom data.table fread
-#' @importFrom data.table setDT
 #' @importFrom utils read.csv
 #' @importFrom stats sd
 #'

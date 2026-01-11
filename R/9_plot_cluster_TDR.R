@@ -284,14 +284,16 @@ plot_cluster_TDR <- function(tag_ID,
 
   #print(plot)
 
-  # Create the directory if it doesn't exist
-  create_directory(output_folder)
+  if (output) {
+    # Create the directory if it doesn't exist
+    dir.create(output_folder, recursive = TRUE, showWarnings = FALSE)
 
-  # save the plot
-  ggsave(filename = file.path(output_folder, paste0(tag_ID, "_TDR_k=", k, ".png")), plot = plot, width = plot_size[1], height = plot_size[2], dpi = dpi)
+    # save the plot
+    ggplot2::ggsave(filename = file.path(output_folder, paste0(tag_ID, "_TDR_k=", k, ".png")), plot = plot, width = plot_size[1], height = plot_size[2], dpi = dpi)
 
-  # Message output
-  if (verbose) message(paste0("Output file: ", output_folder, "/", tag_ID, "_TDR_k=", k, ".png"))
+    # Message output
+    if (verbose) message(paste0("Output file: ", output_folder, "/", tag_ID, "_TDR_k=", k, ".png"))
+  }
 
   return(plot)
 }

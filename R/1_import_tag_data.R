@@ -109,18 +109,18 @@ import_tag_data <- function(tag_ID,
 
   # Check that the number of rows is at least 1
   if (nrow(tag_archive) < 1) {
-    stop("\nError: The tag archive has no rows.")
+    stop("Error: The tag archive has no rows.")
   }
 
   # Print tag ID
-  if (verbose) message(paste0("\nTag ID = ", tag_ID, "\n"))
+  if (verbose) message(paste0("\nTag ID = ", tag_ID))
 
   # Remove rows where Depth column is NA
   tag_archive <- tag_archive[!is.na(tag_archive$depth), ]
 
   # Check that the number of rows is at least 1
   if (nrow(tag_archive) < 1) {
-    stop("\nError: The tag archive has no rows after removing NA values in the Depth column.\n")
+    stop("Error: The tag archive has no rows after removing NA values in the Depth column.")
   }
 
   # Set date as a POSIXct object
@@ -137,11 +137,11 @@ import_tag_data <- function(tag_ID,
   # Check if deploy_date and release_date are within the range
   if (deploy_date < min_date || release_date > max_date) {
     if (deploy_date < min_date && release_date > max_date) {
-      stop("\nBoth deploy and release dates are outside the archive range.")
+      stop("Both deploy and release dates are outside the archive range.")
     } else if (deploy_date < min_date) {
-      stop("\nDeploy date is outside the archive range: ", min_date)
+      stop("Deploy date is outside the archive range: ", min_date)
     } else {
-      stop("\nRelease date is outside the archive range: ", max_date)
+      stop("Release date is outside the archive range: ", max_date)
     }
   }
 
@@ -192,7 +192,7 @@ import_tag_data <- function(tag_ID,
 
   # Metadata from tag deployment
   sampling_interval <- as.numeric(difftime(tag_archive$date[2], tag_archive$date[1], units = "secs"))
-  if (verbose) message(paste0("\nDepth sampling interval is ", sampling_interval, " seconds \n"))
+  if (verbose) message(paste0("Depth sampling interval is ", sampling_interval, " seconds"))
 
   # Count values less than 0 in the depth column before correction
   values_above_zero <- sum(tag_archive$depth < 0)
@@ -201,7 +201,7 @@ import_tag_data <- function(tag_ID,
   tag_archive$depth <- ifelse(tag_archive$depth < 0, 0, tag_archive$depth)
 
   # Report the number of values changed
-  if (verbose) message("\nNumber of depth values corrected (above 0):", values_above_zero, "\n")
+  if (verbose) message("Number of depth values corrected (above 0):", values_above_zero)
 
   # Print mean, SD and maximum depths
   if (verbose) message(paste0(
@@ -209,7 +209,7 @@ import_tag_data <- function(tag_ID,
     " SD = ", round(sd(tag_archive$depth), 1), "\n"
   ))
 
-  if (verbose) message(paste0("Maximum depth = ", max(tag_archive$depth), "\n"))
+  if (verbose) message(paste0("Maximum depth = ", max(tag_archive$depth)))
 
   # Calculate the number of days between the first and last data points
   first_date <- as.Date(format(tag_archive$date[1], format = "%Y-%m-%d", tz = time_zone))
@@ -217,7 +217,7 @@ import_tag_data <- function(tag_ID,
   num_days <- as.numeric(difftime(last_date, first_date, units = "days"))
 
   # Print the number of days in the full days data set
-  if (verbose) message(paste0("Number of full days in dataset: ", num_days + 1, "\n"))
+  if (verbose) message(paste0("Number of full days in dataset: ", num_days + 1))
 
   # Create date_only column
   tag_archive$date_only <- as.Date(format(lubridate::with_tz(tag_archive$date, tzone = time_zone), "%Y-%m-%d"))
@@ -235,7 +235,7 @@ import_tag_data <- function(tag_ID,
     # Save the 'tag_archive' object to output_folder
     saveRDS(tag_archive, file = file.path(output_folder, tag_ID, "archive_days.rds"))
 
-    if (verbose) message(paste0("\nOutput file: ", output_folder, "/", tag_ID, "/archive_days.rds\n"))
+    if (verbose) message(paste0("Output file: ", output_folder, "/", tag_ID, "/archive_days.rds"))
   }
 
   # Return the cropped dataset
@@ -368,11 +368,11 @@ plot_TDR <- function(rds_file,
     if (nrow(archive_days) == 0) {
       stop("No data available within the specified X_lim date range.")
     }
-    if (verbose) message("Data has been filtered between X-axis limits \n")
+    if (verbose) message("Data has been filtered between X-axis limits")
   }
 
   # Print sampling interval
-  if (verbose) message(paste0("\nData sampling interval is ", sampling_interval, " seconds\n"))
+  if (verbose) message(paste0("Data sampling interval is ", sampling_interval, " seconds"))
 
   if (every_s != 0) { # Using time, rather than number of rows to plot data.
     # Check if every_s is a multiple of the original sampling frequency
@@ -404,12 +404,12 @@ plot_TDR <- function(rds_file,
   }
 
   # Messages
-  if (verbose) message("\nMaximum depth is ", max(archive_days$depth), " meters\n")
+  if (verbose) message("Maximum depth is ", max(archive_days$depth), " meters")
 
   # Select plot data
   plot_data <- archive_days[, c("date", "depth")]
 
-  TDR_plot <- ggplot2::ggplot(plot_data, aes(x = date, y = depth)) +
+  TDR_plot <- ggplot(plot_data, aes(x = date, y = depth)) +
     geom_path() +
     scale_y_reverse(limits = c(Y_lim[2], Y_lim[1]), breaks = seq(Y_lim[1], Y_lim[2], Y_lim[3]), expand = c(0, 0)) +
     scale_x_datetime(date_breaks = date_breaks, date_labels = "%Y-%m-%d", expand = c(0, 0, 0, 0), position = "top") +
@@ -442,7 +442,7 @@ plot_TDR <- function(rds_file,
       create.dir = TRUE
     )
 
-    if (verbose) message("\nOutput file:", file.path(output_folder, paste0("tag_archive.png")))
+    if (verbose) message("Output file:", file.path(output_folder, paste0("tag_archive.png")))
   }
 
   return(plot_data)

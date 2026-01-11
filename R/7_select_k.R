@@ -257,25 +257,27 @@ select_k <- function(kmeans_data,
   pc_columns_count <- length(grep("^PC", names(kmeans_data)))
 
   # Save the combined plot
-  if (is.null(unique_tag_ID) == TRUE) {
-    # Multiple tags save folder 'Combined_tags'
-    save_folder <- file.path(output_folder, "Combined_tags/5_k-means")
+  if (output) {
+    if (is.null(unique_tag_ID)) {
+      # Multiple tags save folder 'Combined_tags'
+      save_folder <- file.path(output_folder, "Combined_tags/5_k-means")
 
-    # Message
-    if (verbose) message(paste0("Multiple tags output file: ", save_folder, "/Select_k.", pc_columns_count, "_PCs.png"))
-  } else {
-    # Single tag save folder - unique_unique_tag_ID
-    save_folder <- file.path(output_folder, unique_tag_ID, "5_k-means")
+      # Message
+      if (verbose) message(paste0("Multiple tags output file: ", save_folder, "/Select_k.", pc_columns_count, "_PCs.png"))
+    } else {
+      # Single tag save folder - unique_unique_tag_ID
+      save_folder <- file.path(output_folder, unique_tag_ID, "5_k-means")
 
-    # Message
-    if (verbose) message(paste0("Single tag output file: ", save_folder, "/Select_k.", pc_columns_count, "_PCs.png\n"))
+      # Message
+      if (verbose) message(paste0("Single tag output file: ", save_folder, "/Select_k.", pc_columns_count, "_PCs.png\n"))
+    }
+
+    # Create the directory if it doesn't exist
+    dir.create(save_folder, recursive = TRUE, showWarnings = FALSE)
+
+    # Save plot to combined data folder
+    ggsave(file.path(save_folder, paste0("Select_k.", pc_columns_count, "_PCs.png")), plot = combined_k_plot, width = 14.22, height = 5)
+
   }
-
-  # Create the directory if it doesn't exist
-  create_directory(save_folder)
-
-  # Save plot to combined data folder
-  ggsave(file.path(save_folder, paste0("Select_k.", pc_columns_count, "_PCs.png")), plot = combined_k_plot, width = 14.22, height = 5)
-
   return(combined_k_plot)
 }

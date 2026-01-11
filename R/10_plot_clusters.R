@@ -12,6 +12,7 @@
 #' @importFrom patchwork wrap_plots
 #' @importFrom utils head
 #' @importFrom data.table uniqueN
+#' @importFrom data.table setDT
 #' @importFrom colorspace qualitative_hcl
 #'
 #' @inheritParams pca_data

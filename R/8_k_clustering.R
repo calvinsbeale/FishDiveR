@@ -57,7 +57,7 @@
 #'   nstart = 50,
 #'   polygon = FALSE,
 #'   output = FALSE,
-#'   output_folder = tempdir()
+#'   output_folder = tempdir(),
 #'   verbose = TRUE
 #' )
 #' }

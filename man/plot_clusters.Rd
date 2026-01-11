@@ -63,10 +63,10 @@ Defaults to FALSE.}
 \item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
-A plot list of all plots created of each cluster in the data. Prints
-to file one figure for each Cluster with a fixed y-axis. Additionally
-outputs a facet plot of all clusters, and a free y-axis version of all
-plots.
+A plot list of all plots created of each cluster in the data. When
+output == TRUE this prints to file one figure for each Cluster with a fixed
+y-axis. Additionally outputs a facet plot of all clusters, and a free
+y-axis version of all plots.
 }
 \description{
 \code{plot_clusters} plots the time-depth records of the days closest to the

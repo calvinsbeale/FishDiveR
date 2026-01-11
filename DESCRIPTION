@@ -32,8 +32,7 @@ Imports:
     scales,
     suncalc,
     tidyr,
-    WaveletComp,
-    withr
+    WaveletComp
 Suggests: 
     knitr,
     rmarkdown,

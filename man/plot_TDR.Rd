@@ -6,7 +6,7 @@
 \usage{
 plot_TDR(
   rds_file,
-  data_folder = data_dir,
+  data_folder = NULL,
   every_nth = 20,
   every_s = 0,
   plot_size = c(12, 6),
@@ -14,7 +14,9 @@ plot_TDR(
   Y_lim = c(0, 1500, 100),
   date_breaks = "14 day",
   dpi = 300,
-  output_folder = data_dir
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -47,8 +49,11 @@ c(0,1500,100).}
 
 \item{dpi}{Numerical. DPI to use for 'ggsave()' output. E.g, 600}
 
-\item{output_folder}{Output folder path. E.g. "C:/Tag data". Defaults to
-'data_dir'}
+\item{output}{Logical. If TRUE, a plot file is saved to \code{output_folder}. Defaults to FALSE.}
+
+\item{output_folder}{Output folder path used when \code{output = TRUE}. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 A data frame of plot data
@@ -71,7 +76,9 @@ TDR_plot <- plot_TDR(
   Y_lim = c(0, 300, 50),
   date_breaks = "24 hour",
   dpi = 100,
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

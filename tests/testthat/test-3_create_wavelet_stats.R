@@ -9,7 +9,9 @@ test_that("create_wavelet_stats() creates a csv file", {
   waveStats <- create_wavelet_stats(
     wavelet = my.w,
     tag_ID = tag,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check that waveStats.csv file is created in the save directory

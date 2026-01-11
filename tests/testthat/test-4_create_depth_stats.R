@@ -15,7 +15,9 @@ test_that("create_depth_stats() creates a csv file", {
     sunset_time = "18:00:00",
     GPS = FALSE,
     sunset_type = NULL,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check that waveStats.csv file is created in the save directory
@@ -31,7 +33,9 @@ test_that("create_depth_stats() creates a csv file", {
     sunset_time = "18:00:00",
     GPS = FALSE,
     sunset_type = NULL,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check that waveStats.csv file is created in the save directory
@@ -49,7 +53,9 @@ test_that("create_depth_stats() creates a csv file", {
     sunset_time = "18:00:00",
     GPS = GPS_file,
     sunset_type = "civil",
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check that waveStats.csv file is created in the save directory

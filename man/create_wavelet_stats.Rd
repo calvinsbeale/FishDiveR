@@ -4,7 +4,13 @@
 \alias{create_wavelet_stats}
 \title{create_wavelet_stats}
 \usage{
-create_wavelet_stats(wavelet = my.w, tag_ID, output_folder = data_dir)
+create_wavelet_stats(
+  wavelet,
+  tag_ID,
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{wavelet}{An object of class "analyze.wavelet" from package
@@ -13,8 +19,13 @@ create_wavelet_stats(wavelet = my.w, tag_ID, output_folder = data_dir)
 \item{tag_ID}{Unique tag identification number in a vector of characters.
 E.g. "123456"}
 
-\item{output_folder}{Output folder path. E.g. "C:/Tag data". Defaults to
-'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 A data frame containing the seven wavelet statistics for each
@@ -44,7 +55,9 @@ my.w <- readRDS(file.path(filepath, "data/1_Wavelets/data_wavelet.rds"))
 waveStats <- create_wavelet_stats(
   wavelet = my.w,
   tag_ID = "data",
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

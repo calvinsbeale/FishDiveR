@@ -14,7 +14,9 @@ pca_data(
   mean_sq_power = FALSE,
   amplitude_mean = TRUE,
   amplitude_variance = FALSE,
-  output_folder = data_dir
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -45,8 +47,13 @@ Default TRUE}
 \item{amplitude_variance}{TRUE or FALSE to include this wavelet statistic.
 Default FALSE}
 
-\item{output_folder}{Parent folder path with separate folders for each tag
-data. E.g. "C:/Tag data". Defaults to 'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 A data frame with the combined data for all tag ID's listed,
@@ -73,7 +80,9 @@ pc_data <- pca_data(
   mean_sq_power = FALSE,
   amplitude_mean = TRUE,
   amplitude_variance = FALSE,
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

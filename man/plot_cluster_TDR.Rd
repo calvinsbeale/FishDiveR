@@ -7,7 +7,7 @@ cluster}
 \usage{
 plot_cluster_TDR(
   tag_ID,
-  data_folder = data_dir,
+  data_folder = NULL,
   kmeans_result,
   every_nth = 10,
   every_s = 0,
@@ -17,7 +17,9 @@ plot_cluster_TDR(
   legend = TRUE,
   plot_size = c(12, 6),
   dpi = 300,
-  output_folder = data_dir
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -56,8 +58,13 @@ numeric, positive and 2 elements long. Default to 'c(12,6)'}
 
 \item{dpi}{Numerical. DPI to use for 'ggsave()' output. E.g, 600}
 
-\item{output_folder}{Parent folder path with separate folders for each tag
-data. E.g. "C:/Tag data". Defaults to 'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 Returns the cluster TDR plot. Additionally prints to file the TDR
@@ -88,7 +95,9 @@ plot_cluster_TDR(
   legend = TRUE,
   plot_size = c(12, 6),
   dpi = 100,
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

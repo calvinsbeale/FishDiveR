@@ -8,7 +8,9 @@ pca_scores(
   pc_results = results,
   plot_loadings = TRUE,
   every_nth = 12,
-  output_folder = data_dir
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -20,8 +22,13 @@ pca_scores(
 \item{every_nth}{Numeric. Sequence of labels to show on mean power plot.
 Default is 12.}
 
-\item{output_folder}{Parent folder path with separate folders for each tag
-data. E.g. "C:/Tag data". Defaults to 'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 A data frame of pc scores containing one column for each Principal
@@ -46,7 +53,9 @@ pc_scores <- pca_scores(
   pc_results = pc_results,
   plot_loadings = FALSE,
   every_nth = 12,
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

@@ -13,7 +13,9 @@ import_tag_data(
   depth_col = 2,
   temp_col = NA,
   time_zone,
-  output_folder = data_dir
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -37,8 +39,13 @@ data/123456/123456-Archive.csv")}
 
 \item{time_zone}{Time zone of the data. E.g. "Asia/Tokyo"}
 
-\item{output_folder}{Output folder path. E.g. "C:/Tag data". Defaults to
-'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 A data frame of processed tag data. Columns kept are:
@@ -56,9 +63,9 @@ Data to import should be a csv file with a 'date_time' column and a depth
 column. Data is cropped by deployment and release times.
 }
 \details{
-Creates and additionally outputs a data frame \code{archive_days.rds}
-containing the cropped data. Data is cropped to full days from midnight to
-midnight in local time based on the time zone supplied.
+Data are cropped to full days from midnight to midnight in local time based on
+the time zone supplied. If \code{output = TRUE}, the cropped data are saved as
+\code{archive_days.rds} within \code{output_folder}.
 }
 \examples{
 # Set file path
@@ -74,7 +81,9 @@ archive_days <- import_tag_data(
   depth_col = 2,
   temp_col = NA,
   time_zone = "Asia/Tokyo",
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

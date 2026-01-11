@@ -12,7 +12,9 @@ test_that("k_clustering creates a rds file", {
     standardise = FALSE,
     k = 4,
     polygon = FALSE,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check if the output is a dataframe
@@ -24,7 +26,9 @@ test_that("k_clustering creates a rds file", {
     standardise = TRUE,
     k = 4,
     polygon = TRUE,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check if the output is a dataframe

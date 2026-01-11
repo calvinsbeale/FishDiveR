@@ -10,7 +10,9 @@ test_that("pca_results(), pca_scores() and combine_data create the correct files
     No_pcs = NULL,
     PCV = 99,
     plot_eigenvalues = FALSE,
+    output = TRUE,
     output_folder = tempdir(),
+    verbose = TRUE,
     interactive_mode = FALSE
   )
 
@@ -24,7 +26,9 @@ test_that("pca_results(), pca_scores() and combine_data create the correct files
     No_pcs = 3,
     PCV = NULL,
     plot_eigenvalues = TRUE,
+    output = TRUE,
     output_folder = tempdir(),
+    verbose = TRUE,
     interactive_mode = FALSE
   )
 
@@ -51,14 +55,18 @@ test_that("pca_results(), pca_scores() and combine_data create the correct files
   pc_scores <- pca_scores(
     pc_results = pca_results,
     plot_loadings = FALSE,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Run the function pca_scores_inc_depth
   pc_scores <- pca_scores(
     pc_results = pca_results,
     plot_loadings = TRUE,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check if the output is a data frame
@@ -77,7 +85,9 @@ test_that("pca_results(), pca_scores() and combine_data create the correct files
     tag_vector = "data",
     data_folder = file.path(system.file("extdata", package = "FishDiveR")),
     pc_scores = pc_scores,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check that combined_data.rds file is created in the save directory

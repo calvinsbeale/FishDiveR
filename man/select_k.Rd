@@ -11,7 +11,9 @@ select_k(
   v_line = NULL,
   calc_gap = FALSE,
   plot_gap = FALSE,
-  output_folder = data_dir
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -33,8 +35,13 @@ Defaults to FALSE}
 \item{plot_gap}{TRUE or FALSE. Whether or not to plot the gap statistic.
 Defaults to FALSE.}
 
-\item{output_folder}{Parent folder path with separate folders for each tag
-data. E.g. "C:/Tag data". Defaults to 'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 A 'ggplot' class object and creates a figure containing both the
@@ -44,6 +51,11 @@ plot for 1 to 'Max.k' clusters.
 \description{
 \code{select_k} creates the elbow plot and silhouette width plot for assistance
 with selection of k
+}
+\details{
+This function relies on random initialisation in k-means clustering.
+For reproducible results, users may wish to set a random seed
+prior to calling this function using \code{set.seed()}.
 }
 \examples{
 # Set file path
@@ -60,7 +72,9 @@ selecting_k <- select_k(
   v_line = 4,
   calc_gap = FALSE,
   plot_gap = FALSE,
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

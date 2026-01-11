@@ -21,7 +21,9 @@ test_that("plot_clusters() creates a png file", {
     color = FALSE,
     diel_shade = FALSE,
     dpi = 30,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check that TDR.png is created in the save directory
@@ -40,7 +42,9 @@ test_that("plot_clusters() creates a png file", {
     color = TRUE,
     diel_shade = TRUE,
     dpi = 100,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check that TDR.png is created in the save directory

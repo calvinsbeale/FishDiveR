@@ -6,9 +6,11 @@
 \usage{
 combine_data(
   tag_vector = tag_list,
-  data_folder = data_dir,
+  data_folder = NULL,
   pc_scores = scores,
-  output_folder = data_dir
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -21,8 +23,13 @@ data. E.g. "C:/Tag data". Defaults to 'data_dir'}
 \item{pc_scores}{Data frame of principal component scores extracted through
 PCA on wavelet statistics. Output of 'pca_scores()' function.}
 
-\item{output_folder}{Parent folder path with separate folders for each tag
-data. E.g. "C:/Tag data". Defaults to 'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 A data frame containing the combined depth statistics and principal
@@ -47,7 +54,9 @@ combined_stats <- combine_data(
   tag_vector = "data",
   data_folder = filepath,
   pc_scores = pc_scores,
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

@@ -5,12 +5,14 @@
 \title{Perform Principal Component Analysis}
 \usage{
 pca_results(
-  pc_data = data,
+  pc_data,
   standardise = TRUE,
   No_pcs = NULL,
   PCV = NULL,
   plot_eigenvalues = TRUE,
-  output_folder = data_dir,
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE,
   interactive_mode = TRUE
 )
 }
@@ -29,8 +31,13 @@ default}
 \item{plot_eigenvalues}{TRUE or FALSE. Plot PC eigenvalues and general
 loadings. Default TRUE.}
 
-\item{output_folder}{Parent folder path with separate folders for each tag
-data. E.g. "C:/Tag data". Defaults to 'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 
 \item{interactive_mode}{TRUE or FALSE. Used for testing the package. Default
 FALSE.}
@@ -58,7 +65,9 @@ pc_results <- pca_results(
   No_pcs = 1,
   PCV = NULL,
   plot_eigenvalues = FALSE,
+  output = TRUE,
   output_folder = tempdir(),
+  verbose = TRUE,
   interactive_mode = FALSE
 )
 
@@ -71,7 +80,9 @@ pc_results <- pca_results(
   No_pcs = 3,
   PCV = NULL,
   plot_eigenvalues = TRUE,
+  output = TRUE,
   output_folder = tempdir(),
+  verbose = TRUE,
   interactive_mode = FALSE
 )
 }

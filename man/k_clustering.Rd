@@ -11,7 +11,8 @@ k_clustering(
   nstart = 50,
   polygon = FALSE,
   output = TRUE,
-  output_folder = data_dir
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -32,8 +33,10 @@ points. Defaults to FALSE.}
 \item{output}{TRUE or FALSE. Whether or not to output the results.
 Defaults to TRUE.}
 
-\item{output_folder}{Parent folder path with separate folders for each tag
-data. E.g. "C:/Tag data". Defaults to 'data_dir'}
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 An object of class 'kmeans' containing the k-means clustering data
@@ -43,6 +46,11 @@ Principal Components.
 \description{
 \code{k_clustering} performs k-means clustering on the PC scores with the selected
 value of k
+}
+\details{
+This function relies on random initialisation in k-means clustering.
+For reproducible results, users may wish to set a random seed
+prior to calling this function using \code{set.seed()}.
 }
 \examples{
 # Set file path
@@ -63,6 +71,7 @@ kmeans_result <- k_clustering(
   polygon = FALSE,
   output = FALSE,
   output_folder = tempdir()
+  verbose = TRUE
 )
 }
 

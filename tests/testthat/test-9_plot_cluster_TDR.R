@@ -19,7 +19,9 @@ test_that("additional_plots creates a png file", {
     legend = FALSE,
     plot_size = c(12, 6),
     dpi = 30,
-    output_folder = paste0(tempdir(), "/", tag)
+    output = TRUE,
+    output_folder = paste0(tempdir(), "/", tag),
+    verbose = TRUE
   )
 
   # Run plot_clusters function
@@ -35,7 +37,9 @@ test_that("additional_plots creates a png file", {
     legend = TRUE,
     plot_size = c(12, 6),
     dpi = 300,
-    output_folder = paste0(tempdir(), "/", tag)
+    output = TRUE,
+    output_folder = paste0(tempdir(), "/", tag),
+    verbose = TRUE
   )
 
   # Check that the TDR file is created in the save directory

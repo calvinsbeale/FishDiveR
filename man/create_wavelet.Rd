@@ -9,11 +9,15 @@ create_wavelet(
   tag_ID,
   wv_period_hours = 24,
   sampling_frequency = NULL,
+  allow_irregular_sampling = FALSE,
+  load_existing_wavelet = FALSE,
   suboctaves = 12,
   lower_period_mins = 5,
   upper_period_hours = 24,
   pval = FALSE,
-  output_folder = data_dir,
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE,
   plot_wavelet = TRUE,
   max_period_ticks = 10,
   plot_width = 800,
@@ -34,6 +38,12 @@ to investigate daily diving behaviour. Defaults to 24.}
 \item{sampling_frequency}{Sampling frequency of depth data in seconds. Defaults
 to time between first and second depth record. Recommended to leave blank.}
 
+\item{allow_irregular_sampling}{Allows irregular sampling interval in the
+dataset. Not recommended. Defaults to FALSE.}
+
+\item{load_existing_wavelet}{Load an existing my.w wavelet object from the
+output_folder. Defaults to FALSE.}
+
 \item{suboctaves}{number of suboctaves between each logarithmic period. E.g.
 between 24 and 12 hours. Highly recommended to use 12, for easy of
 interpretation of hours and signal present (daily, diel, tidal).}
@@ -48,8 +58,13 @@ Defaults to 24 hours.}
 \code{\link[WaveletComp:analyze.wavelet]{WaveletComp::analyze.wavelet()}} for further details. P-values not used in
 further analysis, and increase computation time and file size.}
 
-\item{output_folder}{Output folder path. E.g. "C:/Tag data". Defaults to
-'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 
 \item{plot_wavelet}{TRUE or FALSE. Plot the wavelet spectrum and mean power?}
 
@@ -64,13 +79,13 @@ plots.}
 \item{interactive_mode}{Used for testing the package only. Defaults to TRUE.}
 }
 \value{
-An object of class "analyze.wavelet" from package 'WaveletComp'.
-Additionally outputs a plot of the wavelet spectrum, and a plot of the mean
-power per period
+When output = TRUE, returns an object of class "analyze.wavelet"
+from package 'WaveletComp'. Additionally outputs a plot of the wavelet
+spectrum, and a plot of the mean power per period.
 }
 \description{
 \code{create_wavelet} creates the a wavelet spectrum using WaveletComp package.
-Skips creation if my.w is already in the global environment.
+Optionally loads and plots an existing my.w object.
 }
 \details{
 Uses \code{\link[WaveletComp:analyze.wavelet]{WaveletComp::analyze.wavelet()}} to create a univariate wavelet
@@ -94,11 +109,15 @@ my.w <- create_wavelet(
   tag_ID = "data",
   wv_period_hours = 24,
   sampling_frequency = NULL,
+  allow_irregular_sampling = FALSE,
+  load_existing_wavelet = TRUE,
   suboctaves = 12,
   lower_period_mins = 30,
   upper_period_hours = 24,
   pval = FALSE,
+  output = TRUE,
   output_folder = tempdir(),
+  verbose = TRUE,
   plot_wavelet = FALSE,
   max_period_ticks = 10,
   plot_width = 800,

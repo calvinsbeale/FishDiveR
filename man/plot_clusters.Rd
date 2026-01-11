@@ -7,7 +7,7 @@ cluster}
 \usage{
 plot_clusters(
   tag_vector = tag_list,
-  data_folder = data_dir,
+  data_folder = NULL,
   kmeans_result,
   No_days = 1,
   every_nth = 10,
@@ -16,7 +16,9 @@ plot_clusters(
   color = TRUE,
   diel_shade = FALSE,
   dpi = 300,
-  output_folder = data_dir
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -52,8 +54,13 @@ be slow! Defaults to FALSE.}
 
 \item{dpi}{Numerical. DPI to use for 'ggsave()' output. E.g, 600}
 
-\item{output_folder}{Parent folder path with separate folders for each tag
-data. E.g. "C:/Tag data". Defaults to 'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 A plot list of all plots created of each cluster in the data. Prints
@@ -85,7 +92,9 @@ plot_clusters(
   color = TRUE,
   diel_shade = FALSE,
   dpi = 100,
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

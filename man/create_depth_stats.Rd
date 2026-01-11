@@ -5,14 +5,16 @@
 \title{Create depth statistics}
 \usage{
 create_depth_stats(
-  archive = archive_days,
+  archive,
   tag_ID,
   diel = FALSE,
   sunrise_time = NULL,
   sunset_time = NULL,
   GPS = FALSE,
   sunset_type = "civil",
-  output_folder = data_dir
+  output = FALSE,
+  output_folder = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -33,11 +35,16 @@ E.g. "123456"}
 'date', 'lat' (latitude) and 'lon' (longitude) if one exists. 'date'
 columns must be in a format readable by lubridate::dmy()}
 
-\item{sunset_type}{Choose which type of sunset to include 'NULL', civil',
+\item{sunset_type}{Choose which type of sunset to include 'NULL', 'civil',
 'nautical', or 'astronomical'}
 
-\item{output_folder}{Output folder path. E.g. "C:/Tag data". Defaults to
-'data_dir'}
+\item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
+Defaults to FALSE.}
+
+\item{output_folder}{Output folder path. If \code{output = TRUE},
+\code{output_folder} must be provided. Defaults to NULL.}
+
+\item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
 }
 \value{
 A set of statistics calculated daily for the depth data. If diel
@@ -64,7 +71,9 @@ depthStats <- create_depth_stats(
   sunset_time = "18:00:00",
   GPS = file.path(filepath, "data/GPS.csv"),
   sunset_type = "civil",
-  output_folder = tempdir()
+  output = TRUE,
+  output_folder = tempdir(),
+  verbose = TRUE
 )
 
 }

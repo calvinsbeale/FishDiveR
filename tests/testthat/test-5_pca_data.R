@@ -14,7 +14,9 @@ test_that("pca_data_inc_depth() creates a rds file", {
     mean_sq_power = TRUE,
     amplitude_mean = FALSE,
     amplitude_variance = TRUE,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Run the function
@@ -28,7 +30,9 @@ test_that("pca_data_inc_depth() creates a rds file", {
     mean_sq_power = FALSE,
     amplitude_mean = TRUE,
     amplitude_variance = FALSE,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check if the output is a dataframe

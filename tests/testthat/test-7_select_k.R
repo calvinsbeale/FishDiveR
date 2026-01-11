@@ -11,7 +11,9 @@ test_that("select_k() creates the appropriate plot", {
     v_line = 4,
     calc_gap = TRUE,
     plot_gap = TRUE,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check if the output is a ggplot object
@@ -29,7 +31,9 @@ test_that("select_k() creates the appropriate plot", {
     v_line = 4,
     calc_gap = FALSE,
     plot_gap = FALSE,
-    output_folder = tempdir()
+    output = TRUE,
+    output_folder = tempdir(),
+    verbose = TRUE
   )
 
   # Check if the output is a ggplot object

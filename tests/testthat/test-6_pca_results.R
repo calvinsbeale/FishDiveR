@@ -55,6 +55,7 @@ test_that("pca_results(), pca_scores() and combine_data create the correct files
   pc_scores <- pca_scores(
     pc_results = pca_results,
     plot_loadings = FALSE,
+    every_nth = 12,
     output = TRUE,
     output_folder = tempdir(),
     verbose = TRUE
@@ -64,6 +65,7 @@ test_that("pca_results(), pca_scores() and combine_data create the correct files
   pc_scores <- pca_scores(
     pc_results = pca_results,
     plot_loadings = TRUE,
+    every_nth = 12,
     output = TRUE,
     output_folder = tempdir(),
     verbose = TRUE

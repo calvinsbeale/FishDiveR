@@ -20,7 +20,7 @@ test_that("create_wavelet() creates a WaveletComp object", {
     upper_period_hours = 24,
     pval = TRUE,
     output = TRUE,
-    output_folder = file.path(tempdir(), "temp"),
+    output_folder = tempdir(),
     verbose = FALSE,
     plot_wavelet = FALSE,
     max_period_ticks = 6,

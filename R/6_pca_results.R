@@ -152,8 +152,8 @@ pca_results <- function(pc_data,
   non_numeric_col_names <- names(pc_data)[non_numeric_cols]
 
   # Report the names of non-numerical columns being excluded
-  if (verbose) message("Non-numerical columns being excluded: ")
-  if (verbose) message(non_numeric_col_names)
+  if (verbose) {message("Non-numerical columns being excluded: ",
+                       paste(non_numeric_col_names, collapse = ", "))}
 
   # Create a new data frame without non-numerical columns
   temp_data <- pc_data[, !non_numeric_cols]
@@ -184,23 +184,15 @@ pca_results <- function(pc_data,
   if (!is.null(PCV)) {
     # Calculate the number of components required to reach the desired cumulative variance
     Max.C <- which(eigenvalues$`cumulative percentage of variance` >= PCV)[1]
-    if (verbose) message("Using cumulative variance threshold: Keeping", Max.C, "principal components to reach", PCV, "% variance")
+    if (verbose) message("Using cumulative variance threshold: Keeping ", Max.C, " principal components to reach ", PCV, "% variance")
   } else if (is.null(No_pcs)) {
-    # Ask the user how many components to keep if No_pcs is NULL and PCV is not provided
-    valid_input <- FALSE
-    while (!valid_input) {
-      # Prompt user
-      Max.C_input <- readline(prompt = "Enter the number of components to keep: ")
-      # Check input
-      if (grepl("^\\d+$", Max.C_input)) {
-        Max.C <- as.integer(Max.C_input)
-        valid_input <- TRUE
-      } else {
-        warning("Invalid input. Please enter a valid integer.\n")
-      }
-    }
+
+    if (verbose) message("Number of components to keep was not input. Keeping all PC's with eigenvalues >= 1.")
+
+    Max.C <- ev
+
     # Print cumulative variance being kept
-    if (verbose) message("Keeping", Max.C, "PC's contributing to a cumulative", eigenvalues[Max.C, "cumulative percentage of variance"], "% of variance")
+    if (verbose) message("Keeping ", Max.C, " PC's contributing to a cumulative ", eigenvalues[Max.C, "cumulative percentage of variance"], "% of variance")
   } else {
     if (is.numeric(No_pcs)) {
       Max.C <- No_pcs
@@ -208,7 +200,7 @@ pca_results <- function(pc_data,
       stop("Please enter a valid integer for No_pcs")
     }
     # Print cumulative variance being kept
-    if (verbose) message("Keeping", Max.C, "PC's contributing to a cumulative", eigenvalues[Max.C, "cumulative percentage of variance"], "% of variance")
+    if (verbose) message("Keeping ", Max.C, " PC's contributing to a cumulative ", eigenvalues[Max.C, "cumulative percentage of variance"], "% of variance")
   }
 
   # Run PCA on the data frame, keeping the top 'Max.c' principal components

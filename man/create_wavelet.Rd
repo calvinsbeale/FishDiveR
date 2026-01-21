@@ -110,7 +110,7 @@ my.w <- create_wavelet(
   wv_period_hours = 24,
   sampling_frequency = NULL,
   allow_irregular_sampling = FALSE,
-  load_existing_wavelet = TRUE,
+  load_existing_wavelet = FALSE,
   suboctaves = 12,
   lower_period_mins = 30,
   upper_period_hours = 24,

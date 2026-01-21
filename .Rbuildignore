@@ -3,7 +3,6 @@
 ^\.Rproj\.user$
 ^README\.Rmd$
 ^LICENSE\.md$
-^\\.git$
 ^\.Rhistory$
 ^\.RData$
 ^\.Files_not_packaged$
@@ -15,3 +14,5 @@
 ^\.github$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
+^build$
+^tests/testthat/Rplots\.pdf$

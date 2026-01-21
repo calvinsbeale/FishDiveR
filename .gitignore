@@ -2,5 +2,6 @@
 *.Rhistory
 inst/doc
 docs
-FishDiveR_1.0.1.tar.gz
+FishDiveR_1.1.0.tar.gz
 FishDiveR.Rcheck
+tests/testthat/Rplots.pdf

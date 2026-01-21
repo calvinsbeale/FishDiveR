@@ -188,7 +188,7 @@ plot_cluster_TDR <- function(tag_ID,
     archive_days <- archive_days[as.numeric(archive_days$date - start_time) %% every_s == 0, ]
 
     # Print sampling interval
-    if (verbose) message("Plotting every", every_s, "seconds")
+    if (verbose) message("Plotting every ", every_s, " seconds")
   } else {
     if (every_nth != 1) {
       # Subset to every nth record
@@ -196,7 +196,7 @@ plot_cluster_TDR <- function(tag_ID,
       archive_days <- archive_days[crop_sq, ]
 
       # Print sampling interval
-      if (verbose) message("Plotting every", every_nth, "records")
+      if (verbose) message("Plotting every ", every_nth, " records")
     } else {
       # Print sampling interval
       if (verbose) message("Plotting every record")

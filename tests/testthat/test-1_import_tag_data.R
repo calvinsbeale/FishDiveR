@@ -13,7 +13,7 @@ test_that("process_tag_data() imports a tag archive", {
     time_zone = "UTC",
     output = TRUE,
     output_folder = tempdir(),
-    verbose = FALSE
+    verbose = TRUE
   )
 
   # Check if the output is a dataframe
@@ -50,7 +50,7 @@ test_that("process_tag_data() imports a tag archive", {
     dpi = 30,
     output = TRUE,
     output_folder = file.path(tempdir(), "data"),
-    verbose = FALSE
+    verbose = TRUE
   )
 
   TDR_plot <- plot_TDR(
@@ -65,7 +65,7 @@ test_that("process_tag_data() imports a tag archive", {
     dpi = 30,
     output = TRUE,
     output_folder = file.path(tempdir(), "data"),
-    verbose = FALSE
+    verbose = TRUE
   )
 
   # Check that the TDR file is created in the save directory

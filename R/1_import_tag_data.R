@@ -225,6 +225,53 @@ import_tag_data <- function(tag_ID,
   # Set time zone attribute
   attr(tag_archive, "time_zone") <- time_zone
 
+
+
+
+
+
+
+
+  # Helper function to check constant sampling frequency
+  check_sampling_frequency <- function(tag_archive) {
+    # Differences in seconds between consecutive timestamps
+    diffs <- as.numeric(diff(tag_archive$date), units = "secs")
+
+    # Remove non-finite values (defensive)
+    diffs <- diffs[is.finite(diffs)]
+
+    is_constant <- length(unique(diffs)) == 1L
+
+    time_frequency_df <- as.data.frame(table(diffs), stringsAsFactors = FALSE)
+    names(time_frequency_df) <- c("Time_frequency_in_Seconds", "Number_of_Records")
+    time_frequency_df$Time_frequency_in_Seconds <- as.numeric(time_frequency_df$Time_frequency_in_Seconds)
+
+    # attach for the user to inspect later
+    attr(tag_archive, "sampling_frequency_table") <- time_frequency_df
+
+    if (!is_constant) {
+      if (isTRUE(verbose)) {
+        msg <- paste(
+          apply(time_frequency_df, 1, function(x) paste0(x[1], "s: ", x[2], " records")),
+          collapse = "; "
+        )
+        message("Sampling frequency is not constant. Intervals detected: ", msg)
+      }
+    }
+
+    tag_archive
+  }
+
+  # Check the sampling frequency is constant throughout the dataset
+  check_sampling_frequency(tag_archive)
+
+
+
+
+
+
+
+
   if (isTRUE(output)) {
     if (is.null(output_folder)) {
       stop("When output = TRUE, output_folder must be provided.")

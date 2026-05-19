@@ -33,6 +33,9 @@ the data into behaviours which can be plotted and examined further. `FishDiveR`
 allows the user to import tag data from comma-separated-value (csv) archives
 which include a time-date stamp and a depth column.
 
+See https://rdcu.be/e3CET for accompanying peer-reviewed publication and detailed
+use cases. Feel free to contact the author for further information and updates.
+
 The various functions:
 - Import and crop the archive.
 - Plot the depth time-series record.
@@ -150,7 +153,6 @@ my.w <- create_wavelet(
   tag_ID = "data",
   wv_period_hours = 24,
   sampling_frequency = NULL,
-  allow_irregular_sampling = FALSE,
   load_existing_wavelet = FALSE,
   suboctaves = 12,
   lower_period_mins = 30,

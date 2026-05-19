@@ -25,8 +25,6 @@
 #'   to investigate daily diving behaviour. Defaults to 24.
 #' @param sampling_frequency Sampling frequency of depth data in seconds. Defaults
 #'   to time between first and second depth record. Recommended to leave blank.
-#' @param allow_irregular_sampling Allows irregular sampling interval in the
-#'   dataset. Not recommended. Defaults to FALSE.
 #' @param load_existing_wavelet Load an existing my.w wavelet object from the
 #'   output_folder. Defaults to FALSE.
 #' @param suboctaves number of suboctaves between each logarithmic period. E.g.
@@ -66,7 +64,6 @@
 #'   tag_ID = "data",
 #'   wv_period_hours = 24,
 #'   sampling_frequency = NULL,
-#'   allow_irregular_sampling = FALSE,
 #'   load_existing_wavelet = FALSE,
 #'   suboctaves = 12,
 #'   lower_period_mins = 30,
@@ -87,7 +84,6 @@ create_wavelet <- function(archive,
                            tag_ID,
                            wv_period_hours = 24,
                            sampling_frequency = NULL,
-                           allow_irregular_sampling = FALSE,
                            load_existing_wavelet = FALSE,
                            suboctaves = 12,
                            lower_period_mins = 5,
@@ -180,9 +176,6 @@ create_wavelet <- function(archive,
   if (isTRUE(output) && is.null(output_folder)) {
     stop("When output = TRUE, output_folder must be provided.")
   }
-  if (!is.logical(allow_irregular_sampling)) {
-    stop("allow_irregular_sampling must be TRUE or FALSE.")
-  }
   if (!is.logical(plot_wavelet)) {
     stop("plot_wavelet must be TRUE or FALSE.")
   }
@@ -224,10 +217,6 @@ create_wavelet <- function(archive,
           collapse = "; "
         )
         message("Sampling frequency is not constant. Intervals detected: ", msg)
-      }
-
-      if (!isTRUE(allow_irregular_sampling)) {
-        stop("Sampling frequency is not constant and allow_irregular_sampling is FALSE.", call. = FALSE)
       }
     }
 

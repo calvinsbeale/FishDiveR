@@ -9,7 +9,6 @@ create_wavelet(
   tag_ID,
   wv_period_hours = 24,
   sampling_frequency = NULL,
-  allow_irregular_sampling = FALSE,
   load_existing_wavelet = FALSE,
   suboctaves = 12,
   lower_period_mins = 5,
@@ -37,9 +36,6 @@ to investigate daily diving behaviour. Defaults to 24.}
 
 \item{sampling_frequency}{Sampling frequency of depth data in seconds. Defaults
 to time between first and second depth record. Recommended to leave blank.}
-
-\item{allow_irregular_sampling}{Allows irregular sampling interval in the
-dataset. Not recommended. Defaults to FALSE.}
 
 \item{load_existing_wavelet}{Load an existing my.w wavelet object from the
 output_folder. Defaults to FALSE.}
@@ -109,7 +105,6 @@ my.w <- create_wavelet(
   tag_ID = "data",
   wv_period_hours = 24,
   sampling_frequency = NULL,
-  allow_irregular_sampling = FALSE,
   load_existing_wavelet = FALSE,
   suboctaves = 12,
   lower_period_mins = 30,

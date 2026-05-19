@@ -25,6 +25,10 @@ plotted and examined further. `FishDiveR` allows the user to import tag
 data from comma-separated-value (csv) archives which include a time-date
 stamp and a depth column.
 
+See <https://rdcu.be/e3CET> for accompanying peer-reviewed publication
+and detailed use cases. Feel free to contact the author for further
+information and updates.
+
 The various functions: - Import and crop the archive. - Plot the depth
 time-series record. - Calculate daily and diel statistics for use in
 k-means clustering. - Perform wavelet analysis using the `WaveletComp`
@@ -78,7 +82,7 @@ install.packages("FishDiveR")
 
 ``` r
 library(FishDiveR)
-#> FishDiveR version 1.0.1. Facilitating classification of aquatic animal behaviours from vertical movement data.
+#> FishDiveR version 1.1.0. Facilitating classification of aquatic animal behaviours from vertical movement data.
 #>  Type 'citation("FishDiveR")' for citing this R package in publications.
 # Set file path
 filepath <- system.file("extdata", package = "FishDiveR")
@@ -133,7 +137,7 @@ archive_days <- import_tag_data(
 #> Mean depth = 81.5 SD = 87.6
 #> Maximum depth = 262.2
 #> Number of full days in dataset: 10
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/archive_days.rds
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/archive_days.rds
 # Plot the depth time-series record
 TDR_plot <- plot_TDR(
   rds_file = "data/archive_days.rds",
@@ -151,7 +155,7 @@ TDR_plot <- plot_TDR(
 #> Data sampling interval is 60 seconds
 #> Plotting every 600 seconds
 #> Maximum depth is 252.5 meters
-#> Output file:C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/tag_archive.png
+#> Output file:C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/tag_archive.png
 ```
 
 The `create_wavelet()` function performs wavelet analysis on the
@@ -199,7 +203,6 @@ my.w <- create_wavelet(
   tag_ID = "data",
   wv_period_hours = 24,
   sampling_frequency = NULL,
-  allow_irregular_sampling = FALSE,
   load_existing_wavelet = FALSE,
   suboctaves = 12,
   lower_period_mins = 30,
@@ -222,9 +225,9 @@ my.w <- create_wavelet(
 #> Class attributes are accessible through following names:
 #> series loess.span dt dj Wave Phase Ampl Power Power.avg Power.pval Power.avg.pval Ridge Period Scale nc nr coi.1 coi.2 axis.1 axis.2 date.format date.tz
 #> 
-#> Wavelet saved to C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/1_Wavelets/data_wavelet.rds
+#> Wavelet saved to C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/1_Wavelets/data_wavelet.rds
 #> 
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/2_Wavelet_Figures/
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/2_Wavelet_Figures/
 ```
 
 The two functions `create_wavelet_stats()` and `create_depth_stats()`
@@ -246,7 +249,7 @@ waveStats <- create_wavelet_stats(
 )
 #> Running create_wavelet_stats() on tag ID data
 #> 
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/3_Stats/data_waveStats.csv
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/3_Stats/data_waveStats.csv
 # Create daily and diel depth statistics
 depthStats <- create_depth_stats(
   archive = archive_days,
@@ -263,7 +266,7 @@ depthStats <- create_depth_stats(
 #> Running create_depth_stats() on tag ID data
 #> Reading in GPS locations. Using actual sunrise and sunset times to calculate diel statistics
 #> Archive updated with diel periods based on GPS calculated times
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/3_Stats/data_depthStats.csv
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/3_Stats/data_depthStats.csv
 ```
 
 Performing Principal Component Analysis (PCA). PCA is performed to
@@ -320,7 +323,7 @@ pc_data <- pca_data(
   output_folder = tempdir(),
   verbose = TRUE
 )
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA/pc_data.rds
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/4_PCA/pc_data.rds
 # Run Principal Component Analysis on the data frame to calculate PC scores
 pc_results <- pca_results(
   pc_data = pc_data,
@@ -332,8 +335,7 @@ pc_results <- pca_results(
   output_folder = tempdir(),
   verbose = TRUE
 )
-#> Non-numerical columns being excluded:
-#> tag_IDdate_only
+#> Non-numerical columns being excluded: tag_ID, date_only
 #>        eigenvalue percentage of variance cumulative percentage of variance
 #> comp 1 142.382404             47.9402034                          47.94020
 #> comp 2 103.975584             35.0086141                          82.94882
@@ -343,10 +345,10 @@ pc_results <- pca_results(
 #> comp 6   3.341829              1.1251948                          99.38245
 #> comp 7   1.225305              0.4125604                          99.79501
 #> 7 principal components of 9 have eigenvalues >= 1
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA/eigenvalues_cum_var.csv
-#> Using cumulative variance threshold: Keeping3principal components to reach90% variance
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA/pc_results.rds contains the selected number of principal components.
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/4_PCA/eigenvalues_cum_var.csv
+#> Using cumulative variance threshold: Keeping 3 principal components to reach 90% variance
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/4_PCA
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/4_PCA/pc_results.rds contains the selected number of principal components.
 # Extract the principal component scores.
 pc_scores <- pca_scores(
   pc_results = pc_results,
@@ -355,8 +357,8 @@ pc_scores <- pca_scores(
   output_folder = tempdir(),
   verbose = TRUE
 )
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/4_PCA/pc_scores.rds
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/4_PCA
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/4_PCA/pc_scores.rds
 ```
 
 The PC scores and depth statistics calculated from the raw tag data are
@@ -373,7 +375,7 @@ kmeans_features <- combine_data(
   output_folder = tempdir(),
   verbose = TRUE
 )
-#> Saving combined metrics to:C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/5_k-means/combined_stats.rds
+#> Saving combined metrics to:C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/5_k-means/combined_stats.rds
 # Optionally at this stage the user may select to remove or add additional statistics. If data are modified, be sure to re-standardise the data frame.
 # kmeans_features <- kmeans_features[,c(1:8, 10:20)]
 ```
@@ -415,7 +417,7 @@ selecting_k <- select_k(
 #> K = 6 Average silhouette width = 0.392
 #> K = 7 Average silhouette width = 0.243
 #> K = 8 Average silhouette width = 0.154
-#> Single tag output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/5_k-means/Select_k.3_PCs.png
+#> Single tag output file: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/5_k-means/Select_k.3_PCs.png
 # Run k-means with the selected number of clusters
 kmeans_result <- k_clustering(
   kmeans_data = kmeans_features,
@@ -429,7 +431,7 @@ kmeans_result <- k_clustering(
 )
 #> Standardising k-means input.
 #> Total of 10 days of data
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/5_k-means
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/5_k-means
 ```
 
 Note: After clustering, the user may find the mean standardised values
@@ -467,8 +469,8 @@ TDR_plot <- plot_cluster_TDR(
 #> Single tag k-means loaded
 #> Maximum depth is 262.2
 #> Data sampling interval is 60 seconds
-#> Plotting every600seconds
-#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data_TDR_k=4.png
+#> Plotting every 600 seconds
+#> Output file: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data_TDR_k=4.png
 ```
 
 Plot the depth time-series of the 24-hour segments closest to the centre
@@ -497,10 +499,10 @@ plots_list <- plot_clusters(
 )
 #> Maximum depth is 262.2
 #> Data sampling interval is 60 seconds
-#> Plotting every300seconds
-#> Cluster 1 dates 2000-01-10 Tag: data
-#> Cluster 2 dates 2000-01-08 Tag: data
+#> Plotting every 300 seconds
+#> Cluster 1 dates 2000-01-08 Tag: data
+#> Cluster 2 dates 2000-01-10 Tag: data
 #> Cluster 3 dates 2000-01-03 Tag: data
 #> Cluster 4 dates 2000-01-04 Tag: data
-#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpg5pCzZ/data/6_Cluster-plots.K=4_shaded
+#> Output folder: C:\Users\User\AppData\Local\Temp\Rtmpq0DmKr/data/6_Cluster-plots.K=4_shaded
 ```

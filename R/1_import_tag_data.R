@@ -225,13 +225,6 @@ import_tag_data <- function(tag_ID,
   # Set time zone attribute
   attr(tag_archive, "time_zone") <- time_zone
 
-
-
-
-
-
-
-
   # Helper function to check constant sampling frequency
   check_sampling_frequency <- function(tag_archive) {
     # Differences in seconds between consecutive timestamps
@@ -264,13 +257,6 @@ import_tag_data <- function(tag_ID,
 
   # Check the sampling frequency is constant throughout the dataset
   check_sampling_frequency(tag_archive)
-
-
-
-
-
-
-
 
   if (isTRUE(output)) {
     if (is.null(output_folder)) {

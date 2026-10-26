@@ -21,5 +21,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Calvin Beale \email{calvin.beale.8@gmail.com} (\href{https://orcid.org/0000-0002-3505-8929}{ORCID}) [copyright holder]
 
+Authors:
+\itemize{
+  \item Calvin Beale \email{calvin.beale.8@gmail.com} (\href{https://orcid.org/0000-0002-3505-8929}{ORCID}) [copyright holder]
+}
+
 }
 \keyword{internal}

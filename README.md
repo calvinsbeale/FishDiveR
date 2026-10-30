@@ -5,13 +5,17 @@
 
 <!-- badges: start -->
 
+[![CRAN
+status](https://www.r-pkg.org/badges/version/FishDiveR)](https://CRAN.R-project.org/package=FishDiveR)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/grand-total/FishDiveR)](https://CRAN.R-project.org/package=FishDiveR)
 [![R-CMD-check](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/calvinsbeale/FishDiveR/actions/workflows/R-CMD-check.yaml)
 [![Project Status: Active – The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Lifecycle:
 maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-\[![License](https://img.shields.io/github/license/calvinsbeale/FishDiveR.svg)\]
+[![License](https://img.shields.io/github/license/calvinsbeale/FishDiveR.svg)](https://github.com/calvinsbeale/FishDiveR/blob/main/LICENSE.md)
 [![Last-commit](https://img.shields.io/github/last-commit/calvinsbeale/FishDiveR.svg)](https://github.com/calvinsbeale/FishDiveR/commits/main)
 [![Docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://github.com/calvinsbeale/FishDiveR/)
 <!-- badges: end -->
@@ -63,8 +67,15 @@ collection.
 > package. Please share your experience. In case of issues, please
 > report on GitHub and I will endevour to fix ASAP!
 
-You can install the development version of `FishDiveR` from
-[GitHub](https://github.com/) with:
+You can install the released version of `FishDiveR` from
+[CRAN](https://CRAN.R-project.org/package=FishDiveR) with:
+
+``` r
+install.packages("FishDiveR")
+```
+
+Or install the development version from
+[GitHub](https://github.com/calvinsbeale/FishDiveR) with:
 
 ``` r
 # Development version (requires either the "remotes" or "devtools" package to install:
@@ -73,9 +84,6 @@ remotes::install_github("calvinsbeale/FishDiveR")
 
 # install.packages("devtools")
 devtools::install_github("calvinsbeale/FishDiveR")
-
-# CRAN release: (NOT YET LAUNCHED)
-install.packages("FishDiveR")
 ```
 
 ## Usage

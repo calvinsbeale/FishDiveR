@@ -1,6 +1,19 @@
 # FishDiveR (development version)
 
-* Initial CRAN submission.
+## Breaking change
+- `create_wavelet()` no longer has the `allow_irregular_sampling` argument (it was not functional). Non-constant sampling intervals are now reported with a message rather than stopping.
+
+## New features
+- `import_tag_data()` now checks that the sampling frequency is constant and, when `verbose = TRUE`, reports the intervals detected.
+
+## Docs/Infra
+- Citation updated to the published article: Beale & Gleiss (2026), *Movement Ecology* 14:8 <doi:10.1186/s40462-025-00622-w>.
+- README updated for the CRAN release; added CRAN badges.
+- Documentation rebuilt with roxygen2 8.1.1.
+
+# FishDiveR 1.1.0 — 2026-01-26
+
+* First release on CRAN.
 
 # FishDiveR 1.0.0.0
 

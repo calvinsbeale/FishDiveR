@@ -66,6 +66,10 @@ column. Data is cropped by deployment and release times.
 Data are cropped to full days from midnight to midnight in local time based on
 the time zone supplied. If \code{output = TRUE}, the cropped data are saved as
 \code{archive_days.rds} within \code{output_folder}.
+
+A warning is given if the sampling interval is not constant throughout the
+cropped data (e.g. gaps from missing records), listing the intervals detected
+and how many records have each.
 }
 \examples{
 # Set file path

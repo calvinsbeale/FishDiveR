@@ -72,3 +72,30 @@ test_that("process_tag_data() imports a tag archive", {
   expected_filepath <- file.path(tempdir(), "data", "tag_archive.png")
   expect_true(file.exists(expected_filepath))
 })
+
+test_that("import_tag_data() warns on irregular sampling intervals", {
+  archive_file <- system.file("extdata", "data/data-Archive.csv", package = "FishDiveR")
+
+  import_args <- list(
+    tag_ID = "data",
+    tag_deploy_UTC = "2000-01-01 00:00:00",
+    tag_release_UTC = "2000-01-11 23:59:00",
+    archive = archive_file,
+    time_zone = "UTC",
+    verbose = FALSE
+  )
+
+  # Example data has a constant 60 s interval
+  expect_no_warning(do.call(import_tag_data, import_args))
+
+  # Remove records to create a gap in the time-series
+  irregular_file <- file.path(tempdir(), "irregular-Archive.csv")
+  archive <- utils::read.csv(archive_file)
+  utils::write.csv(archive[-(5000:5004), ], irregular_file, row.names = FALSE)
+
+  import_args$archive <- irregular_file
+  expect_warning(
+    do.call(import_tag_data, import_args),
+    "Sampling frequency is not constant. Intervals detected: 60s: .* records; 360s: 1 records"
+  )
+})

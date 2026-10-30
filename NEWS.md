@@ -1,10 +1,10 @@
 # FishDiveR (development version)
 
 ## Breaking change
-- `create_wavelet()` no longer has the `allow_irregular_sampling` argument (it was not functional). Non-constant sampling intervals are now reported with a message rather than stopping.
+- `create_wavelet()` no longer has the `allow_irregular_sampling` argument (it was not functional), and no longer stops on non-constant sampling intervals.
 
 ## New features
-- `import_tag_data()` now checks that the sampling frequency is constant and, when `verbose = TRUE`, reports the intervals detected.
+- `import_tag_data()` now warns if the sampling interval is not constant, listing the intervals detected and their record counts.
 
 ## Docs/Infra
 - Citation updated to the published article: Beale & Gleiss (2026), *Movement Ecology* 14:8 <doi:10.1186/s40462-025-00622-w>.

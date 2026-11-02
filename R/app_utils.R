@@ -1,0 +1,259 @@
+# Helpers for the FishDiveR app (run_app). These do not use shiny, so they can
+# be tested directly.
+
+# Columns of the tag table. One row per tag, saved as tag_metadata.csv in the
+# project folder. Names match the import_tag_data() arguments.
+tag_metadata_columns <- c(
+  "tag_ID", "archive", "tag_deploy_UTC", "tag_release_UTC",
+  "date_time_col", "depth_col", "temp_col", "time_zone", "GPS"
+)
+
+#' Empty tag table
+#' @noRd
+empty_tag_metadata <- function() {
+  data.frame(
+    tag_ID = character(),
+    archive = character(),
+    tag_deploy_UTC = character(),
+    tag_release_UTC = character(),
+    date_time_col = integer(),
+    depth_col = integer(),
+    temp_col = integer(),
+    time_zone = character(),
+    GPS = character(),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Read a tag table from csv
+#'
+#' Required columns are tag_ID, archive, tag_deploy_UTC, tag_release_UTC and
+#' time_zone. date_time_col, depth_col, temp_col and GPS are optional and take
+#' the import_tag_data() defaults when missing.
+#' @noRd
+read_tag_metadata <- function(file) {
+  if (!file.exists(file)) {
+    return(empty_tag_metadata())
+  }
+
+  meta <- utils::read.csv(file, colClasses = "character", na.strings = c("", "NA"), check.names = FALSE)
+
+  required <- c("tag_ID", "archive", "tag_deploy_UTC", "tag_release_UTC", "time_zone")
+  missing_cols <- setdiff(required, names(meta))
+  if (length(missing_cols) > 0) {
+    stop("Tag table is missing column(s): ", paste(missing_cols, collapse = ", "), call. = FALSE)
+  }
+
+  # Fill optional columns with defaults
+  if (!"date_time_col" %in% names(meta)) meta$date_time_col <- "1"
+  if (!"depth_col" %in% names(meta)) meta$depth_col <- "2"
+  if (!"temp_col" %in% names(meta)) meta$temp_col <- NA_character_
+  if (!"GPS" %in% names(meta)) meta$GPS <- NA_character_
+
+  meta <- meta[, tag_metadata_columns, drop = FALSE]
+  meta$tag_ID <- trimws(meta$tag_ID)
+  meta$date_time_col <- suppressWarnings(as.integer(meta$date_time_col))
+  meta$depth_col <- suppressWarnings(as.integer(meta$depth_col))
+  meta$temp_col <- suppressWarnings(as.integer(meta$temp_col))
+  meta <- meta[!is.na(meta$tag_ID) & nzchar(meta$tag_ID), , drop = FALSE]
+  rownames(meta) <- NULL
+
+  meta
+}
+
+#' Write a tag table to csv
+#' @noRd
+write_tag_metadata <- function(meta, file) {
+  utils::write.csv(meta[, tag_metadata_columns, drop = FALSE], file = file, row.names = FALSE, na = "")
+  invisible(file)
+}
+
+#' Add or replace tags in a tag table, matching on tag_ID
+#' @noRd
+upsert_tags <- function(meta, new_tags) {
+  meta <- meta[!meta$tag_ID %in% new_tags$tag_ID, , drop = FALSE]
+  meta <- rbind(meta, new_tags[, tag_metadata_columns, drop = FALSE])
+  rownames(meta) <- NULL
+  meta
+}
+
+#' Check one row of the tag table
+#'
+#' @returns Character vector of problems. Empty if the tag is ready to import.
+#' @noRd
+validate_tag <- function(tag) {
+  problems <- character()
+  is_blank <- function(x) length(x) == 0 || is.na(x) || !nzchar(trimws(x))
+  is_col <- function(x) !is.na(x) && x > 0
+
+  if (is_blank(tag$tag_ID)) problems <- c(problems, "tag ID is missing")
+  if (is_blank(tag$archive)) {
+    problems <- c(problems, "archive file is missing")
+  } else if (!file.exists(tag$archive)) {
+    problems <- c(problems, "archive file not found")
+  }
+
+  parse_utc <- function(x) {
+    if (is_blank(x)) return(NA)
+    as.POSIXct(x, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  }
+  deploy <- parse_utc(tag$tag_deploy_UTC)
+  release <- parse_utc(tag$tag_release_UTC)
+  if (is.na(deploy)) problems <- c(problems, "deploy time must be 'yyyy-mm-dd hh:mm:ss'")
+  if (is.na(release)) problems <- c(problems, "release time must be 'yyyy-mm-dd hh:mm:ss'")
+  if (!is.na(deploy) && !is.na(release) && release <= deploy) {
+    problems <- c(problems, "release time must be after deploy time")
+  }
+
+  if (is_blank(tag$time_zone) || !tag$time_zone %in% OlsonNames()) {
+    problems <- c(problems, "time zone not recognised")
+  }
+  if (!is_col(tag$date_time_col)) problems <- c(problems, "date-time column must be a positive number")
+  if (!is_col(tag$depth_col)) problems <- c(problems, "depth column must be a positive number")
+  if (!is.na(tag$temp_col) && tag$temp_col <= 0) problems <- c(problems, "temperature column must be blank or a positive number")
+  if (!is_blank(tag$GPS) && !file.exists(tag$GPS)) problems <- c(problems, "GPS file not found")
+
+  problems
+}
+
+#' Which pipeline outputs exist for each tag in the project folder
+#' @noRd
+tag_status <- function(meta, project_folder) {
+  tags <- meta$tag_ID
+  tag_file <- function(...) file.exists(file.path(project_folder, tags, ...))
+
+  data.frame(
+    tag_ID = tags,
+    Imported = tag_file("archive_days.rds"),
+    Wavelet = file.exists(file.path(project_folder, tags, "1_Wavelets", paste0(tags, "_wavelet.rds"))),
+    Daily_stats = file.exists(file.path(project_folder, tags, "3_Stats", paste0(tags, "_waveStats.csv"))) &
+      file.exists(file.path(project_folder, tags, "3_Stats", paste0(tags, "_depthStats.csv"))),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Evaluate an expression, collecting its messages, warnings and any error
+#'
+#' @returns A list with the value, a character log, and ok = FALSE if an error occurred.
+#' @noRd
+run_logged <- function(expr) {
+  log <- character()
+  ok <- TRUE
+
+  value <- withCallingHandlers(
+    tryCatch(expr, error = function(e) {
+      ok <<- FALSE
+      log <<- c(log, paste("Error:", conditionMessage(e)))
+      NULL
+    }),
+    message = function(m) {
+      log <<- c(log, sub("\\s+$", "", conditionMessage(m)))
+      invokeRestart("muffleMessage")
+    },
+    warning = function(w) {
+      log <<- c(log, paste("Warning:", conditionMessage(w)))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  list(value = value, log = log[nzchar(log)], ok = ok)
+}
+
+#' Open a file or folder dialog on the user's computer
+#'
+#' Uses a tcltk dialog held in front of other windows (so it is not hidden
+#' behind the browser), falling back to RStudio's dialogs. The option
+#' FishDiveR.choose_path can supply a replacement function, used in tests.
+#'
+#' @param start_dir Folder the dialog opens in. Ignored if NULL or missing.
+#' @returns The chosen path, or NULL if cancelled or no dialog is available.
+#' @noRd
+choose_path <- function(type = c("file", "dir"), caption = "Select", start_dir = NULL) {
+  type <- match.arg(type)
+  if (!is.null(start_dir) && !dir.exists(start_dir)) start_dir <- NULL
+
+  path <- tryCatch(
+    {
+      chooser <- getOption("FishDiveR.choose_path")
+      if (is.function(chooser)) {
+        chooser(type, caption, start_dir)
+      } else if (isTRUE(capabilities("tcltk")) && requireNamespace("tcltk", quietly = TRUE)) {
+        choose_path_tcltk(type, caption, start_dir)
+      } else if (requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable()) {
+        start <- if (is.null(start_dir)) rstudioapi::getActiveProject() else start_dir
+        if (type == "file") rstudioapi::selectFile(caption = caption, path = start) else rstudioapi::selectDirectory(caption = caption, path = start)
+      } else {
+        NULL
+      }
+    },
+    error = function(e) NULL
+  )
+
+  if (length(path) == 0 || is.na(path[1]) || !nzchar(path[1])) {
+    return(NULL)
+  }
+  normalizePath(path[1], winslash = "/", mustWork = FALSE)
+}
+
+#' tcltk file or folder dialog owned by an always-on-top window
+#' @noRd
+choose_path_tcltk <- function(type, caption, start_dir) {
+  # Small always-on-top owner window, so the dialog opens in front of the browser
+  owner <- tcltk::tktoplevel()
+  on.exit(tcltk::tkdestroy(owner))
+  tcltk::tkwm.title(owner, "FishDiveR")
+  tcltk::tkwm.geometry(owner, "1x1+200+200")
+  tcltk::tcl("wm", "attributes", owner, "-topmost", 1)
+  tcltk::tkraise(owner)
+  tcltk::tkfocus("-force", owner)
+
+  args <- list(parent = owner, title = caption)
+  if (!is.null(start_dir)) args$initialdir <- start_dir
+
+  path <- if (type == "dir") {
+    do.call(tcltk::tkchooseDirectory, args)
+  } else {
+    do.call(tcltk::tkgetOpenFile, c(args, filetypes = "{{CSV files} {.csv}} {{All files} *}"))
+  }
+  tcltk::tclvalue(path)
+}
+
+#' Tag table row for the example data shipped with FishDiveR
+#' @noRd
+example_tag <- function() {
+  data.frame(
+    tag_ID = "example",
+    archive = system.file("extdata", "data", "data-Archive.csv", package = "FishDiveR"),
+    tag_deploy_UTC = "2000-01-01 00:00:00",
+    tag_release_UTC = "2000-01-11 23:59:00",
+    date_time_col = 1L,
+    depth_col = 2L,
+    temp_col = NA_integer_,
+    time_zone = "UTC",
+    GPS = system.file("extdata", "data", "GPS.csv", package = "FishDiveR"),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Sensible ggplot2 date_breaks for a record of n_days
+#' @noRd
+default_date_breaks <- function(n_days) {
+  if (n_days <= 7) {
+    "1 day"
+  } else if (n_days <= 21) {
+    "2 day"
+  } else if (n_days <= 60) {
+    "7 day"
+  } else if (n_days <= 180) {
+    "14 day"
+  } else {
+    "1 month"
+  }
+}
+
+#' Rounded maximum depth and tick step for a TDR Y axis
+#' @noRd
+default_depth_axis <- function(max_depth) {
+  step <- if (max_depth <= 100) 10 else if (max_depth <= 500) 50 else 100
+  c(max = ceiling(max_depth / step) * step, step = step)
+}

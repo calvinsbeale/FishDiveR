@@ -4,6 +4,9 @@
 - `create_wavelet()` no longer has the `allow_irregular_sampling` argument (it was not functional), and no longer stops on non-constant sampling intervals.
 
 ## New features
+- New `run_app()` opens a point-and-click app for FishDiveR that runs locally in your browser (in development). It manages a project folder and a table of tags, and currently covers importing tags and plotting their depth records. Later steps will follow. Needs the 'shiny', 'bslib' and 'DT' packages.
+- `plot_TDR()` now attaches its ggplot to the returned data as the attribute `TDR_plot`.
+- `plot_TDR()` has a new `minmax_bins` argument for fast plotting of large archives: it plots only the shallowest and deepest record in each of that many time bins, keeping dive extremes that `every_nth` can miss.
 - `import_tag_data()` now warns if the sampling interval is not constant, listing the intervals detected and their record counts.
 
 ## Docs/Infra

@@ -33,9 +33,14 @@ Imports:
     suncalc,
     tidyr,
     WaveletComp
-Suggests: 
+Suggests:
+    bslib,
+    DT,
     knitr,
     rmarkdown,
+    rstudioapi,
+    shiny (>= 1.7.0),
+    tcltk,
     testthat (>= 3.0.0)
 Depends:
     R (>= 3.5.0)

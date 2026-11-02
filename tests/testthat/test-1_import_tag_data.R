@@ -73,6 +73,27 @@ test_that("process_tag_data() imports a tag archive", {
   expect_true(file.exists(expected_filepath))
 })
 
+test_that("plot_TDR() minmax_bins keeps the shallowest and deepest records", {
+  filepath <- system.file("extdata", package = "FishDiveR")
+  archive_days <- readRDS(file.path(filepath, "data/archive_days.rds"))
+
+  plot_data <- plot_TDR(
+    rds_file = "data/archive_days.rds",
+    data_folder = filepath,
+    Y_lim = c(0, 300, 50),
+    date_breaks = "48 hour",
+    minmax_bins = 100
+  )
+
+  expect_lte(nrow(plot_data), 200)
+  expect_equal(max(plot_data$depth), max(archive_days$depth))
+  expect_equal(min(plot_data$depth), min(archive_days$depth))
+  expect_false(is.unsorted(plot_data$date))
+  expect_s3_class(attr(plot_data, "TDR_plot"), "ggplot")
+
+  expect_error(plot_TDR("data/archive_days.rds", data_folder = filepath, minmax_bins = -1), "minmax_bins")
+})
+
 test_that("import_tag_data() warns on irregular sampling intervals", {
   archive_file <- system.file("extdata", "data/data-Archive.csv", package = "FishDiveR")
 

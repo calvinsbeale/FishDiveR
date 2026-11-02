@@ -16,7 +16,8 @@ plot_TDR(
   dpi = 300,
   output = FALSE,
   output_folder = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  minmax_bins = 0
 )
 }
 \arguments{
@@ -54,9 +55,16 @@ c(0,1500,100).}
 \item{output_folder}{Output folder path used when \code{output = TRUE}. Defaults to NULL.}
 
 \item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
+
+\item{minmax_bins}{Numerical. Alternative to every_nth and every_s for fast
+plotting of large archives. Splits the record into this many equal time
+bins and plots only the shallowest and deepest record in each, so dive
+extremes are kept. E.g. 2000. Overrides every_nth and every_s if != 0.
+Defaults to 0.}
 }
 \value{
-A data frame of plot data
+A data frame of plot data. The ggplot object is attached as the
+attribute 'TDR_plot'.
 }
 \description{
 This function plots the time-series depth data from the imported tag.

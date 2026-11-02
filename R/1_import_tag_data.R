@@ -277,6 +277,11 @@ import_tag_data <- function(tag_ID,
 #'   of data points to plot by number of seconds, as opposed to records. E.g.
 #'   plots every 60th second, rather than 10th row of data. Must be a multiple of the
 #'   sampling frequency. Overrides every_nth if != 0.
+#' @param minmax_bins Numerical. Alternative to every_nth and every_s for fast
+#'   plotting of large archives. Splits the record into this many equal time
+#'   bins and plots only the shallowest and deepest record in each, so dive
+#'   extremes are kept. E.g. 2000. Overrides every_nth and every_s if != 0.
+#'   Defaults to 0.
 #' @param plot_size ggSave height and width for saving the output plot. Must be
 #'   numeric, positive and 2 elements long. Default to 'c(12,6)'
 #' @param X_lim Optional. Vector with two dates delimiting the time-depth record
@@ -291,7 +296,8 @@ import_tag_data <- function(tag_ID,
 #' @param output_folder Output folder path used when \code{output = TRUE}. Defaults to NULL.
 #' @param verbose Logical. If TRUE, progress messages are shown. Defaults to FALSE.
 #'
-#' @returns A data frame of plot data
+#' @returns A data frame of plot data. The ggplot object is attached as the
+#'   attribute 'TDR_plot'.
 #'
 #' @export
 #'
@@ -327,7 +333,8 @@ plot_TDR <- function(rds_file,
                      dpi = 300,
                      output = FALSE,
                      output_folder = NULL,
-                     verbose = FALSE) {
+                     verbose = FALSE,
+                     minmax_bins = 0) {
   # Check format of inputs, on error stop
   if (!is.character(rds_file)) {
     stop("rds_file must be a character string.")
@@ -338,6 +345,9 @@ plot_TDR <- function(rds_file,
   }
   if ((!is.numeric(every_s) || every_s < 0)) {
     stop("every_s must be a positive integer.")
+  }
+  if (!is.numeric(minmax_bins) || length(minmax_bins) != 1 || minmax_bins < 0) {
+    stop("minmax_bins must be 0 or a positive integer.")
   }
   # Check that plot_size is numeric, positive and exactly 2 elements long
   if (!is.numeric(plot_size) || length(plot_size) != 2 || any(plot_size <= 0)) {
@@ -391,7 +401,17 @@ plot_TDR <- function(rds_file,
   # Print sampling interval
   if (verbose) message(paste0("Data sampling interval is ", sampling_interval, " seconds"))
 
-  if (every_s != 0) { # Using time, rather than number of rows to plot data.
+  if (minmax_bins != 0) { # Keep the shallowest and deepest record in each time bin
+    rows <- split(seq_len(nrow(archive_days)), cut(as.numeric(archive_days$date), breaks = minmax_bins, labels = FALSE))
+    keep <- c(
+      vapply(rows, function(i) i[which.min(archive_days$depth[i])], integer(1)),
+      vapply(rows, function(i) i[which.max(archive_days$depth[i])], integer(1))
+    )
+    archive_days <- archive_days[sort(unique(keep)), ]
+
+    # Print sampling interval
+    if (verbose) message("Plotting shallowest and deepest records in ", minmax_bins, " time bins \n")
+  } else if (every_s != 0) { # Using time, rather than number of rows to plot data.
     # Check if every_s is a multiple of the original sampling frequency
     if (every_s %% sampling_interval != 0) {
       stop(paste("Error: The specified sampling interval (", every_s, " seconds) is not a multiple of the original sampling interval (", sampling_interval, " seconds).", sep = ""))
@@ -461,6 +481,9 @@ plot_TDR <- function(rds_file,
 
     if (verbose) message("Output file:", file.path(output_folder, paste0("tag_archive.png")))
   }
+
+  # Attach the plot for callers that want to display it, e.g. run_app()
+  attr(plot_data, "TDR_plot") <- TDR_plot
 
   return(plot_data)
 }

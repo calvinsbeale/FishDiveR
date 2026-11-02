@@ -1,0 +1,153 @@
+test_that("tag tables round-trip through csv and fill optional columns", {
+  file <- tempfile(fileext = ".csv")
+
+  write_tag_metadata(example_tag(), file)
+  expect_equal(read_tag_metadata(file), example_tag(), ignore_attr = TRUE)
+
+  # Only the required columns
+  utils::write.csv(example_tag()[, c("tag_ID", "archive", "tag_deploy_UTC", "tag_release_UTC", "time_zone")], file, row.names = FALSE)
+  meta <- read_tag_metadata(file)
+  expect_equal(names(meta), tag_metadata_columns)
+  expect_equal(meta$date_time_col, 1L)
+  expect_equal(meta$depth_col, 2L)
+  expect_true(is.na(meta$temp_col))
+
+  # Missing required column
+  utils::write.csv(data.frame(tag_ID = "a"), file, row.names = FALSE)
+  expect_error(read_tag_metadata(file), "missing column")
+
+  expect_equal(nrow(read_tag_metadata(tempfile())), 0)
+})
+
+test_that("upsert_tags() replaces tags with the same ID", {
+  tags <- upsert_tags(empty_tag_metadata(), example_tag())
+  second <- example_tag()
+  second$tag_ID <- "second"
+  tags <- upsert_tags(tags, second)
+  expect_equal(tags$tag_ID, c("example", "second"))
+
+  changed <- example_tag()
+  changed$time_zone <- "Asia/Tokyo"
+  tags <- upsert_tags(tags, changed)
+  expect_equal(nrow(tags), 2)
+  expect_equal(tags$time_zone[tags$tag_ID == "example"], "Asia/Tokyo")
+})
+
+test_that("validate_tag() reports problems", {
+  expect_length(validate_tag(example_tag()), 0)
+
+  bad <- example_tag()
+  bad$archive <- "no-such-file.csv"
+  bad$tag_release_UTC <- "1999-12-31 00:00:00"
+  bad$time_zone <- "Not/AZone"
+  bad$depth_col <- NA_integer_
+  problems <- validate_tag(bad)
+  expect_true(any(grepl("archive file not found", problems)))
+  expect_true(any(grepl("after deploy", problems)))
+  expect_true(any(grepl("time zone", problems)))
+  expect_true(any(grepl("depth column", problems)))
+})
+
+test_that("run_logged() collects messages, warnings and errors", {
+  res <- run_logged({
+    message("hello")
+    warning("careful")
+    42
+  })
+  expect_true(res$ok)
+  expect_equal(res$value, 42)
+  expect_equal(res$log, c("hello", "Warning: careful"))
+
+  res <- run_logged(stop("broken"))
+  expect_false(res$ok)
+  expect_equal(res$log, "Error: broken")
+})
+
+test_that("app imports tags and plots the depth record", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("DT")
+
+  project <- file.path(tempdir(), "app_project")
+  unlink(project, recursive = TRUE)
+  dir.create(project)
+
+  state <- shiny::reactiveValues(project = project, tags = example_tag(), refresh = 0)
+  expect_equal(tag_status(example_tag(), project)$Imported, FALSE)
+
+  shiny::testServer(mod_import_server, args = list(state = state), {
+    session$setInputs(import_all = 1)
+    expect_true(file.exists(file.path(project, "example", "archive_days.rds")))
+    expect_match(paste(import_log(), collapse = "\n"), "example: imported")
+    expect_equal(imported_tags(), "example")
+
+    session$setInputs(plot_tag = "example")
+    session$setInputs(
+      downsample = "n", every = 10, y_max = 300, y_step = 50,
+      x_lim = archive_info()$dates, date_breaks = "2 day", no_axis_titles = TRUE
+    )
+    expect_null(plotted_settings())
+    session$setInputs(create_plot = 1)
+    plot <- tdr_plot()
+    expect_s3_class(plot, "ggplot")
+    expect_s3_class(plot$theme$axis.title, "element_blank")
+    expect_identical(plotted_settings(), plot_settings())
+
+    # Changing a setting does not redraw until Create plot is clicked
+    session$setInputs(y_max = 350)
+    expect_false(identical(plotted_settings(), plot_settings()))
+    expect_identical(tdr_plot(), plot)
+
+    # Fast preview plots at most two points per time bin
+    session$setInputs(downsample = "minmax", create_plot = 2)
+    expect_lte(nrow(tdr_plot()$data), 2 * preview_bins)
+
+    # Remove the tag after confirming
+    session$setInputs(tag_table_rows_selected = 1, remove_selected = 1)
+    session$setInputs(confirm_remove = 1)
+    expect_equal(nrow(state$tags), 0)
+    expect_equal(nrow(read_tag_metadata(file.path(project, "tag_metadata.csv"))), 0)
+    expect_true(file.exists(file.path(project, "example", "archive_days.rds")))
+  })
+})
+
+test_that("Browse opens in the project folder and fills the path", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("DT")
+
+  project <- file.path(tempdir(), "app_project_browse")
+  dir.create(project, showWarnings = FALSE)
+  archive <- example_tag()$archive
+
+  start_dirs <- character()
+  old <- options(FishDiveR.choose_path = function(type, caption, start_dir) {
+    start_dirs <<- c(start_dirs, start_dir)
+    archive
+  })
+  on.exit(options(old), add = TRUE)
+
+  state <- shiny::reactiveValues(project = normalizePath(project, winslash = "/"), tags = empty_tag_metadata(), refresh = 0)
+  shiny::testServer(mod_project_server, args = list(state = state), {
+    session$setInputs(archive_browse = 1)
+    session$setInputs(browse_ready = 1)
+    expect_equal(start_dirs, state$project)
+  })
+})
+
+test_that("Next buttons move through the steps", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("bslib")
+  skip_if_not_installed("DT")
+
+  shiny::testServer(app_server(), {
+    session$setInputs(next_project = 1)
+    session$setInputs(next_import = 1)
+    expect_true(TRUE)
+  })
+})
+
+test_that("run_app() checks project_folder", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("bslib")
+  skip_if_not_installed("DT")
+  expect_error(run_app(project_folder = file.path(tempdir(), "no-such-folder")), "does not exist")
+})

@@ -86,6 +86,19 @@ remotes::install_github("calvinsbeale/FishDiveR")
 devtools::install_github("calvinsbeale/FishDiveR")
 ```
 
+## Point-and-click app (in development)
+
+The development version includes an app that runs FishDiveR from your
+web browser, without writing code. It runs locally on your computer, so
+your data never leave your machine. It currently covers setting up a
+project with several tags, importing them and plotting their depth
+records; the remaining steps are being added.
+
+``` r
+install.packages(c("shiny", "bslib", "DT"))
+FishDiveR::run_app()
+```
+
 ## Usage
 
 ``` r

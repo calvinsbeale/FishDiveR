@@ -230,21 +230,25 @@ mod_wavelet_server <- function(id, state) {
       DT::datatable(display, selection = selection, rownames = FALSE, fillContainer = FALSE, options = list(dom = "t", pageLength = 1000))
     })
 
+    # Settings problems are always shown; problems with particular tags only
+    # for the tags selected in the table
     output$warnings <- shiny::renderUI({
       info <- tag_info()
       s <- settings()
       if (is.null(info)) return(NULL)
+      selected <- selected_info()
+      if (is.null(selected)) selected <- info[0, ]
       msgs <- character()
 
       if (!settings_ok(s)) {
         msgs <- c(msgs, "Enter positive periods, with the upper period longer than the lower period.")
       } else {
-        too_short <- info$tag_ID[s$lower_period_mins * 60 < info$sampling_s]
+        too_short <- selected$tag_ID[s$lower_period_mins * 60 < selected$sampling_s]
         if (length(too_short) > 0) {
           msgs <- c(msgs, paste0("The lower period is shorter than the sampling interval of: ", paste(too_short, collapse = ", "), "."))
         }
         if (!is.null(ram)) {
-          too_big <- info$tag_ID[!is.na(info$bytes) & info$bytes > ram / 2]
+          too_big <- selected$tag_ID[!is.na(selected$bytes) & selected$bytes > ram / 2]
           if (length(too_big) > 0) {
             msgs <- c(msgs, paste0(
               "Estimated memory for ", paste(too_big, collapse = ", "), " is more than half of this computer's ",
@@ -253,7 +257,7 @@ mod_wavelet_server <- function(id, state) {
           }
         }
       }
-      thin <- thin_problems(s, info)
+      thin <- thin_problems(s, selected)
       msgs <- c(msgs, thin$errors, thin$warnings)
 
       done <- info[info$wavelet, ]
@@ -397,8 +401,14 @@ mod_wavelet_server <- function(id, state) {
     # Ask before replacing existing wavelets
     start_run <- function(tag_IDs) {
       info <- tag_info()
-      if (!settings_ok(settings()) || length(thin_problems(settings(), info)$errors) > 0) {
-        shiny::showNotification("Check the wavelet and thinning settings first.", type = "error")
+      if (!settings_ok(settings())) {
+        shiny::showNotification("Check the wavelet settings first.", type = "error")
+        return()
+      }
+      # Check thinning for the tags being run, which may not be the selected ones
+      thin_errors <- thin_problems(settings(), info[info$tag_ID %in% tag_IDs, , drop = FALSE])$errors
+      if (length(thin_errors) > 0) {
+        shiny::showNotification(paste(thin_errors, collapse = " "), type = "error", duration = 10)
         return()
       }
       existing <- intersect(tag_IDs, info$tag_ID[info$wavelet])

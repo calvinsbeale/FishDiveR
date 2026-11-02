@@ -11,6 +11,7 @@ app_ui <- function() {
     theme = bslib::bs_theme(version = 5, primary = "#1B6A8F"),
     # Let pages grow and scroll, so stacked cards in narrow windows don't overlap
     fillable = FALSE,
+    header = app_css(),
     bslib::nav_panel(
       "1. Project & tags",
       value = "project",
@@ -32,21 +33,13 @@ app_ui <- function() {
     bslib::nav_panel(
       "4. Daily stats",
       value = "stats",
-      placeholder_panel(
-        "Daily statistics",
-        "Create daily wavelet statistics and daily and diel depth statistics for each tag.",
-        c("create_wavelet_stats()", "create_depth_stats()")
-      ),
+      mod_stats_ui("stats"),
       next_button("stats")
     ),
     bslib::nav_panel(
       "5. PCA",
       value = "pca",
-      placeholder_panel(
-        "Principal component analysis",
-        "Combine the wavelet statistics of the selected tags, choose the principal components to keep, and view the loadings.",
-        c("pca_data()", "pca_results()", "pca_scores()", "combine_data()")
-      ),
+      mod_pca_ui("pca"),
       next_button("pca")
     ),
     bslib::nav_panel(
@@ -121,5 +114,7 @@ app_server <- function(project_folder = NULL) {
     mod_project_server("project", state)
     mod_import_server("import", state)
     mod_wavelet_server("wavelet", state)
+    mod_stats_server("stats", state)
+    mod_pca_server("pca", state)
   }
 }

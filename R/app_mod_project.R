@@ -7,6 +7,7 @@ mod_project_ui <- function(id) {
   bslib::layout_columns(
     col_widths = bslib::breakpoints(sm = 12, lg = c(4, 8)),
     shiny::div(
+      class = "fd-left-col",
       bslib::card(
         bslib::card_header("Project folder"),
         shiny::p(
@@ -39,18 +40,27 @@ mod_project_ui <- function(id) {
         )
       )
     ),
-    bslib::card(
-      bslib::card_header("Tags in this project"),
-      shiny::p(
-        "Select a tag to edit or remove it. The table is saved as",
-        shiny::code("tag_metadata.csv"), "in the project folder."
-      ),
-      DT::DTOutput(ns("tag_table"), fill = FALSE),
-      bslib::card_footer(
-        shiny::actionButton(ns("edit_tag"), "Edit selected"),
-        shiny::actionButton(ns("remove_tag"), "Remove selected"),
-        shiny::actionButton(ns("load_table"), "Load tag table csv..."),
-        shiny::actionButton(ns("add_example"), "Add example tag")
+    # Side by side, the tags card is no taller than the left column and its
+    # table scrolls (see app_css())
+    shiny::div(
+      class = "fd-match-left",
+      bslib::card(
+        bslib::card_header("Tags in this project"),
+        bslib::card_body(
+          class = "fd-scroll",
+          fillable = FALSE,
+          shiny::p(
+            "Select a tag to edit or remove it. The table is saved as",
+            shiny::code("tag_metadata.csv"), "in the project folder."
+          ),
+          DT::DTOutput(ns("tag_table"), fill = FALSE)
+        ),
+        bslib::card_footer(
+          shiny::actionButton(ns("edit_tag"), "Edit selected"),
+          shiny::actionButton(ns("remove_tag"), "Remove selected"),
+          shiny::actionButton(ns("load_table"), "Load tag table csv..."),
+          shiny::actionButton(ns("add_example"), "Add example tag")
+        )
       )
     )
   )

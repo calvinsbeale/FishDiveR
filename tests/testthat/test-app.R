@@ -181,6 +181,13 @@ test_that("app runs wavelets for imported tags", {
 
   state <- shiny::reactiveValues(project = project, tags = tag, refresh = 0)
   shiny::testServer(mod_wavelet_server, args = list(state = state), {
+    # Warnings about particular tags only appear for selected tags
+    session$setInputs(lower_period_mins = 0.5, upper_period_hours = 24, suboctaves = 12)
+    expect_false(isTRUE(grepl("shorter than the sampling interval", output$warnings$html)))
+    session$setInputs(tag_table_rows_selected = 1)
+    expect_match(output$warnings$html, "shorter than the sampling interval of: example")
+    session$setInputs(tag_table_rows_selected = NULL)
+
     session$setInputs(lower_period_mins = 30, upper_period_hours = 24, suboctaves = 12)
     info <- tag_info()
     expect_equal(info$tag_ID, "example")
@@ -264,5 +271,69 @@ test_that("app thins records before the wavelet", {
 
     # The imported record keeps its full resolution
     expect_equal(nrow(readRDS(file.path(project, "example", "archive_days.rds"))), 14400)
+  })
+})
+
+test_that("suggest_n_pcs() keeps eigenvalues of 1 or more and at least 70% variance", {
+  eig <- data.frame(eigenvalue = c(5, 2, 1.2, 0.8, 0.5), cumulative = c(50, 70, 82, 90, 95))
+  expect_equal(suggest_n_pcs(eig), 3)
+  eig$cumulative <- c(40, 55, 65, 75, 95)
+  expect_equal(suggest_n_pcs(eig), 4)
+})
+
+test_that("app makes daily statistics and runs PCA across tags", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("DT")
+
+  project <- file.path(tempdir(), "app_project_pca")
+  unlink(project, recursive = TRUE)
+  dir.create(project)
+  tags <- example_tag()
+  tags <- rbind(tags, transform(example_tag(), tag_ID = "example2"))
+  for (i in seq_len(nrow(tags))) {
+    archive <- suppressMessages(import_tag_data(
+      tag_ID = tags$tag_ID[i], tag_deploy_UTC = tags$tag_deploy_UTC[i], tag_release_UTC = tags$tag_release_UTC[i],
+      archive = tags$archive[i], time_zone = tags$time_zone[i], output = TRUE, output_folder = project
+    ))
+    utils::capture.output(suppressWarnings(create_wavelet(
+      archive, tags$tag_ID[i], lower_period_mins = 60, upper_period_hours = 24, output = TRUE,
+      output_folder = project, plot_wavelet = FALSE, interactive_mode = FALSE
+    )))
+  }
+  state <- shiny::reactiveValues(project = project, tags = tags, refresh = 0)
+
+  shiny::testServer(mod_stats_server, args = list(state = state), {
+    session$setInputs(diel = TRUE, diel_source = "gps", sunset_type = "civil", sunrise_time = "06:00:00", sunset_time = "18:00:00")
+    expect_equal(diel_source(tag_info()), c("GPS file", "GPS file"))
+    session$setInputs(run_all = 1)
+    expect_match(paste(stats_log(), collapse = "\n"), "example: done")
+    expect_equal(tag_info()$wave_days, c(10L, 10L))
+    expect_equal(tag_info()$depth_days, c(10L, 10L))
+
+    session$setInputs(view_tag = "example", view_stats = "depth")
+    expect_true(file.exists(view_file()))
+  })
+
+  shiny::testServer(mod_pca_server, args = list(state = state), {
+    session$setInputs(tags = c("example", "example2"), stats = c("power_mean", "power_variance", "amplitude_mean"), standardise = TRUE)
+    expect_length(errors(), 0)
+
+    session$setInputs(calc_eigen = 1)
+    expect_true(eigen_current())
+    eig <- eigen()$eig
+    n <- suggest_n_pcs(eig)
+    expect_gte(eig$cumulative[n], 70)
+
+    # Changing the settings makes the eigenvalues out of date
+    session$setInputs(standardise = FALSE)
+    expect_false(eigen_current())
+    session$setInputs(standardise = TRUE)
+
+    session$setInputs(n_pcs = 3, run_pca = 1)
+    expect_match(pca_log()[1], "PCA with 3 components: done")
+    combined <- readRDS(file.path(project, "Combined_tags", "5_k-means", "combined_stats.rds"))
+    expect_equal(nrow(combined), 20)
+    expect_true(all(c("PC1", "PC2", "PC3") %in% names(combined)))
+    expect_true("PC_Eigenvalues_cum_var.png" %in% figure_files())
   })
 })

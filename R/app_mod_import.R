@@ -32,11 +32,19 @@ mod_import_ui <- function(id) {
           shiny::selectInput(ns("plot_tag"), "Tag", choices = NULL),
           shiny::radioButtons(
             ns("downsample"), "Points to plot",
-            choices = c(
-              "Fast preview (deepest and shallowest)" = "minmax",
-              "Every n records" = "n",
-              "Every n seconds" = "s"
-            )
+            choiceNames = list(
+              shiny::tagList(
+                "Fast preview ",
+                help_tip(paste0(
+                  "Splits the record into ", format(preview_bins, big.mark = ","), " time slices and plots only the ",
+                  "shallowest and deepest record in each. Every dive's extremes are kept, and long deployments plot ",
+                  "in about a second."
+                ))
+              ),
+              "Every n records",
+              "Every n seconds"
+            ),
+            choiceValues = c("minmax", "n", "s")
           ),
           shiny::conditionalPanel(
             "input.downsample != 'minmax'",

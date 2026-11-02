@@ -3,6 +3,31 @@
 # Step values of the app tabs, in workflow order
 app_steps <- c("project", "import", "wavelets", "stats", "pca", "clustering", "results")
 
+#' Styles for the app
+#'
+#' fd-match-left: on wide screens, a card that fills its grid cell without
+#' adding height, so it ends level with the column beside it.
+#' @noRd
+app_css <- function() {
+  shiny::tags$style(shiny::HTML("
+    @media (min-width: 992px) {
+      .fd-match-left { position: relative; flex: 1 1 auto; }
+      .fd-match-left > .card { position: absolute; inset: 0; margin-bottom: 0; }
+      .fd-left-col > .card:last-child { margin-bottom: 0; }
+    }
+    .fd-scroll { min-height: 0; overflow-y: auto; }
+  "))
+}
+
+#' A small "?" that shows an explanation when hovered over
+#' @noRd
+help_tip <- function(text) {
+  bslib::tooltip(
+    shiny::span(class = "badge rounded-pill text-bg-secondary", style = "cursor: help;", "?"),
+    text
+  )
+}
+
 #' Next button at the bottom right of a step
 #' @noRd
 next_button <- function(step) {

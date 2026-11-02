@@ -42,5 +42,8 @@ utils::globalVariables(c(
   "scores",
   "data",
   "results",
-  "period_labs_factor"
+  "period_labs_factor",
+  "component",
+  "variance",
+  "cumulative"
 ))

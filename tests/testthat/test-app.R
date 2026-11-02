@@ -238,6 +238,9 @@ test_that("app thins records before the wavelet", {
   state <- shiny::reactiveValues(project = project, tags = tag, refresh = 0)
   shiny::testServer(mod_wavelet_server, args = list(state = state), {
     session$setInputs(lower_period_mins = 60, upper_period_hours = 24, suboctaves = 12, thin = FALSE, thin_s = 15)
+    # No suggestion until a tag is selected
+    expect_true(is.na(suggested_thin()))
+    session$setInputs(tag_table_rows_selected = 1)
     expect_equal(suggested_thin(), 180)
     full_bytes <- tag_info()$bytes
 
@@ -256,6 +259,8 @@ test_that("app thins records before the wavelet", {
     session$setInputs(thin_s = 180, run_all = 2)
     expect_match(paste(wavelet_log(), collapse = "\n"), "Thinned from 60 to 180 second sampling")
     expect_equal(tag_info()$wavelet_sampling_s, 180)
+    session$setInputs(view_tag = "example")
+    expect_match(output$thinned_note$html, "Wavelet thinned to 180 seconds")
 
     # The imported record keeps its full resolution
     expect_equal(nrow(readRDS(file.path(project, "example", "archive_days.rds"))), 14400)

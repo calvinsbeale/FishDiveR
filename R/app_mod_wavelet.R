@@ -49,6 +49,7 @@ mod_wavelet_ui <- function(id) {
         shiny::selectInput(ns("view_tag"), "Tag", choices = NULL),
         shiny::radioButtons(ns("view_plot"), "Show", choices = c("Power spectrum" = "spectrum", "Mean power by period" = "mean_power"), inline = TRUE)
       ),
+      shiny::uiOutput(ns("thinned_note")),
       shiny::uiOutput(ns("view_note")),
       shiny::imageOutput(ns("wavelet_image"), height = "auto", fill = FALSE)
     )
@@ -224,7 +225,9 @@ mod_wavelet_server <- function(id, state) {
         ),
         check.names = FALSE
       )
-      DT::datatable(display, selection = "multiple", rownames = FALSE, fillContainer = FALSE, options = list(dom = "t", pageLength = 1000))
+      # Keep the selection when settings change and the table is redrawn
+      selection <- list(mode = "multiple", selected = shiny::isolate(input$tag_table_rows_selected))
+      DT::datatable(display, selection = selection, rownames = FALSE, fillContainer = FALSE, options = list(dom = "t", pageLength = 1000))
     })
 
     output$warnings <- shiny::renderUI({
@@ -268,36 +271,55 @@ mod_wavelet_server <- function(id, state) {
       if (length(log) == 0) "No wavelets run yet this session." else paste(log, collapse = "\n")
     })
 
-    ## Thinning suggestion
-    suggested_thin <- shiny::reactive({
+    ## Thinning suggestion, for the tags selected in the table
+    selected_info <- shiny::reactive({
       info <- tag_info()
+      rows <- input$tag_table_rows_selected
+      if (is.null(info) || length(rows) == 0) NULL else info[rows[rows <= nrow(info)], , drop = FALSE]
+    })
+
+    suggested_thin <- shiny::reactive({
+      selected <- selected_info()
       s <- settings()
-      if (is.null(info) || !settings_ok(s)) return(NA_real_)
-      suggest_thin_interval(s$lower_period_mins, info$sampling_s)
+      if (is.null(selected) || !settings_ok(s)) return(NA_real_)
+      suggest_thin_interval(s$lower_period_mins, selected$sampling_s)
     })
 
     output$thin_suggestion <- shiny::renderUI({
-      info <- tag_info()
+      selected <- selected_info()
       s <- settings()
-      if (is.null(info) || !settings_ok(s)) return(NULL)
+      if (is.null(selected)) {
+        return(shiny::p(class = "text-muted small", "Select tags in the table below to see a suggested thinning interval."))
+      }
+      if (!settings_ok(s)) return(NULL)
       suggested <- suggested_thin()
+      tag_names <- paste(selected$tag_ID, collapse = ", ")
 
       if (is.na(suggested)) {
-        return(shiny::p(class = "text-muted small", "No thinning interval suits this lower period and these tags' sampling intervals."))
-      }
-      if (all(info$sampling_s >= suggested)) {
         return(shiny::p(
           class = "text-muted small",
-          paste0("Thinning isn't needed: all tags are already sampled every ", suggested, " s or less often.")
+          paste0("No thinning interval suits this lower period and the sampling interval of ", tag_names, ".")
+        ))
+      }
+      if (all(selected$sampling_s >= suggested)) {
+        return(shiny::p(
+          class = "text-muted small",
+          paste0(
+            "Thinning isn't needed: ", tag_names, if (nrow(selected) == 1) " is" else " are",
+            " already sampled every ", suggested, " s or less often."
+          )
         ))
       }
 
-      full_bytes <- wavelet_bytes(info$n_records, s$lower_period_mins, s$upper_period_hours, s$suboctaves)
+      full_bytes <- wavelet_bytes(selected$n_records, s$lower_period_mins, s$upper_period_hours, s$suboctaves)
       thinned_bytes <- wavelet_bytes(
-        info$n_records * info$sampling_s / pmax(info$sampling_s, suggested),
+        selected$n_records * selected$sampling_s / pmax(selected$sampling_s, suggested),
         s$lower_period_mins, s$upper_period_hours, s$suboctaves
       )
-      largest <- which.max(full_bytes)
+      savings <- paste0(
+        selected$tag_ID, ": ", format_bytes(full_bytes), " to ", format_bytes(thinned_bytes),
+        collapse = "; "
+      )
 
       shiny::div(
         class = "alert alert-info py-2",
@@ -306,9 +328,7 @@ mod_wavelet_server <- function(id, state) {
           shiny::strong(paste0("Suggested: thin to ", suggested, " s")),
           paste0(
             "for a ", s$lower_period_mins, " minute lower period, keeping ",
-            floor(s$lower_period_mins * 60 / suggested), " records per cycle. For tag ", info$tag_ID[largest],
-            ", this cuts the estimated memory from ", format_bytes(full_bytes[largest]), " to ",
-            format_bytes(thinned_bytes[largest]), "."
+            floor(s$lower_period_mins * 60 / suggested), " records per cycle. Estimated memory, ", savings, "."
           )
         ),
         shiny::actionLink(session$ns("use_suggestion"), "Use this suggestion")
@@ -445,6 +465,15 @@ mod_wavelet_server <- function(id, state) {
       shiny::req(input$view_tag, input$view_plot)
       file_name <- if (input$view_plot == "spectrum") "_wavelet_spectrum_no.p.png" else "_wavelet_mean_power.png"
       file.path(state$project, input$view_tag, "2_Wavelet_Figures", paste0(input$view_tag, file_name))
+    })
+
+    output$thinned_note <- shiny::renderUI({
+      info <- tag_info()
+      shiny::req(info, input$view_tag)
+      row <- info[info$tag_ID == input$view_tag, ]
+      if (nrow(row) == 1 && isTRUE(row$wavelet_sampling_s > row$sampling_s)) {
+        shiny::p(class = "text-muted", paste("Wavelet thinned to", row$wavelet_sampling_s, "seconds"))
+      }
     })
 
     output$view_note <- shiny::renderUI({

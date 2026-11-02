@@ -305,6 +305,10 @@ create_wavelet <- function(archive,
       # Load the existing wavelet
       if (verbose) message("\nLoading existing wavelet.")
       my.w <- readRDS(file = wavelet_file_path)
+
+      # Use the wavelet's own sampling interval, which differs from archive's
+      # if the record was thinned before the wavelet was made
+      sampling_frequency <- as.numeric(difftime(my.w$series[2, 1], my.w$series[1, 1], units = "secs"))
     } else {
       stop("Wavelet was not found in output_folder")
     }
@@ -343,7 +347,7 @@ create_wavelet <- function(archive,
   }
 
   # Combine the attributes into a list
-  wavelet_meta <- list(LP = attr(my.w, "LP"), UP = attr(my.w, "UP"), SO = attr(my.w, "SO"))
+  wavelet_meta <- list(LP = attr(my.w, "LP"), UP = attr(my.w, "UP"), SO = attr(my.w, "SO"), sampling_s = sampling_frequency)
 
   if (isTRUE(output)) {
     # Save the list as an RDS file

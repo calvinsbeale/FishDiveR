@@ -5,6 +5,8 @@
 
 ## New features
 - New `run_app()` opens a point-and-click app for FishDiveR that runs locally in your browser (in development). It manages a project folder and a table of tags, and currently covers importing tags, plotting their depth records, and running the wavelet analysis with an estimate of the memory each tag needs. Later steps will follow. Needs the 'shiny', 'bslib' and 'DT' packages.
+- New `thin_archive()` block-averages a depth record to a longer sampling interval (e.g. 1 s to 15 s) before `create_wavelet()`, cutting the wavelet's memory and run time for long, high-frequency records. In the app, step 3 has a thinning option with a suggested interval based on the lower period.
+- `create_wavelet()` now records the wavelet's sampling interval as `sampling_s` in `wavelet_meta`, and with `load_existing_wavelet = TRUE` uses the saved wavelet's own sampling interval for the figures.
 - `plot_TDR()` now attaches its ggplot to the returned data as the attribute `TDR_plot`.
 - `plot_TDR()` has a new `minmax_bins` argument for fast plotting of large archives: it plots only the shallowest and deepest record in each of that many time bins, keeping dive extremes that `every_nth` can miss.
 - `import_tag_data()` now warns if the sampling interval is not constant, listing the intervals detected and their record counts.

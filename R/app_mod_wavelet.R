@@ -19,6 +19,18 @@ mod_wavelet_ui <- function(id) {
         shiny::numericInput(ns("upper_period_hours"), "Upper period (hours)", value = 24, min = 1),
         shiny::numericInput(ns("suboctaves"), "Sub-octaves", value = 12, min = 1, step = 1)
       ),
+      shiny::checkboxInput(ns("thin"), "Thin records before the wavelet (block average)"),
+      shiny::conditionalPanel(
+        "input.thin",
+        ns = ns,
+        shiny::numericInput(ns("thin_s"), "Thin to (seconds)", value = 15, min = 1, step = 1, width = "200px")
+      ),
+      shiny::uiOutput(ns("thin_suggestion")),
+      bslib::accordion(
+        open = FALSE,
+        class = "mb-3",
+        bslib::accordion_panel("How thinning works", thinning_explanation())
+      ),
       DT::DTOutput(ns("tag_table"), fill = FALSE),
       shiny::uiOutput(ns("warnings")),
       shiny::div(
@@ -43,6 +55,52 @@ mod_wavelet_ui <- function(id) {
   )
 }
 
+#' Explanation of thinning for the wavelet step
+#' @noRd
+thinning_explanation <- function() {
+  shiny::tagList(
+    shiny::p(
+      shiny::strong("What it does."),
+      "Each block of n seconds is averaged into one record, so thinning a 1 second record to 15 seconds turns every",
+      "15 records into one. Only the copy given to the wavelet is thinned: the imported record used for the depth",
+      "plots and the daily depth statistics keeps its full resolution."
+    ),
+    shiny::p(
+      shiny::strong("Why use it."),
+      "The memory and time a wavelet needs grow with the number of records. Thinning 15 times cuts both roughly",
+      "15 times, e.g. 11 GB to under 1 GB. The periods analysed are set by the lower period, upper period and",
+      "sub-octaves, so they do not change."
+    ),
+    shiny::p(
+      shiny::strong("Effect on the wavelet."),
+      "The shortest cycle a record can show is twice its sampling interval, 30 seconds at 15 second sampling.",
+      "Cycles at the lower period are still well described as long as each cycle has enough records: a 5 minute",
+      "cycle has 300 records at 1 second and 20 at 15 seconds, and 20 is plenty. What is lost is only movement",
+      "faster than about twice the new interval, which is already below the lower period and outside the analysis."
+    ),
+    shiny::p(
+      shiny::strong("Why average rather than keep every nth record."),
+      "Keeping only every nth record lets movements faster than the new interval show up as false, slower cycles",
+      "(aliasing). Averaging each block removes them first."
+    ),
+    shiny::p(
+      shiny::strong("Suggested interval."),
+      paste0(
+        "The suggestion keeps at least ", thin_records_per_cycle, " records per cycle of the lower period",
+        " (the lower period in seconds divided by ", thin_records_per_cycle, "), rounded down to an interval that divides a day evenly"
+      ),
+      "and is a multiple of your tags' sampling intervals. Tags already sampled at that interval or longer are not thinned."
+    ),
+    shiny::p(
+      class = "mb-0",
+      shiny::strong("Keep tags consistent."),
+      "Wavelet statistics from a thinned record are very close to, but not identical to, those from the full record.",
+      "Thin all tags you will cluster together to the same interval. This also makes tags recorded at different",
+      "rates directly comparable."
+    )
+  )
+}
+
 #' @noRd
 mod_wavelet_server <- function(id, state) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -53,12 +111,60 @@ mod_wavelet_server <- function(id, state) {
     settings <- shiny::reactive(list(
       lower_period_mins = input$lower_period_mins,
       upper_period_hours = input$upper_period_hours,
-      suboctaves = input$suboctaves
+      suboctaves = input$suboctaves,
+      thin_s = if (isTRUE(input$thin)) input$thin_s else NA
     ))
 
     settings_ok <- function(s) {
       isTRUE(s$lower_period_mins > 0) && isTRUE(s$upper_period_hours > 0) && isTRUE(s$suboctaves >= 1) &&
         isTRUE(s$upper_period_hours * 60 > s$lower_period_mins)
+    }
+
+    # Sampling interval the wavelet will use for a tag: thinned if thinning is
+    # on and the tag is sampled more finely than the thinning interval
+    wavelet_sampling <- function(sampling_s, thin_s) {
+      if (isTRUE(thin_s > sampling_s)) thin_s else sampling_s
+    }
+
+    # Problems with the thinning interval. Errors stop a run; warnings don't.
+    thin_problems <- function(s, info) {
+      errors <- character()
+      warnings <- character()
+      thin_s <- s$thin_s
+      if (is.na(thin_s) || is.null(info)) {
+        return(list(errors = errors, warnings = warnings))
+      }
+
+      if (!isTRUE(thin_s > 0) || thin_s != round(thin_s) || 86400 %% thin_s != 0) {
+        errors <- c(errors, "The thinning interval must be a whole number of seconds that divides a day evenly, e.g. 5, 10, 15, 30 or 60.")
+        return(list(errors = errors, warnings = warnings))
+      }
+      not_multiple <- info$tag_ID[info$sampling_s < thin_s & thin_s %% info$sampling_s != 0]
+      if (length(not_multiple) > 0) {
+        errors <- c(errors, paste0(
+          "The thinning interval must be a multiple of the sampling interval of: ", paste(not_multiple, collapse = ", "), "."
+        ))
+      }
+      if (settings_ok(s)) {
+        if (thin_s * 2 >= s$lower_period_mins * 60) {
+          errors <- c(errors, paste0(
+            "Thinning to ", thin_s, " s is too coarse for a ", s$lower_period_mins,
+            " minute lower period: the shortest cycle it can show is ", thin_s * 2, " s."
+          ))
+        } else if (thin_s > s$lower_period_mins * 60 / thin_records_per_cycle) {
+          warnings <- c(warnings, paste0(
+            "Thinning to ", thin_s, " s leaves fewer than ", thin_records_per_cycle,
+            " records per cycle of the lower period. The suggested interval is safer."
+          ))
+        }
+      }
+      not_thinned <- info$tag_ID[info$sampling_s >= thin_s]
+      if (length(not_thinned) > 0) {
+        warnings <- c(warnings, paste0(
+          "Already sampled at ", thin_s, " s or longer, so not thinned: ", paste(not_thinned, collapse = ", "), "."
+        ))
+      }
+      list(errors = errors, warnings = warnings)
     }
 
     # One row per imported tag: size, current wavelet settings and estimate
@@ -75,15 +181,20 @@ mod_wavelet_server <- function(id, state) {
       rows <- lapply(tags, function(tag) {
         summary <- archive_summary(file.path(state$project, tag, "archive_days.rds"))
         meta <- if (status$Wavelet[status$tag_ID == tag]) read_wavelet_meta(state$project, tag) else NULL
+        wave_sampling <- wavelet_sampling(summary$sampling_s, s$thin_s)
+        wave_records <- summary$n_records * summary$sampling_s / wave_sampling
         data.frame(
           tag_ID = tag,
           n_records = summary$n_records,
           sampling_s = summary$sampling_s,
-          bytes = if (settings_ok(s)) wavelet_bytes(summary$n_records, s$lower_period_mins, s$upper_period_hours, s$suboctaves) else NA,
+          wave_sampling_s = wave_sampling,
+          bytes = if (settings_ok(s)) wavelet_bytes(wave_records, s$lower_period_mins, s$upper_period_hours, s$suboctaves) else NA,
           wavelet = !is.null(meta),
           LP = if (is.null(meta)) NA else meta$LP,
           UP_hours = if (is.null(meta)) NA else meta$UP * 24,
           SO = if (is.null(meta)) NA else meta$SO,
+          # Wavelets made before the sampling interval was recorded show NA
+          wavelet_sampling_s = if (is.null(meta$sampling_s)) NA else meta$sampling_s,
           stringsAsFactors = FALSE
         )
       })
@@ -97,9 +208,20 @@ mod_wavelet_server <- function(id, state) {
       display <- data.frame(
         `Tag ID` = info$tag_ID,
         Records = format(info$n_records, big.mark = ","),
-        `Sampling (s)` = info$sampling_s,
+        `Sampling (s)` = ifelse(
+          info$wave_sampling_s > info$sampling_s,
+          paste(info$sampling_s, "to", info$wave_sampling_s),
+          info$sampling_s
+        ),
         `Est. memory` = ifelse(is.na(info$bytes), "", format_bytes(info$bytes)),
-        Wavelet = ifelse(info$wavelet, paste0("Yes (", info$LP, " min to ", info$UP_hours, " h, ", info$SO, " sub-oct.)"), ""),
+        Wavelet = ifelse(
+          info$wavelet,
+          paste0(
+            "Yes (", info$LP, " min to ", info$UP_hours, " h, ", info$SO, " sub-oct.",
+            ifelse(is.na(info$wavelet_sampling_s), "", paste0(", ", info$wavelet_sampling_s, " s")), ")"
+          ),
+          ""
+        ),
         check.names = FALSE
       )
       DT::datatable(display, selection = "multiple", rownames = FALSE, fillContainer = FALSE, options = list(dom = "t", pageLength = 1000))
@@ -123,15 +245,17 @@ mod_wavelet_server <- function(id, state) {
           if (length(too_big) > 0) {
             msgs <- c(msgs, paste0(
               "Estimated memory for ", paste(too_big, collapse = ", "), " is more than half of this computer's ",
-              format_bytes(ram), " and may run out of memory. Try a longer lower period."
+              format_bytes(ram), " and may run out of memory. Try thinning the records or a longer lower period."
             ))
           }
         }
       }
+      thin <- thin_problems(s, info)
+      msgs <- c(msgs, thin$errors, thin$warnings)
 
       done <- info[info$wavelet, ]
-      if (nrow(unique(done[, c("LP", "UP_hours", "SO")])) > 1) {
-        msgs <- c(msgs, "Existing wavelets use different settings. Tags clustered together should use the same settings.")
+      if (nrow(unique(done[, c("LP", "UP_hours", "SO", "wavelet_sampling_s")])) > 1) {
+        msgs <- c(msgs, "Existing wavelets use different settings or sampling intervals. Tags clustered together should use the same.")
       }
 
       if (length(msgs) > 0) {
@@ -142,6 +266,58 @@ mod_wavelet_server <- function(id, state) {
     output$log <- shiny::renderText({
       log <- wavelet_log()
       if (length(log) == 0) "No wavelets run yet this session." else paste(log, collapse = "\n")
+    })
+
+    ## Thinning suggestion
+    suggested_thin <- shiny::reactive({
+      info <- tag_info()
+      s <- settings()
+      if (is.null(info) || !settings_ok(s)) return(NA_real_)
+      suggest_thin_interval(s$lower_period_mins, info$sampling_s)
+    })
+
+    output$thin_suggestion <- shiny::renderUI({
+      info <- tag_info()
+      s <- settings()
+      if (is.null(info) || !settings_ok(s)) return(NULL)
+      suggested <- suggested_thin()
+
+      if (is.na(suggested)) {
+        return(shiny::p(class = "text-muted small", "No thinning interval suits this lower period and these tags' sampling intervals."))
+      }
+      if (all(info$sampling_s >= suggested)) {
+        return(shiny::p(
+          class = "text-muted small",
+          paste0("Thinning isn't needed: all tags are already sampled every ", suggested, " s or less often.")
+        ))
+      }
+
+      full_bytes <- wavelet_bytes(info$n_records, s$lower_period_mins, s$upper_period_hours, s$suboctaves)
+      thinned_bytes <- wavelet_bytes(
+        info$n_records * info$sampling_s / pmax(info$sampling_s, suggested),
+        s$lower_period_mins, s$upper_period_hours, s$suboctaves
+      )
+      largest <- which.max(full_bytes)
+
+      shiny::div(
+        class = "alert alert-info py-2",
+        shiny::p(
+          class = "mb-1",
+          shiny::strong(paste0("Suggested: thin to ", suggested, " s")),
+          paste0(
+            "for a ", s$lower_period_mins, " minute lower period, keeping ",
+            floor(s$lower_period_mins * 60 / suggested), " records per cycle. For tag ", info$tag_ID[largest],
+            ", this cuts the estimated memory from ", format_bytes(full_bytes[largest]), " to ",
+            format_bytes(thinned_bytes[largest]), "."
+          )
+        ),
+        shiny::actionLink(session$ns("use_suggestion"), "Use this suggestion")
+      )
+    })
+
+    shiny::observeEvent(input$use_suggestion, {
+      shiny::updateCheckboxInput(session, "thin", value = TRUE)
+      shiny::updateNumericInput(session, "thin_s", value = suggested_thin())
     })
 
     # Run new wavelets with the current settings, or with redraw = TRUE load
@@ -162,6 +338,13 @@ mod_wavelet_server <- function(id, state) {
           started <- Sys.time()
           res <- run_logged({
             archive <- readRDS(file.path(state$project, tag, "archive_days.rds"))
+            # Thin the copy given to the wavelet; the imported record is unchanged
+            if (!redraw) {
+              sampling_s <- as.numeric(difftime(archive$date[2], archive$date[1], units = "secs"))
+              if (isTRUE(s$thin_s > sampling_s)) {
+                archive <- thin_archive(archive, s$thin_s, verbose = TRUE)
+              }
+            }
             # Hide WaveletComp's console printout
             utils::capture.output(create_wavelet(
               archive = archive,
@@ -193,11 +376,11 @@ mod_wavelet_server <- function(id, state) {
 
     # Ask before replacing existing wavelets
     start_run <- function(tag_IDs) {
-      if (!settings_ok(settings())) {
-        shiny::showNotification("Check the wavelet settings first.", type = "error")
+      info <- tag_info()
+      if (!settings_ok(settings()) || length(thin_problems(settings(), info)$errors) > 0) {
+        shiny::showNotification("Check the wavelet and thinning settings first.", type = "error")
         return()
       }
-      info <- tag_info()
       existing <- intersect(tag_IDs, info$tag_ID[info$wavelet])
       if (length(existing) == 0) {
         run_wavelets(tag_IDs)

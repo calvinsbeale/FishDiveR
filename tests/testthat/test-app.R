@@ -212,3 +212,52 @@ test_that("app runs wavelets for imported tags", {
     expect_match(paste(wavelet_log(), collapse = "\n"), "Loading existing wavelet")
   })
 })
+
+test_that("suggest_thin_interval() keeps enough records per cycle", {
+  expect_equal(suggest_thin_interval(5, 1), 15)
+  expect_equal(suggest_thin_interval(20, 1), 60)
+  expect_equal(suggest_thin_interval(60, 1), 180)
+  # Must also be a multiple of every more finely sampled tag's interval
+  expect_equal(suggest_thin_interval(5, c(1, 4)), 12)
+  expect_true(is.na(suggest_thin_interval(0.5, 1)))
+})
+
+test_that("app thins records before the wavelet", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("DT")
+
+  project <- file.path(tempdir(), "app_project_thin")
+  unlink(project, recursive = TRUE)
+  dir.create(project)
+  tag <- example_tag()
+  suppressMessages(import_tag_data(
+    tag_ID = tag$tag_ID, tag_deploy_UTC = tag$tag_deploy_UTC, tag_release_UTC = tag$tag_release_UTC,
+    archive = tag$archive, time_zone = tag$time_zone, output = TRUE, output_folder = project
+  ))
+
+  state <- shiny::reactiveValues(project = project, tags = tag, refresh = 0)
+  shiny::testServer(mod_wavelet_server, args = list(state = state), {
+    session$setInputs(lower_period_mins = 60, upper_period_hours = 24, suboctaves = 12, thin = FALSE, thin_s = 15)
+    expect_equal(suggested_thin(), 180)
+    full_bytes <- tag_info()$bytes
+
+    session$setInputs(use_suggestion = 1)
+    session$setInputs(thin = TRUE, thin_s = 180)
+    expect_equal(tag_info()$wave_sampling_s, 180)
+    expect_equal(tag_info()$bytes, full_bytes / 3)
+    expect_length(thin_problems(settings(), tag_info())$errors, 0)
+
+    # A thinning interval that is not a multiple of 60 s is refused
+    session$setInputs(thin_s = 90)
+    expect_match(thin_problems(settings(), tag_info())$errors, "multiple of the sampling interval")
+    session$setInputs(run_all = 1)
+    expect_false(file.exists(file.path(project, "example", "1_Wavelets", "example_wavelet.rds")))
+
+    session$setInputs(thin_s = 180, run_all = 2)
+    expect_match(paste(wavelet_log(), collapse = "\n"), "Thinned from 60 to 180 second sampling")
+    expect_equal(tag_info()$wavelet_sampling_s, 180)
+
+    # The imported record keeps its full resolution
+    expect_equal(nrow(readRDS(file.path(project, "example", "archive_days.rds"))), 14400)
+  })
+})

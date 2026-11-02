@@ -268,6 +268,26 @@ wavelet_bytes <- function(n_records, lower_period_mins, upper_period_hours, subo
   n_records * wavelet_periods(lower_period_mins, upper_period_hours, suboctaves) * 48
 }
 
+# Thinning intervals offered as suggestions, in seconds. All divide a day evenly.
+thin_interval_choices <- c(2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60, 120, 180, 240, 300, 600)
+
+# Records per cycle of the lower period to keep when thinning
+thin_records_per_cycle <- 20
+
+#' Suggested thinning interval for a wavelet lower period
+#'
+#' The longest interval in thin_interval_choices that keeps
+#' thin_records_per_cycle records per cycle of the lower period and is a
+#' multiple of the sampling interval of every tag sampled more finely.
+#' @returns Seconds, or NA if no interval fits.
+#' @noRd
+suggest_thin_interval <- function(lower_period_mins, sampling_s) {
+  max_s <- lower_period_mins * 60 / thin_records_per_cycle
+  ok <- thin_interval_choices[thin_interval_choices <= max_s]
+  ok <- ok[vapply(ok, function(x) all(sampling_s >= x | x %% sampling_s == 0), logical(1))]
+  if (length(ok) == 0) NA_real_ else max(ok)
+}
+
 #' Bytes as a short human-readable string
 #' @noRd
 format_bytes <- function(bytes) {

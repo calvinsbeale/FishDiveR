@@ -9,6 +9,9 @@
 - `plot_TDR()` has a new `minmax_bins` argument for fast plotting of large archives: it plots only the shallowest and deepest record in each of that many time bins, keeping dive extremes that `every_nth` can miss.
 - `import_tag_data()` now warns if the sampling interval is not constant, listing the intervals detected and their record counts.
 
+## Fixes
+- `create_wavelet()`: the wavelet power spectrum figure no longer has its end cut off for long, high-frequency records (e.g. 29 days at 1 s). Records with millions of samples are now thinned for drawing only; the saved wavelet is unchanged. Redraw existing figures with `load_existing_wavelet = TRUE`.
+
 ## Docs/Infra
 - Citation updated to the published article: Beale & Gleiss (2026), *Movement Ecology* 14:8 <doi:10.1186/s40462-025-00622-w>.
 - README updated for the CRAN release; added CRAN badges.

@@ -202,5 +202,13 @@ test_that("app runs wavelets for imported tags", {
     expect_equal(pending_run(), "example")
     session$setInputs(confirm_run = 1)
     expect_equal(tag_info()$LP, 60)
+
+    # Redraw figures from the saved wavelet, keeping its settings
+    figure <- file.path(project, "example", "2_Wavelet_Figures", "example_wavelet_spectrum_no.p.png")
+    unlink(figure)
+    session$setInputs(lower_period_mins = 30, tag_table_rows_selected = 1, redraw_selected = 1)
+    expect_true(file.exists(figure))
+    expect_equal(tag_info()$LP, 60)
+    expect_match(paste(wavelet_log(), collapse = "\n"), "Loading existing wavelet")
   })
 })

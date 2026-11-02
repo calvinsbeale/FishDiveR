@@ -23,7 +23,8 @@ mod_wavelet_ui <- function(id) {
       shiny::uiOutput(ns("warnings")),
       shiny::div(
         shiny::actionButton(ns("run_selected"), "Run selected", class = "btn-primary"),
-        shiny::actionButton(ns("run_all"), "Run all")
+        shiny::actionButton(ns("run_all"), "Run all"),
+        shiny::actionButton(ns("redraw_selected"), "Redraw figures")
       ),
       shiny::h6("Log", class = "mt-3"),
       shiny::verbatimTextOutput(ns("log"))
@@ -143,13 +144,20 @@ mod_wavelet_server <- function(id, state) {
       if (length(log) == 0) "No wavelets run yet this session." else paste(log, collapse = "\n")
     })
 
-    run_wavelets <- function(tag_IDs) {
-      s <- settings()
+    # Run new wavelets with the current settings, or with redraw = TRUE load
+    # each tag's saved wavelet and redraw its figures with its own settings
+    run_wavelets <- function(tag_IDs, redraw = FALSE) {
       log <- character()
-      shiny::withProgress(message = "Wavelet analysis", value = 0, {
+      shiny::withProgress(message = if (redraw) "Redrawing wavelet figures" else "Wavelet analysis", value = 0, {
         for (i in seq_along(tag_IDs)) {
           tag <- tag_IDs[i]
           shiny::setProgress(value = (i - 1) / length(tag_IDs), detail = paste0(tag, " (", i, " of ", length(tag_IDs), "). Long records can take a while."))
+
+          s <- settings()
+          if (redraw) {
+            meta <- read_wavelet_meta(state$project, tag)
+            s <- list(lower_period_mins = meta$LP, upper_period_hours = meta$UP * 24, suboctaves = meta$SO)
+          }
 
           started <- Sys.time()
           res <- run_logged({
@@ -158,6 +166,7 @@ mod_wavelet_server <- function(id, state) {
             utils::capture.output(create_wavelet(
               archive = archive,
               tag_ID = tag,
+              load_existing_wavelet = redraw,
               lower_period_mins = s$lower_period_mins,
               upper_period_hours = s$upper_period_hours,
               suboctaves = s$suboctaves,
@@ -224,6 +233,17 @@ mod_wavelet_server <- function(id, state) {
       info <- tag_info()
       shiny::req(info)
       start_run(info$tag_ID)
+    })
+
+    shiny::observeEvent(input$redraw_selected, {
+      info <- tag_info()
+      rows <- input$tag_table_rows_selected
+      tag_IDs <- intersect(info$tag_ID[rows], info$tag_ID[info$wavelet])
+      if (length(tag_IDs) == 0) {
+        shiny::showNotification("Select one or more tags that already have a wavelet.", type = "error")
+        return()
+      }
+      run_wavelets(tag_IDs, redraw = TRUE)
     })
 
     ## Spectrum viewer

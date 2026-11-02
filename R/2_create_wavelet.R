@@ -408,6 +408,20 @@ create_wavelet <- function(archive,
       at_points <- head(at_points, -1)
     }
 
+    # Thin long records for plotting. Drawing a raster image with millions of
+    # columns silently cuts off the end of the spectrum, so keep at most 10
+    # columns per pixel of plot width, at the even step image() requires. The
+    # time axis is drawn from my.w$nc, so it is unchanged.
+    plot_w <- my.w
+    plot_step <- ceiling(my.w$nc / (plot_width * 10))
+    if (plot_step > 1) {
+      plot_cols <- seq(1, my.w$nc, by = plot_step)
+      plot_w$Power <- my.w$Power[, plot_cols, drop = FALSE]
+      plot_w$axis.1 <- my.w$axis.1[plot_cols]
+      if (!is.null(my.w$Power.pval)) plot_w$Power.pval <- my.w$Power.pval[, plot_cols, drop = FALSE]
+      if (!is.null(my.w$Ridge)) plot_w$Ridge <- my.w$Ridge[, plot_cols, drop = FALSE]
+    }
+
     # Create the directory if it doesn't exist
     dir.create(file.path(output_folder, tag_ID, "2_Wavelet_Figures"), recursive = TRUE, showWarnings = FALSE)
 
@@ -433,7 +447,7 @@ create_wavelet <- function(archive,
           label_digits <- 0
         }
 
-        WaveletComp::wt.image(my.w,
+        WaveletComp::wt.image(plot_w,
           plot.coi = FALSE,
           plot.ridge = FALSE, # No ridge (p-value significance) will be plotted
           color.key = "quantile",

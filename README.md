@@ -91,8 +91,8 @@ devtools::install_github("calvinsbeale/FishDiveR")
 The development version includes an app that runs FishDiveR from your
 web browser, without writing code. It runs locally on your computer, so
 your data never leave your machine. It currently covers setting up a
-project with several tags, importing them and plotting their depth
-records; the remaining steps are being added.
+project with several tags, importing them, plotting their depth records
+and running the wavelet analysis; the remaining steps are being added.
 
 ``` r
 install.packages(c("shiny", "bslib", "DT"))

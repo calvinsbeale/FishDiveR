@@ -251,6 +251,83 @@ default_date_breaks <- function(n_days) {
   }
 }
 
+#' Number of wavelet periods for the create_wavelet() settings
+#' @noRd
+wavelet_periods <- function(lower_period_mins, upper_period_hours, suboctaves) {
+  lower_days <- lower_period_mins / 1440
+  upper_days <- upper_period_hours / 24
+  floor(log2(upper_days / lower_days) * suboctaves) + 1
+}
+
+#' Approximate memory of a wavelet object in bytes
+#'
+#' WaveletComp stores the complex wave (16 bytes) and the phase, amplitude,
+#' power and ridge matrices (8 bytes each) for every period and record.
+#' @noRd
+wavelet_bytes <- function(n_records, lower_period_mins, upper_period_hours, suboctaves) {
+  n_records * wavelet_periods(lower_period_mins, upper_period_hours, suboctaves) * 48
+}
+
+#' Bytes as a short human-readable string
+#' @noRd
+format_bytes <- function(bytes) {
+  units <- c("B", "KB", "MB", "GB", "TB")
+  i <- pmax(1, pmin(length(units), floor(log(pmax(bytes, 1), 1024)) + 1))
+  paste(signif(bytes / 1024^(i - 1), 2), units[i])
+}
+
+# Archive summaries, cached by file path and modification time
+archive_summary_cache <- new.env(parent = emptyenv())
+
+#' Number of records and sampling interval of an imported archive
+#' @noRd
+archive_summary <- function(file) {
+  key <- paste(file, file.mtime(file))
+  if (!is.null(archive_summary_cache[[key]])) {
+    return(archive_summary_cache[[key]])
+  }
+  archive <- readRDS(file)
+  summary <- list(
+    n_records = nrow(archive),
+    sampling_s = as.numeric(difftime(archive$date[2], archive$date[1], units = "secs"))
+  )
+  archive_summary_cache[[key]] <- summary
+  summary
+}
+
+#' Wavelet settings (LP in minutes, UP in days, SO) saved by create_wavelet()
+#' @returns The settings list, or NULL if the tag has no wavelet.
+#' @noRd
+read_wavelet_meta <- function(project_folder, tag_ID) {
+  file <- file.path(project_folder, tag_ID, "1_Wavelets", "wavelet_meta.rds")
+  if (!file.exists(file)) {
+    return(NULL)
+  }
+  readRDS(file)
+}
+
+#' Total memory of this computer in bytes, or NULL if unknown
+#' @noRd
+total_ram_bytes <- function() {
+  bytes <- tryCatch(
+    {
+      sysname <- Sys.info()[["sysname"]]
+      if (sysname == "Windows") {
+        out <- system2("powershell", c("-NoProfile", "-Command", "(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory"), stdout = TRUE, stderr = FALSE)
+        as.numeric(out[nzchar(out)][1])
+      } else if (sysname == "Darwin") {
+        as.numeric(system2("sysctl", c("-n", "hw.memsize"), stdout = TRUE, stderr = FALSE)[1])
+      } else {
+        meminfo <- readLines("/proc/meminfo", n = 1)
+        as.numeric(gsub("[^0-9]", "", meminfo)) * 1024
+      }
+    },
+    error = function(e) NA_real_,
+    warning = function(w) NA_real_
+  )
+  if (length(bytes) != 1 || is.na(bytes) || bytes <= 0) NULL else bytes
+}
+
 #' Rounded maximum depth and tick step for a TDR Y axis
 #' @noRd
 default_depth_axis <- function(max_depth) {

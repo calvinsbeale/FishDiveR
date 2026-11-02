@@ -9,6 +9,8 @@ app_ui <- function() {
     window_title = "FishDiveR",
     id = "steps",
     theme = bslib::bs_theme(version = 5, primary = "#1B6A8F"),
+    # Let pages grow and scroll, so stacked cards in narrow windows don't overlap
+    fillable = FALSE,
     bslib::nav_panel(
       "1. Project & tags",
       value = "project",
@@ -24,11 +26,7 @@ app_ui <- function() {
     bslib::nav_panel(
       "3. Wavelets",
       value = "wavelets",
-      placeholder_panel(
-        "Wavelet analysis",
-        "Run the continuous wavelet transform on each imported tag and view the wavelet spectrum.",
-        "create_wavelet()"
-      ),
+      mod_wavelet_ui("wavelet"),
       next_button("wavelets")
     ),
     bslib::nav_panel(
@@ -122,5 +120,6 @@ app_server <- function(project_folder = NULL) {
 
     mod_project_server("project", state)
     mod_import_server("import", state)
+    mod_wavelet_server("wavelet", state)
   }
 }

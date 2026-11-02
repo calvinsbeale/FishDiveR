@@ -151,3 +151,56 @@ test_that("run_app() checks project_folder", {
   skip_if_not_installed("DT")
   expect_error(run_app(project_folder = file.path(tempdir(), "no-such-folder")), "does not exist")
 })
+
+test_that("wavelet size estimates match WaveletComp output", {
+  wavelet <- readRDS(system.file("extdata", "data", "1_Wavelets", "data_wavelet.rds", package = "FishDiveR"))
+  lp <- attr(wavelet, "LP")
+  up_hours <- attr(wavelet, "UP") * 24
+  so <- attr(wavelet, "SO")
+
+  expect_equal(wavelet_periods(lp, up_hours, so), wavelet$nr)
+  estimate <- wavelet_bytes(wavelet$nc, lp, up_hours, so)
+  actual <- as.numeric(object.size(wavelet))
+  expect_lt(abs(estimate - actual) / actual, 0.1)
+
+  expect_equal(format_bytes(c(500, 2048, 5 * 1024^3)), c("500 B", "2 KB", "5 GB"))
+})
+
+test_that("app runs wavelets for imported tags", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("DT")
+
+  project <- file.path(tempdir(), "app_project_wavelet")
+  unlink(project, recursive = TRUE)
+  dir.create(project)
+  tag <- example_tag()
+  suppressMessages(import_tag_data(
+    tag_ID = tag$tag_ID, tag_deploy_UTC = tag$tag_deploy_UTC, tag_release_UTC = tag$tag_release_UTC,
+    archive = tag$archive, time_zone = tag$time_zone, output = TRUE, output_folder = project
+  ))
+
+  state <- shiny::reactiveValues(project = project, tags = tag, refresh = 0)
+  shiny::testServer(mod_wavelet_server, args = list(state = state), {
+    session$setInputs(lower_period_mins = 30, upper_period_hours = 24, suboctaves = 12)
+    info <- tag_info()
+    expect_equal(info$tag_ID, "example")
+    expect_false(info$wavelet)
+    expect_equal(info$sampling_s, 60)
+
+    session$setInputs(run_all = 1)
+    expect_true(file.exists(file.path(project, "example", "1_Wavelets", "example_wavelet.rds")))
+    expect_true(file.exists(file.path(project, "example", "2_Wavelet_Figures", "example_wavelet_spectrum_no.p.png")))
+    expect_match(paste(wavelet_log(), collapse = "\n"), "example: done")
+
+    info <- tag_info()
+    expect_true(info$wavelet)
+    expect_equal(c(info$LP, info$UP_hours, info$SO), c(30, 24, 12))
+    expect_equal(wavelet_tags(), "example")
+
+    # Running again asks first, then replaces with the new settings
+    session$setInputs(lower_period_mins = 60, run_all = 2)
+    expect_equal(pending_run(), "example")
+    session$setInputs(confirm_run = 1)
+    expect_equal(tag_info()$LP, 60)
+  })
+})

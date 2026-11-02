@@ -11,11 +11,11 @@ mod_import_ui <- function(id) {
   ns <- shiny::NS(id)
 
   bslib::layout_columns(
-    col_widths = bslib::breakpoints(sm = 12, lg = c(4, 8)),
+    col_widths = bslib::breakpoints(sm = 12, xl = c(4, 8)),
     bslib::card(
       bslib::card_header("Import tag archives"),
       shiny::p("Crops each archive to full local days between deployment and release, and saves it to the tag's folder."),
-      DT::DTOutput(ns("tag_table")),
+      DT::DTOutput(ns("tag_table"), fill = FALSE),
       shiny::div(
         shiny::actionButton(ns("import_selected"), "Import selected", class = "btn-primary"),
         shiny::actionButton(ns("import_all"), "Import all"),
@@ -46,6 +46,7 @@ mod_import_ui <- function(id) {
           shiny::dateRangeInput(ns("x_lim"), "Dates"),
           bslib::layout_column_wrap(
             width = "120px",
+            fill = FALSE,
             shiny::numericInput(ns("y_max"), "Max depth (m)", value = 250, min = 1),
             shiny::numericInput(ns("y_step"), "Depth ticks (m)", value = 50, min = 1)
           ),
@@ -59,7 +60,7 @@ mod_import_ui <- function(id) {
           shiny::actionButton(ns("save_plot"), "Save PNG to tag folder")
         ),
         shiny::uiOutput(ns("plot_note")),
-        shiny::plotOutput(ns("tdr_plot"), height = "500px")
+        shiny::plotOutput(ns("tdr_plot"), height = "500px", fill = FALSE)
       )
     )
   )
@@ -85,7 +86,7 @@ mod_import_server <- function(id, state) {
         Imported = ifelse(status()$Imported, "Yes", ""),
         check.names = FALSE
       )
-      DT::datatable(display, selection = "multiple", rownames = FALSE, options = list(dom = "t", pageLength = 1000))
+      DT::datatable(display, selection = "multiple", rownames = FALSE, fillContainer = FALSE, options = list(dom = "t", pageLength = 1000))
     })
 
     output$log <- shiny::renderText({

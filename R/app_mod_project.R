@@ -45,7 +45,7 @@ mod_project_ui <- function(id) {
         "Select a tag to edit or remove it. The table is saved as",
         shiny::code("tag_metadata.csv"), "in the project folder."
       ),
-      DT::DTOutput(ns("tag_table")),
+      DT::DTOutput(ns("tag_table"), fill = FALSE),
       bslib::card_footer(
         shiny::actionButton(ns("edit_tag"), "Edit selected"),
         shiny::actionButton(ns("remove_tag"), "Remove selected"),
@@ -200,7 +200,7 @@ mod_project_server <- function(id, state) {
         Check = ifelse(nzchar(problems), problems, "OK"),
         check.names = FALSE
       )
-      DT::datatable(display, selection = "single", rownames = FALSE, options = list(dom = "t", pageLength = 1000))
+      DT::datatable(display, selection = "single", rownames = FALSE, fillContainer = FALSE, options = list(dom = "t", pageLength = 1000))
     })
 
     selected_tag <- function() {

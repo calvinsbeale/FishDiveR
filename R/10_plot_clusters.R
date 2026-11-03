@@ -468,9 +468,30 @@ plot_clusters <- function(tag_vector = tag_list,
       by = "6 hours"
     )
 
+    # Start the plot, with night shading underneath the depth line if required
+    cluster_plot <- ggplot(data = plot_data, aes(x = time, y = depth))
+
+    if (diel_shade) {
+      # One rectangle per night period (midnight to sunrise, sunset to midnight)
+      # for each day, using that day's sunrise and sunset. Spanning -Inf to Inf
+      # fills the panel whatever the Y-axis limits.
+      day_rows <- plot_data[!duplicated(plot_data$date_number), ]
+      clock_time <- function(x) as.POSIXct(paste("1970-01-01", format(x, "%H:%M:%S")))
+      night <- data.frame(
+        date_number = rep(day_rows$date_number, 2),
+        xmin = c(rep(as.POSIXct("1970-01-01 00:00:00"), nrow(day_rows)), clock_time(day_rows$sunset)),
+        xmax = c(clock_time(day_rows$sunrise), rep(as.POSIXct("1970-01-01 23:59:59"), nrow(day_rows)))
+      )
+      cluster_plot <- cluster_plot +
+        geom_rect(
+          data = night,
+          aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+          inherit.aes = FALSE, fill = "grey85"
+        )
+    }
+
     # Plot the base TDR (in distance from cluster centre order)
-    cluster_plot <-
-      ggplot(data = plot_data, aes(x = time, y = depth)) +
+    cluster_plot <- cluster_plot +
       geom_line(colour = custom_palette[i], linewidth = 1) +
       scale_x_datetime(breaks = time_breaks, date_labels = "%H %M", position = "top", expand = c(0.001, 0, 0, 0)) +
       labs(x = "Time of day", y = "Depth (meters)") +
@@ -487,32 +508,6 @@ plot_clusters <- function(tag_vector = tag_list,
     fixed_Y_plot <- cluster_plot +
       scale_y_reverse(limits = c(Y_lim[2], Y_lim[1]), breaks = seq(Y_lim[1], Y_lim[2], Y_lim[3]), expand = c(0, 0))
 
-    if (diel_shade) {
-      fixed_Y_plot <- fixed_Y_plot +
-        # Midnight to sunrise shading
-        geom_rect(
-          data = plot_data,
-          aes(
-            xmin = as.POSIXct("1970-01-01 00:00:00"),
-            xmax = as.POSIXct(paste("1970-01-01", format(sunrise, "%H:%M:%S"))),
-            ymin = Y_lim[2],
-            ymax = Y_lim[1]
-          ),
-          fill = "grey", alpha = 0.01
-        ) +
-        # Sunset to midnight shading
-        geom_rect(
-          data = plot_data,
-          aes(
-            xmin = as.POSIXct(paste("1970-01-01", format(sunset, "%H:%M:%S"))),
-            xmax = as.POSIXct("1970-01-01 24:00:00"),
-            ymin = Y_lim[2],
-            ymax = Y_lim[1]
-          ),
-          fill = "grey", alpha = 0.01
-        )
-    }
-
     # fixed_Y_plot
 
     # Add plot to list for all clusters facet
@@ -523,7 +518,7 @@ plot_clusters <- function(tag_vector = tag_list,
 
     ## Plotting the free Y-axis version of TDR
 
-    # Calculate the minimum, maximum, and difference in depth of this cluster (i) for diurnal shading with geom_rect
+    # Calculate the minimum, maximum, and difference in depth of this cluster (i) for the free Y-axis limits
     max_depth <- max(plot_data$depth)
     min_depth <- min(plot_data$depth)
     depth_dif <- max_depth - min_depth
@@ -547,36 +542,6 @@ plot_clusters <- function(tag_vector = tag_list,
 
     cluster_plot_free_y <- cluster_plot +
       scale_y_reverse(limits = limits, expand = c(0, 0))
-
-    # Add shading limits to plot_data so facet doesn't alter them (uses last plot in list)
-    plot_data$ymin <- limits[2]
-    plot_data$ymax <- limits[1]
-
-    if (diel_shade) {
-      cluster_plot_free_y <- cluster_plot_free_y +
-        geom_rect(
-          # Midnight to sunrise shading
-          data = plot_data,
-          aes(
-            xmin = as.POSIXct("1970-01-01 00:00:00"),
-            xmax = as.POSIXct(paste("1970-01-01", format(sunrise, "%H:%M:%S"))),
-            ymin = ymin,
-            ymax = ymax
-          ),
-          fill = "grey", alpha = 0.01
-        ) +
-        geom_rect(
-          # Sunset to midnight shading
-          data = plot_data,
-          aes(
-            xmin = as.POSIXct(paste("1970-01-01", format(sunset, "%H:%M:%S"))),
-            xmax = as.POSIXct("1970-01-01 23:59:59"),
-            ymin = ymin,
-            ymax = ymax
-          ),
-          fill = "grey", alpha = 0.01
-        )
-    }
 
     # cluster_plot_free_y
 

@@ -37,6 +37,8 @@ utils::globalVariables(c(
   "VV_ms",
   "RenamedVariable",
   "Combined_tags",
+  "xmin",
+  "xmax",
   "ymin",
   "ymax",
   "scores",

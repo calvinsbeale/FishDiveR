@@ -323,6 +323,8 @@ test_that("app makes daily statistics and runs PCA across tags", {
     eig <- eigen()$eig
     n <- suggest_n_pcs(eig)
     expect_gte(eig$cumulative[n], 70)
+    # All components are returned, not only those with eigenvalues of 1 or more
+    expect_gt(nrow(eig), sum(eig$eigenvalue >= 1))
 
     # Changing the settings makes the eigenvalues out of date
     session$setInputs(standardise = FALSE)
@@ -335,5 +337,69 @@ test_that("app makes daily statistics and runs PCA across tags", {
     expect_equal(nrow(combined), 20)
     expect_true(all(c("PC1", "PC2", "PC3") %in% names(combined)))
     expect_true("PC_Eigenvalues_cum_var.png" %in% figure_files())
+  })
+
+  shiny::testServer(mod_cluster_server, args = list(state = state), {
+    combined <- file.path(project, "Combined_tags")
+    expect_equal(unname(sources()), combined)
+    session$setInputs(source = combined, standardise = TRUE, seed = 123, max_k = 5, calc_gap = FALSE, k = 3, nstart = 10, polygon = TRUE)
+
+    session$setInputs(plot_k = 1)
+    expect_s3_class(k_plot(), "ggplot")
+
+    session$setInputs(run_kmeans = 1)
+    expect_match(cluster_log()[1], "k = 3: done")
+    expect_s3_class(scene(), "rglscene")
+    expect_equal(length(unique(saved_kmeans()$cluster)), 3)
+    expect_true(file.exists(variables_file()))
+    counts <- cluster_day_counts(saved_kmeans())
+    expect_equal(counts$Total, c(10, 10))
+  })
+
+  shiny::testServer(mod_results_server, args = list(state = state), {
+    session$setInputs(source = file.path(project, "Combined_tags"))
+    expect_equal(result_tags(), c("example", "example2"))
+    expect_equal(k(), 3)
+
+    session$setInputs(
+      tdr_tag = "example", downsample = "minmax", every = 10, x_lim = as.Date(c("2000-01-01", "2000-01-10")),
+      y_max = 300, y_step = 50, date_breaks = "2 day", legend = TRUE
+    )
+    session$setInputs(create_tdr = 1)
+    expect_s3_class(tdr_plot(), "ggplot")
+    expect_lte(nrow(tdr_plot()$data), 2 * preview_bins)
+
+    session$setInputs(no_days = 1, days_every = 10, days_y_max = 300, days_y_step = 50, diel_shade = TRUE, dpi = 50)
+    session$setInputs(create_days = 1)
+    expect_match(results_log()[1], "Example days: done")
+    expect_true("Cluster_facet.png" %in% days_files())
+  })
+})
+
+test_that("diel statistics need a GPS file for every tag in GPS mode", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("DT")
+
+  project <- file.path(tempdir(), "app_project_gps")
+  unlink(project, recursive = TRUE)
+  dir.create(project)
+  tag <- example_tag()
+  tag$GPS <- NA_character_
+  suppressMessages(import_tag_data(
+    tag_ID = tag$tag_ID, tag_deploy_UTC = tag$tag_deploy_UTC, tag_release_UTC = tag$tag_release_UTC,
+    archive = tag$archive, time_zone = tag$time_zone, output = TRUE, output_folder = project
+  ))
+  state <- shiny::reactiveValues(project = project, tags = tag, refresh = 0)
+
+  shiny::testServer(mod_stats_server, args = list(state = state), {
+    session$setInputs(diel = TRUE, diel_source = "gps", sunset_type = "civil", sunrise_time = "06:00:00", sunset_time = "18:00:00")
+    expect_equal(diel_source(tag_info()), "No GPS file")
+    expect_match(diel_problems(tag_info()), "No GPS file for example")
+    session$setInputs(run_all = 1)
+    expect_true(is.na(tag_info()$depth_days))
+
+    session$setInputs(diel_source = "fixed")
+    expect_equal(diel_source(tag_info()), "Fixed times")
+    expect_length(diel_problems(tag_info()), 0)
   })
 })

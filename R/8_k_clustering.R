@@ -234,8 +234,13 @@ k_clustering <- function(kmeans_data,
 
           # Only proceed if the cluster has at least 4 points
           if (nrow(cluster_points) >= 4) {
-            # Compute the convex hull
-            hull_indices <- geometry::convhulln(cluster_points)
+            # Compute the convex hull. It fails if the points are flat (e.g.
+            # duplicate days), so skip the hull for that cluster
+            hull_indices <- tryCatch(geometry::convhulln(cluster_points), error = function(e) NULL)
+            if (is.null(hull_indices)) {
+              if (verbose) message("Cluster ", cluster, " points are flat in PC1 to PC3, so no polygon is drawn for it.")
+              next
+            }
 
             # Get the colour for the current cluster
             cluster_colour <- custom_palette[as.character(cluster)]

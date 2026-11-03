@@ -19,7 +19,8 @@ plot_cluster_TDR(
   dpi = 300,
   output = FALSE,
   output_folder = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  minmax_bins = 0
 )
 }
 \arguments{
@@ -65,6 +66,12 @@ Defaults to FALSE.}
 \code{output_folder} must be provided. Defaults to NULL.}
 
 \item{verbose}{Logical. If TRUE, progress messages are shown. Defaults to FALSE.}
+
+\item{minmax_bins}{Numerical. Alternative to every_nth and every_s for fast
+plotting of large archives. Splits the record into this many equal time
+bins and plots only the shallowest and deepest record in each, so dive
+extremes are kept. E.g. 2000. Overrides every_nth and every_s if != 0.
+Defaults to 0.}
 }
 \value{
 Returns the cluster TDR plot. Additionally prints to file the TDR

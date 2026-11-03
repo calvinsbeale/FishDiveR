@@ -402,12 +402,7 @@ plot_TDR <- function(rds_file,
   if (verbose) message(paste0("Data sampling interval is ", sampling_interval, " seconds"))
 
   if (minmax_bins != 0) { # Keep the shallowest and deepest record in each time bin
-    rows <- split(seq_len(nrow(archive_days)), cut(as.numeric(archive_days$date), breaks = minmax_bins, labels = FALSE))
-    keep <- c(
-      vapply(rows, function(i) i[which.min(archive_days$depth[i])], integer(1)),
-      vapply(rows, function(i) i[which.max(archive_days$depth[i])], integer(1))
-    )
-    archive_days <- archive_days[sort(unique(keep)), ]
+    archive_days <- archive_days[minmax_rows(archive_days$date, archive_days$depth, minmax_bins), ]
 
     # Print sampling interval
     if (verbose) message("Plotting shallowest and deepest records in ", minmax_bins, " time bins \n")

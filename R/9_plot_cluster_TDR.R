@@ -64,7 +64,8 @@ plot_cluster_TDR <- function(tag_ID,
                              dpi = 300,
                              output = FALSE,
                              output_folder = NULL,
-                             verbose = FALSE) {
+                             verbose = FALSE,
+                             minmax_bins = 0) {
   # Check if tag_IDs is a character vector
   if (!is.character(tag_ID) || length(tag_ID) != 1) {
     stop("tag_ID must be a single character string.")
@@ -174,7 +175,15 @@ plot_cluster_TDR <- function(tag_ID,
     if (verbose) message("Data has been filtered between X-axis limits")
   }
 
-  if (every_s != 0) { # Using time, rather than number of rows to plot data.
+  if (!is.numeric(minmax_bins) || length(minmax_bins) != 1 || minmax_bins < 0) {
+    stop("minmax_bins must be 0 or a positive integer.")
+  }
+
+  if (minmax_bins != 0) { # Keep the shallowest and deepest record in each time bin
+    archive_days <- archive_days[minmax_rows(archive_days$date, archive_days$depth, minmax_bins), ]
+
+    if (verbose) message("Plotting shallowest and deepest records in ", minmax_bins, " time bins")
+  } else if (every_s != 0) { # Using time, rather than number of rows to plot data.
     # Check if every_s is a multiple of the original sampling frequency
     if (every_s %% sampling_interval != 0) {
       stop(paste("Error: The specified sampling interval (", every_s, " seconds) is not a multiple of the original sampling interval (", sampling_interval, " seconds).", sep = ""))

@@ -15,8 +15,8 @@ mod_stats_ui <- function(id) {
       shiny::checkboxInput(
         ns("diel"),
         shiny::tagList(
-          "Include diel (day and night) statistics ",
-          help_tip("Adds the difference between night and day in depth, vertical speed and time near the surface, standardised by each day's maximum depth.")
+          "Include diel statistics ",
+          help_tip("Diel means day and night. Adds the difference between night and day in depth, vertical speed and time near the surface, standardised by each day's maximum depth.")
         ),
         value = TRUE
       ),
@@ -26,7 +26,7 @@ mod_stats_ui <- function(id) {
         shiny::radioButtons(
           ns("diel_source"), "Day and night times from",
           choices = c(
-            "Each tag's GPS file, where it has one (fixed times otherwise)" = "gps",
+            "Each tag's GPS file" = "gps",
             "Fixed times for all tags" = "fixed"
           )
         ),
@@ -39,11 +39,15 @@ mod_stats_ui <- function(id) {
             width = "200px"
           )
         ),
-        bslib::layout_column_wrap(
-          width = "160px",
-          fill = FALSE,
-          shiny::textInput(ns("sunrise_time"), "Fixed sunrise (local)", value = "06:00:00", placeholder = "hh:mm:ss"),
-          shiny::textInput(ns("sunset_time"), "Fixed sunset (local)", value = "18:00:00", placeholder = "hh:mm:ss")
+        shiny::conditionalPanel(
+          "input.diel_source == 'fixed'",
+          ns = ns,
+          bslib::layout_column_wrap(
+            width = "160px",
+            fill = FALSE,
+            shiny::textInput(ns("sunrise_time"), "Fixed sunrise (local)", value = "06:00:00", placeholder = "hh:mm:ss"),
+            shiny::textInput(ns("sunset_time"), "Fixed sunset (local)", value = "18:00:00", placeholder = "hh:mm:ss")
+          )
         )
       ),
       DT::DTOutput(ns("tag_table"), fill = FALSE),
@@ -116,7 +120,25 @@ mod_stats_server <- function(id, state) {
     # Where each tag's day and night times will come from
     diel_source <- function(info) {
       if (!isTRUE(input$diel)) return(rep("Not used", nrow(info)))
-      ifelse(input$diel_source == "gps" & info$has_gps, "GPS file", "Fixed times")
+      if (input$diel_source == "fixed") return(rep("Fixed times", nrow(info)))
+      ifelse(info$has_gps, "GPS file", "No GPS file")
+    }
+
+    # Problems with the diel settings for some tags, which stop them running
+    diel_problems <- function(info) {
+      msgs <- character()
+      source <- diel_source(info)
+      if (any(source == "Fixed times") && !(is_time(input$sunrise_time) && is_time(input$sunset_time))) {
+        msgs <- c(msgs, "Enter fixed sunrise and sunset times as hh:mm:ss.")
+      }
+      no_gps <- info$tag_ID[source == "No GPS file"]
+      if (length(no_gps) > 0) {
+        msgs <- c(msgs, paste0(
+          "No GPS file for ", paste(no_gps, collapse = ", "), ". Add one in step 1, ",
+          "choose fixed times for all tags, or turn off diel statistics."
+        ))
+      }
+      msgs
     }
 
     output$tag_table <- DT::renderDT({
@@ -138,12 +160,7 @@ mod_stats_server <- function(id, state) {
     output$warnings <- shiny::renderUI({
       info <- tag_info()
       if (is.null(info)) return(NULL)
-      msgs <- character()
-
-      if (isTRUE(input$diel) && any(diel_source(info) == "Fixed times") &&
-        !(is_time(input$sunrise_time) && is_time(input$sunset_time))) {
-        msgs <- c(msgs, "Enter fixed sunrise and sunset times as hh:mm:ss.")
-      }
+      msgs <- diel_problems(info)
       no_wavelet <- info$tag_ID[!info$wavelet]
       if (length(no_wavelet) > 0) {
         msgs <- c(msgs, paste0(
@@ -171,9 +188,9 @@ mod_stats_server <- function(id, state) {
 
     run_stats <- function(tag_IDs) {
       info <- tag_info()
-      if (isTRUE(input$diel) && any(diel_source(info[info$tag_ID %in% tag_IDs, ]) == "Fixed times") &&
-        !(is_time(input$sunrise_time) && is_time(input$sunset_time))) {
-        shiny::showNotification("Enter fixed sunrise and sunset times as hh:mm:ss.", type = "error")
+      problems <- diel_problems(info[info$tag_ID %in% tag_IDs, , drop = FALSE])
+      if (length(problems) > 0) {
+        shiny::showNotification(paste(problems, collapse = " "), type = "error", duration = 10)
         return()
       }
 

@@ -45,38 +45,16 @@ app_ui <- function() {
     bslib::nav_panel(
       "6. Clustering",
       value = "clustering",
-      placeholder_panel(
-        "K-means clustering",
-        "Choose the number of clusters from the elbow and silhouette plots, then cluster the days of all selected tags.",
-        c("select_k()", "k_clustering()")
-      ),
+      mod_cluster_ui("cluster"),
       next_button("clustering")
     ),
     bslib::nav_panel(
       "7. Results",
       value = "results",
-      placeholder_panel(
-        "Results",
-        "Plot each tag's depth record coloured by cluster, and example days from each behaviour cluster.",
-        c("plot_cluster_TDR()", "plot_clusters()")
-      )
+      mod_results_ui("results")
     ),
     bslib::nav_spacer(),
     bslib::nav_item(shiny::textOutput("project_label", inline = TRUE))
-  )
-}
-
-#' Panel for a step that has not been built yet
-#' @noRd
-placeholder_panel <- function(title, description, functions) {
-  bslib::card(
-    bslib::card_header(title),
-    shiny::p(description),
-    shiny::p(
-      shiny::em("Coming soon. Until then, use "),
-      shiny::code(paste(functions, collapse = ", ")),
-      shiny::em(" in R with the project folder as output_folder.")
-    )
   )
 }
 
@@ -116,5 +94,7 @@ app_server <- function(project_folder = NULL) {
     mod_wavelet_server("wavelet", state)
     mod_stats_server("stats", state)
     mod_pca_server("pca", state)
+    mod_cluster_server("cluster", state)
+    mod_results_server("results", state)
   }
 }

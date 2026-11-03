@@ -187,7 +187,9 @@ mod_pca_server <- function(id, state) {
       s <- settings()
       res <- shiny::withProgress(message = "Calculating eigenvalues", value = 0.5, run_logged({
         pc_data <- make_pc_data(s, output = FALSE)
-        pc_res <- pca_results(pc_data, standardise = s$standardise, plot_eigenvalues = FALSE, output = FALSE, interactive_mode = FALSE)
+        # FactoMineR only returns eigenvalues for the components kept, so keep
+        # up to 50 (as pca_results() does internally) to see them all
+        pc_res <- pca_results(pc_data, standardise = s$standardise, No_pcs = 50, plot_eigenvalues = FALSE, output = FALSE, interactive_mode = FALSE)
         eig <- as.data.frame(pc_res$eig)
         data.frame(
           component = seq_len(nrow(eig)),
@@ -248,15 +250,19 @@ mod_pca_server <- function(id, state) {
       {
         e <- eigen()
         shiny::req(e)
-        eig <- utils::head(e$eig, 20)
         chosen <- if (isTRUE(input$n_pcs >= 1)) round(input$n_pcs) else NA
+        # Show every component with an eigenvalue of 1 or more, the chosen
+        # number, and a few beyond, but at least 20
+        n_show <- max(20, sum(e$eig$eigenvalue >= 1) + 3, chosen + 3, na.rm = TRUE)
+        eig <- utils::head(e$eig, n_show)
+        breaks <- if (nrow(eig) > 25) seq(1, nrow(eig), by = 2) else eig$component
         ggplot2::ggplot(eig, ggplot2::aes(x = component)) +
           ggplot2::geom_col(ggplot2::aes(y = variance), fill = "#C7EAE5", colour = "black") +
           ggplot2::geom_line(ggplot2::aes(y = cumulative)) +
           ggplot2::geom_point(ggplot2::aes(y = cumulative)) +
           ggplot2::geom_hline(yintercept = pca_min_variance, linetype = "dashed", colour = "grey40") +
           ggplot2::geom_vline(xintercept = chosen, colour = "#1B6A8F", linewidth = 1, na.rm = TRUE) +
-          ggplot2::scale_x_continuous(breaks = eig$component) +
+          ggplot2::scale_x_continuous(breaks = breaks) +
           ggplot2::scale_y_continuous(limits = c(0, 100)) +
           ggplot2::labs(x = "Principal component", y = "Variance (%)", caption = "Bars: variance of each component. Line: cumulative variance.") +
           ggplot2::theme_bw()
@@ -332,7 +338,7 @@ mod_pca_server <- function(id, state) {
         shiny::req(input$figure)
         file <- file.path(figure_folder(), input$figure)
         shiny::req(file.exists(file))
-        list(src = file, contentType = "image/png", width = "100%", alt = input$figure)
+        list(src = file, contentType = "image/png", style = "max-width: 100%; max-height: 80vh;", alt = input$figure)
       },
       deleteFile = FALSE
     )

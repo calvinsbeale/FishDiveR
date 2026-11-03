@@ -299,7 +299,8 @@ format_bytes <- function(bytes) {
 # Archive summaries, cached by file path and modification time
 archive_summary_cache <- new.env(parent = emptyenv())
 
-#' Number of records and sampling interval of an imported archive
+#' Number of records, sampling interval, maximum depth and date range of an
+#' imported archive
 #' @noRd
 archive_summary <- function(file) {
   key <- paste(file, file.mtime(file))
@@ -309,7 +310,9 @@ archive_summary <- function(file) {
   archive <- readRDS(file)
   summary <- list(
     n_records = nrow(archive),
-    sampling_s = as.numeric(difftime(archive$date[2], archive$date[1], units = "secs"))
+    sampling_s = as.numeric(difftime(archive$date[2], archive$date[1], units = "secs")),
+    max_depth = max(archive$depth),
+    dates = range(archive$date_only)
   )
   archive_summary_cache[[key]] <- summary
   summary
@@ -346,6 +349,23 @@ total_ram_bytes <- function() {
     warning = function(w) NA_real_
   )
   if (length(bytes) != 1 || is.na(bytes) || bytes <= 0) NULL else bytes
+}
+
+#' PCA results ready to cluster in a project
+#'
+#' combine_data() saves combined_stats.rds under Combined_tags for several
+#' tags, or under the tag's own folder for one.
+#' @returns Named character vector of result folders, named with the tags in
+#'   each. Empty if none.
+#' @noRd
+kmeans_sources <- function(project_folder, tag_IDs) {
+  folders <- file.path(project_folder, c("Combined_tags", tag_IDs))
+  folders <- folders[file.exists(file.path(folders, "5_k-means", "combined_stats.rds"))]
+  labels <- vapply(folders, function(folder) {
+    tags <- unique(as.character(readRDS(file.path(folder, "5_k-means", "combined_stats.rds"))$tag_ID))
+    if (basename(folder) == "Combined_tags") paste0("Tags together: ", paste(tags, collapse = ", ")) else paste("Tag", tags)
+  }, character(1))
+  stats::setNames(folders, labels)
 }
 
 #' Rounded maximum depth and tick step for a TDR Y axis

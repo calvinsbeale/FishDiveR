@@ -99,6 +99,17 @@ install.packages(c("shiny", "bslib", "DT"))
 FishDiveR::run_app()
 ```
 
+## Learn more
+
+The package has three vignettes:
+
+- `vignette("FishDiveR")`: getting started, with the full workflow on the example data.
+- `vignette("app", package = "FishDiveR")`: using the point-and-click app.
+- `vignette("large-records", package = "FishDiveR")`: memory, thinning and fast plotting for long, high-frequency records.
+
+When installing from GitHub, add `build_vignettes = TRUE` to include them,
+e.g. `remotes::install_github("calvinsbeale/FishDiveR", build_vignettes = TRUE)`.
+
 ## Usage
 
 ```{r setup}

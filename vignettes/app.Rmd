@@ -1,0 +1,136 @@
+---
+title: "Using the FishDiveR app"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using the FishDiveR app}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+The FishDiveR app runs the whole workflow, from importing tags to plotting behaviour clusters, without writing code. It runs in your web browser but entirely on your own computer, so your data never leave your machine.
+
+This vignette explains how the app is organised and what each step does. The methods behind each step are explained in `vignette("FishDiveR")`.
+
+## Starting the app
+
+The app needs three extra packages. Install them once:
+
+```{r}
+install.packages(c("shiny", "bslib", "DT"))
+```
+
+Then start the app:
+
+```{r}
+FishDiveR::run_app()
+```
+
+It opens in your web browser. To open a project folder straight away, give its path:
+
+```{r}
+FishDiveR::run_app(project_folder = "C:/Tag data/My project")
+```
+
+To stop the app, close the browser tab and press Esc in the R console (or click the red stop sign in RStudio).
+
+## Projects and the folder layout
+
+Everything in the app happens in a **project folder**. The app saves each step's results there, in the same layout the FishDiveR functions use when `output_folder` is the project folder. You can move between the app and R code at any point.
+
+```
+My project/
+  tag_metadata.csv        <- the tag table
+  237522/                 <- one folder per tag
+    archive_days.rds      <- imported depth record
+    1_Wavelets/           <- wavelet and its settings
+    2_Wavelet_Figures/    <- wavelet spectrum figures
+    3_Stats/              <- daily wavelet and depth statistics
+  333237/
+    ...
+  Combined_tags/          <- results for several tags analysed together
+    4_PCA/                <- PCA results and figures
+    5_k-means/            <- combined data, k-means results and figures
+    6_Cluster-plots.K=4/  <- example days of each cluster
+```
+
+When a PCA is run on a single tag, its `4_PCA`, `5_k-means` and `6_Cluster-plots` folders are in that tag's folder instead of `Combined_tags`.
+
+## The tag table
+
+The tags in a project are listed in a tag table, saved as `tag_metadata.csv`. You can add tags one at a time in step 1, or load a whole table from a csv file with these columns:
+
+| Column | Required | Description |
+|---|---|---|
+| `tag_ID` | Yes | Unique ID of the tag, e.g. `237522` |
+| `archive` | Yes | Path of the tag's csv archive |
+| `tag_deploy_UTC` | Yes | Deployment time in UTC, `yyyy-mm-dd hh:mm:ss` |
+| `tag_release_UTC` | Yes | Release time in UTC, `yyyy-mm-dd hh:mm:ss` |
+| `time_zone` | Yes | Local time zone, e.g. `Asia/Tokyo` (see `OlsonNames()`) |
+| `date_time_col` | No | Column number of the date-time. Defaults to 1 |
+| `depth_col` | No | Column number of the depth. Defaults to 2 |
+| `temp_col` | No | Column number of the temperature, if any |
+| `GPS` | No | Path of a GPS csv file (`date`, `lat`, `lon`) for day and night times |
+
+For example:
+
+```
+tag_ID,archive,tag_deploy_UTC,tag_release_UTC,time_zone,GPS
+237522,D:/Tags/237522-Archive.csv,2023-06-01 04:30:00,2023-06-30 12:00:00,Australia/Perth,D:/Tags/237522-GPS.csv
+333237,D:/Tags/333237-Archive.csv,2023-07-02 05:10:00,2023-09-01 08:45:00,Australia/Perth,
+```
+
+Each tag is checked as it is added: that its files exist, its times are in the right format and in order, and its time zone is recognised.
+
+## The seven steps
+
+The steps are tabs along the top of the app, in workflow order. The **Next** button at the bottom right of each step moves on to the next one.
+
+### 1. Project & tags
+
+Open or create the project folder, then add tags with the form, load a tag table csv, or add the example tag to try things out. Select a tag in the table to edit or remove it. Removing a tag from the table keeps its results in the project folder.
+
+### 2. Import
+
+Import some or all of the tags. Each archive is cropped to whole local days between deployment and release, and saved in the tag's folder. The log shows each tag's messages, including any warning that its sampling interval isn't constant.
+
+The depth record of any imported tag can then be plotted. Set the points to plot, dates and axes, then click **Create plot**. Plots of large records can take a while, so the plot only redraws when you click. **Fast preview** plots the shallowest and deepest record in each of 2,000 time slices, which keeps every dive's extremes and plots long deployments in about a second.
+
+### 3. Wavelets
+
+Set the lower period, upper period and sub-octaves, then run the wavelet for selected tags or all tags. The tag table shows each tag's records, sampling interval and **estimated memory**, and the settings of any existing wavelet. A warning appears if a selected tag's wavelet may need more than half of your computer's memory.
+
+To cut memory and run time, tick **Thin records before the wavelet** and choose an interval. Select tags in the table to see a suggested interval for them, with the memory it would save; **Use this suggestion** fills it in. Open **How thinning works** for a full explanation, and see `vignette("large-records", package = "FishDiveR")`.
+
+The spectrum panel shows each tag's wavelet power spectrum or mean power by period. **Redraw figures** redraws them from the saved wavelet without recalculating it.
+
+### 4. Daily stats
+
+Create the daily wavelet and depth statistics. Diel (day and night) statistics use each tag's GPS file, or fixed sunrise and sunset times for all tags. The table shows how many days each tag's statistics cover; the wavelet and depth statistics must cover the same days, as they are matched day by day. Select a tag to view its statistics.
+
+### 5. PCA
+
+Choose the tags to analyse together, the wavelet statistics to include, and whether to standardise. **Calculate eigenvalues** shows the variance each component explains and suggests how many to keep: those with eigenvalues of 1 or more, or more if needed to reach 70% of the variance. Choose the number of components, then **Run PCA**. The results are combined with the depth statistics, ready for clustering. The PCA figures can be viewed on the right.
+
+### 6. Clustering
+
+Choose the PCA results to cluster. **Plot elbow and silhouette** helps choose the number of clusters. **Run k-means** clusters the days and shows:
+
+- an interactive 3D plot of the days on the first three principal components, coloured by cluster (drag to rotate, scroll to zoom),
+- the mean standardised value of each variable in each cluster,
+- how many days of each tag are in each cluster.
+
+A random seed makes the clusters the same each time.
+
+### 7. Results
+
+Plot each tag's depth record with days coloured by cluster, and the most typical days of each cluster, optionally with night shaded. The time taken to make the example-day plots is shown under **Create plots**.
+
+## Tips
+
+- While a long step runs, a progress bar shows which tag is being processed, but the rest of the app can't be used until the step finishes.
+- File and folder **Browse** windows open on your computer, in front of the browser. A message in the app shows while one is open.
+- Results are saved as each step runs, so you can close the app and pick up later by opening the same project folder.

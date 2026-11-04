@@ -1,4 +1,4 @@
-# FishDiveR (development version)
+# FishDiveR 1.2.0
 
 ## Breaking change
 - `create_wavelet()` no longer has the `allow_irregular_sampling` argument (it was not functional), and no longer stops on non-constant sampling intervals.

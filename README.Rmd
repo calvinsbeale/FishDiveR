@@ -35,7 +35,7 @@ the data into behaviours which can be plotted and examined further. `FishDiveR`
 allows the user to import tag data from comma-separated-value (csv) archives
 which include a time-date stamp and a depth column.
 
-See https://rdcu.be/e3CET for accompanying peer-reviewed publication and detailed
+See <https://doi.org/10.1186/s40462-025-00622-w> for the accompanying peer-reviewed publication and detailed
 use cases. Feel free to contact the author for further information and updates.
 
 The various functions:
@@ -88,7 +88,7 @@ devtools::install_github("calvinsbeale/FishDiveR")
 
 ## Point-and-click app (in development)
 
-The development version includes an app that runs FishDiveR from your web
+FishDiveR includes an app that runs FishDiveR from your web
 browser, without writing code. It runs locally on your computer, so your data
 never leave your machine. It covers the whole workflow for several tags at
 once: importing, depth plots, wavelet analysis, daily statistics, PCA, k-means

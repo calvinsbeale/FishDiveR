@@ -14,5 +14,4 @@
 ^\.github$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
-^build$
 ^tests/testthat/Rplots\.pdf$

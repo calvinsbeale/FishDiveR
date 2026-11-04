@@ -196,6 +196,17 @@ record, while keeping every dive’s extremes.</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">tdr</span>, <span class="st">"TDR_plot"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="FishDiveR_files/figure-html/plot-tdr-1.png" class="r-plt" alt="Depth record of the example tag over ten days, with depth increasing downwards." width="100%"></p>
+<p>If the tag was imported with a temperature column
+(<code>temp_col</code>), <code>plot_TDR(colour_temp = TRUE)</code>
+colours the depth record by temperature.</p>
+<p><code><a href="../reference/plot_time_at.html">plot_time_at()</a></code> shows the percentage of time spent in
+each depth range, or with <code>variable = "temp"</code> each
+temperature range. <code>by = "month"</code> gives one histogram per
+month, and <code>by = "day"</code> a heat map of each day.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">time_at_depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_time_at.html">plot_time_at</a></span><span class="op">(</span><span class="va">archive_days</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">275</span>, by <span class="op">=</span> <span class="fl">25</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">time_at_depth</span>, <span class="st">"time_at_plot"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="FishDiveR_files/figure-html/time-at-depth-1.png" class="r-plt" alt="Percentage of time the example tag spent in each 25 m depth range." width="100%"></p>
 </div>
 <div class="section level2">
 <h2 id="wavelet-analysis">2. Wavelet analysis<a class="anchor" aria-label="anchor" href="#wavelet-analysis"></a>
@@ -218,7 +229,7 @@ focuses on daily behaviour.</li>
 and 6 hours exactly, with 12 periods between each.</li>
 </ul>
 <p>Use the same settings for all tags you will cluster together.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">wavelet</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_wavelet.html">create_wavelet</a></span><span class="op">(</span></span>
 <span>  archive <span class="op">=</span> <span class="va">archive_days</span>,</span>
 <span>  tag_ID <span class="op">=</span> <span class="st">"data"</span>,</span>
@@ -246,7 +257,7 @@ how to estimate this and how to reduce it with
 <p><code><a href="../reference/create_wavelet_stats.html">create_wavelet_stats()</a></code> summarises the wavelet for each
 day and period: mean and variance of the amplitude, phase and power, and
 the mean squared power.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">wave_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_wavelet_stats.html">create_wavelet_stats</a></span><span class="op">(</span><span class="va">wavelet</span>, tag_ID <span class="op">=</span> <span class="st">"data"</span>, output <span class="op">=</span> <span class="cn">TRUE</span>, output_folder <span class="op">=</span> <span class="va">project</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">wave_stats</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]  10 478</span></span></code></pre></div>
@@ -260,7 +271,7 @@ and day in these statistics, standardised by each day’s maximum depth.
 Sunrise and sunset come from a GPS file with daily positions (columns
 <code>date</code>, <code>lat</code> and <code>lon</code>), or from fixed
 <code>sunrise_time</code> and <code>sunset_time</code>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">depth_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_depth_stats.html">create_depth_stats</a></span><span class="op">(</span></span>
 <span>  archive <span class="op">=</span> <span class="va">archive_days</span>,</span>
 <span>  tag_ID <span class="op">=</span> <span class="st">"data"</span>,</span>
@@ -285,7 +296,7 @@ Sunrise and sunset come from a GPS file with daily positions (columns
 the tags to analyse. Mean power, power variance and mean amplitude are
 the defaults: they capture the most variance in the fewest principal
 components.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pc_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_data.html">pca_data</a></span><span class="op">(</span></span>
 <span>  tag_vector <span class="op">=</span> <span class="st">"data"</span>,</span>
 <span>  data_folder <span class="op">=</span> <span class="va">project</span>,</span>
@@ -296,7 +307,7 @@ components.</p>
 <p>Before choosing how many components to keep, look at the eigenvalues
 and the cumulative variance they explain. Asking for up to 50 components
 returns all of their eigenvalues.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">all_pcs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_results.html">pca_results</a></span><span class="op">(</span><span class="va">pc_data</span>, No_pcs <span class="op">=</span> <span class="fl">50</span>, plot_eigenvalues <span class="op">=</span> <span class="cn">FALSE</span>, interactive_mode <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">all_pcs</span><span class="op">$</span><span class="va">eig</span>, <span class="fl">8</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        eigenvalue percentage of variance cumulative percentage of variance</span></span>
@@ -311,12 +322,12 @@ returns all of their eigenvalues.</p>
 <p>Common choices are the components with eigenvalues of 1 or more, or
 enough components to explain at least 70% of the variance. Here three
 components explain over 90%.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pc_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_results.html">pca_results</a></span><span class="op">(</span><span class="va">pc_data</span>, No_pcs <span class="op">=</span> <span class="fl">3</span>, plot_eigenvalues <span class="op">=</span> <span class="cn">FALSE</span>, interactive_mode <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">pc_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_scores.html">pca_scores</a></span><span class="op">(</span><span class="va">pc_results</span>, plot_loadings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/combine_data.html">combine_data()</a></code> joins each day’s principal component
 scores with its depth statistics, ready for clustering.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">kmeans_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/combine_data.html">combine_data</a></span><span class="op">(</span>tag_vector <span class="op">=</span> <span class="st">"data"</span>, data_folder <span class="op">=</span> <span class="va">project</span>, pc_scores <span class="op">=</span> <span class="va">pc_scores</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">kmeans_data</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 10 22</span></span></code></pre></div>
@@ -330,7 +341,7 @@ the “elbow” plot) and the mean silhouette width (B). Look for a number
 near the elbow, where more clusters stop reducing the sum of squares by
 much, and where the silhouette width is high. K-means starts from random
 cluster centres, so set a seed for reproducible results.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/select_k.html">select_k</a></span><span class="op">(</span><span class="va">kmeans_data</span>, Max.k <span class="op">=</span> <span class="fl">8</span>, v_line <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
 <p><img src="FishDiveR_files/figure-html/select-k-1.png" class="r-plt" alt="Elbow plot of within-cluster sum of squares and plot of silhouette width against the number of clusters, with a dashed line at four clusters." width="100%"></p>
@@ -338,7 +349,7 @@ cluster centres, so set a seed for reproducible results.</p>
 clusters. With <code>output = TRUE</code> it also saves a 3D plot of the
 first three principal components and figures of each cluster’s mean
 variable values.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
 <span><span class="va">kmeans_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/k_clustering.html">k_clustering</a></span><span class="op">(</span><span class="va">kmeans_data</span>, k <span class="op">=</span> <span class="fl">4</span>, nstart <span class="op">=</span> <span class="fl">50</span>, output <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>Cluster <span class="op">=</span> <span class="va">kmeans_result</span><span class="op">$</span><span class="va">cluster</span><span class="op">)</span></span>
@@ -353,7 +364,7 @@ analyses need many more days for meaningful clusters.</p>
 </h2>
 <p><code><a href="../reference/plot_cluster_TDR.html">plot_cluster_TDR()</a></code> plots a tag’s depth record with each
 day coloured by its cluster.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_cluster_TDR.html">plot_cluster_TDR</a></span><span class="op">(</span></span>
 <span>  tag_ID <span class="op">=</span> <span class="st">"data"</span>,</span>
 <span>  data_folder <span class="op">=</span> <span class="va">project</span>,</span>
@@ -368,7 +379,7 @@ cluster: those closest to the cluster’s centre. With
 <code>diel_shade = TRUE</code>, night is shaded grey. It saves one
 figure per cluster and combined figures in the tag’s
 <code>6_Cluster-plots</code> folder.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_clusters.html">plot_clusters</a></span><span class="op">(</span></span>
 <span>  tag_vector <span class="op">=</span> <span class="st">"data"</span>,</span>
 <span>  data_folder <span class="op">=</span> <span class="va">project</span>,</span>
@@ -389,7 +400,7 @@ figure per cluster and combined figures in the tag’s
 individuals. Run steps 1 to 3 for each tag with the same project folder
 and wavelet settings, then pass all the tag IDs to
 <code><a href="../reference/pca_data.html">pca_data()</a></code> and <code><a href="../reference/combine_data.html">combine_data()</a></code>:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tags</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"tag_A"</span>, <span class="st">"tag_B"</span>, <span class="st">"tag_C"</span><span class="op">)</span></span>
 <span><span class="va">pc_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pca_data.html">pca_data</a></span><span class="op">(</span>tag_vector <span class="op">=</span> <span class="va">tags</span>, data_folder <span class="op">=</span> <span class="va">project</span>, output <span class="op">=</span> <span class="cn">TRUE</span>, output_folder <span class="op">=</span> <span class="va">project</span><span class="op">)</span></span>
 <span><span class="co"># ... pca_results() and pca_scores() as above ...</span></span>

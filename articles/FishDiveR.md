@@ -128,6 +128,23 @@ attr(tdr, "TDR_plot")
 ![Depth record of the example tag over ten days, with depth increasing
 downwards.](FishDiveR_files/figure-html/plot-tdr-1.png)
 
+If the tag was imported with a temperature column (`temp_col`),
+`plot_TDR(colour_temp = TRUE)` colours the depth record by temperature.
+
+[`plot_time_at()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_time_at.md)
+shows the percentage of time spent in each depth range, or with
+`variable = "temp"` each temperature range. `by = "month"` gives one
+histogram per month, and `by = "day"` a heat map of each day.
+
+``` r
+
+time_at_depth <- plot_time_at(archive_days, breaks = seq(0, 275, by = 25))
+attr(time_at_depth, "time_at_plot")
+```
+
+![Percentage of time the example tag spent in each 25 m depth
+range.](FishDiveR_files/figure-html/time-at-depth-1.png)
+
 ## 2. Wavelet analysis
 
 [`create_wavelet()`](https://calvinsbeale.github.io/FishDiveR/reference/create_wavelet.md)

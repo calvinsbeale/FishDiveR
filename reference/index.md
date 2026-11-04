@@ -29,6 +29,8 @@
 - [`plot_clusters()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_clusters.md)
   : Plot the time-series depth records of the days closest to the centre
   of each cluster
+- [`plot_time_at()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_time_at.md)
+  : Plot time at depth or time at temperature
 - [`run_app()`](https://calvinsbeale.github.io/FishDiveR/reference/run_app.md)
   : Launch the FishDiveR app
 - [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)

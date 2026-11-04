@@ -58,7 +58,8 @@
 <span>  output <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  output_folder <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  minmax_bins <span class="op">=</span> <span class="fl">0</span></span>
+<span>  minmax_bins <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  colour_temp <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -132,6 +133,13 @@ bins and plots only the shallowest and deepest record in each, so dive
 extremes are kept. E.g. 2000. Overrides every_nth and every_s if != 0.
 Defaults to 0.</p></dd>
 
+
+<dt id="arg-colour-temp">colour_temp<a class="anchor" aria-label="anchor" href="#arg-colour-temp"></a></dt>
+<dd><p>Logical. If TRUE, the depth record is coloured by
+temperature, from blue (cold) to red (warm). Needs a 'temp' column, i.e.
+the tag imported with <code>temp_col</code> in <code><a href="import_tag_data.html">import_tag_data()</a></code>. Defaults to
+FALSE.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -162,7 +170,7 @@ attribute 'TDR_plot'.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Data sampling interval is 60 seconds</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Plotting every 10 records </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Maximum depth is 256.6 meters</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Output file:/tmp/Rtmpcux66d/tag_archive.png</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Output file:/tmp/RtmpfhMJTI/tag_archive.png</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

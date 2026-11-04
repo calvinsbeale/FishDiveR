@@ -4,6 +4,20 @@
 
 ### New features
 
+- New
+  [`plot_time_at()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_time_at.md)
+  plots time at depth or time at temperature: the percentage of time in
+  each depth or temperature range, for the whole record, each month, or
+  as a heat map of each day. It returns the table of percentages, with
+  the plot attached. In the app, step 2 has a new “Time at depth &
+  temperature” tab.
+- [`plot_TDR()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_TDR.md)
+  has a new `colour_temp` argument to colour the depth record by
+  temperature, from blue (cold) to red (warm). The app’s depth record
+  plot has a “Colour by temperature” option. Both need the tag imported
+  with its temperature column.
+- The app’s date breaks now include “28 day” and “2 month”, and records
+  of over 400 days default to “2 month”.
 - [`import_tag_data()`](https://calvinsbeale.github.io/FishDiveR/reference/import_tag_data.md)
   with `output = TRUE` now also saves the settings it used (archive,
   deployment and release times, columns and time zone) as

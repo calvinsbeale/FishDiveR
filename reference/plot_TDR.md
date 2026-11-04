@@ -18,7 +18,8 @@ plot_TDR(
   output = FALSE,
   output_folder = NULL,
   verbose = FALSE,
-  minmax_bins = 0
+  minmax_bins = 0,
+  colour_temp = FALSE
 )
 ```
 
@@ -91,6 +92,14 @@ plot_TDR(
   are kept. E.g. 2000. Overrides every_nth and every_s if != 0. Defaults
   to 0.
 
+- colour_temp:
+
+  Logical. If TRUE, the depth record is coloured by temperature, from
+  blue (cold) to red (warm). Needs a 'temp' column, i.e. the tag
+  imported with `temp_col` in
+  [`import_tag_data()`](https://calvinsbeale.github.io/FishDiveR/reference/import_tag_data.md).
+  Defaults to FALSE.
+
 ## Value
 
 A data frame of plot data. The ggplot object is attached as the
@@ -120,5 +129,5 @@ TDR_plot <- plot_TDR(
 #> Data sampling interval is 60 seconds
 #> Plotting every 10 records 
 #> Maximum depth is 256.6 meters
-#> Output file:/tmp/Rtmpcux66d/tag_archive.png
+#> Output file:/tmp/RtmpfhMJTI/tag_archive.png
 ```

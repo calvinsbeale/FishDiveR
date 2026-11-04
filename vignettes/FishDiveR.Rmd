@@ -79,7 +79,7 @@ head(archive_days)
 A few things to check with your own data:
 
 - **Time zone.** Days are split at local midnight, so give the time zone the animal was in. Time zones with daylight saving are not supported, as the clock changes create days of 23 and 25 hours.
-- **Sampling interval.** The record needs a constant sampling interval. `import_tag_data()` warns if it finds more than one interval, listing each and how many records have it.
+- **Sampling interval.** The record needs a constant sampling interval. `import_tag_data()` warns if it finds more than one interval, listing each and how many records have it. `sampling_report()` then shows where the irregularities are: duplicate times, gaps, changes of sampling rate, and days with fewer records than expected.
 - **Date-time format.** Dates are currently read in the format `00:01:00 01-Jan-2000`.
 
 `plot_TDR()` plots the depth record. Its `minmax_bins` option plots only the shallowest and deepest record in each of that many time slices: much faster than plotting every record, while keeping every dive's extremes.

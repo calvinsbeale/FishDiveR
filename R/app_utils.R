@@ -320,14 +320,33 @@ archive_summary <- function(file) {
     return(archive_summary_cache[[key]])
   }
   archive <- readRDS(file)
+  report <- sampling_report(archive)
   summary <- list(
     n_records = nrow(archive),
-    sampling_s = as.numeric(difftime(archive$date[2], archive$date[1], units = "secs")),
+    sampling_s = report$interval_s,
     max_depth = max(archive$depth),
-    dates = range(archive$date_only)
+    dates = range(archive$date_only),
+    sampling = report
   )
   archive_summary_cache[[key]] <- summary
   summary
+}
+
+#' One-line summary of a sampling_report(), e.g. "Irregular: 2 gaps, 1 duplicate"
+#' @noRd
+sampling_status <- function(report) {
+  if (report$regular) {
+    return(paste0("Regular (", report$interval_s, " s)"))
+  }
+  counts <- c(
+    duplicate = nrow(report$duplicates),
+    `out of order` = nrow(report$out_of_order),
+    `rate change` = nrow(report$rate_changes),
+    gap = nrow(report$gaps),
+    `short interval` = nrow(report$short)
+  )
+  counts <- counts[counts > 0]
+  paste0("Irregular: ", paste0(counts, " ", names(counts), ifelse(counts > 1, "s", ""), collapse = ", "))
 }
 
 #' Wavelet settings (LP in minutes, UP in days, SO) saved by create_wavelet()

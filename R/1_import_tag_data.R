@@ -11,7 +11,8 @@
 #'
 #' A warning is given if the sampling interval is not constant throughout the
 #' cropped data (e.g. gaps from missing records), listing the intervals detected
-#' and how many records have each.
+#' and how many records have each. Use [sampling_report()] on the imported
+#' data to see where the irregularities are.
 #'
 #' @name import_tag_data
 #'
@@ -239,7 +240,10 @@ import_tag_data <- function(tag_ID,
   if (length(unique(diffs)) > 1L) {
     interval_counts <- table(diffs)
     msg <- paste0(names(interval_counts), "s: ", as.integer(interval_counts), " records", collapse = "; ")
-    warning("Sampling frequency is not constant. Intervals detected: ", msg, call. = FALSE)
+    warning("Sampling frequency is not constant. Intervals detected: ", msg,
+      ". Run sampling_report() on the imported archive for details.",
+      call. = FALSE
+    )
   }
 
   if (isTRUE(output)) {

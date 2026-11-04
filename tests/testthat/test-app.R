@@ -80,6 +80,12 @@ test_that("app imports tags and plots the depth record", {
     expect_match(paste(import_log(), collapse = "\n"), "example: imported")
     expect_equal(imported_tags(), "example")
 
+    # Selecting an imported tag shows its sampling check
+    session$setInputs(tag_table_rows_selected = 1)
+    expect_match(paste(as.character(output$sampling_details), collapse = ""), "Regular: every interval is 60 s")
+    expect_equal(sampling_status(tag_sampling("example")), "Regular (60 s)")
+    session$setInputs(tag_table_rows_selected = NULL)
+
     session$setInputs(plot_tag = "example")
     session$setInputs(
       downsample = "n", every = 10, y_max = 300, y_step = 50,

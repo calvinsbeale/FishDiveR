@@ -69,7 +69,8 @@ the time zone supplied. If \code{output = TRUE}, the cropped data are saved as
 
 A warning is given if the sampling interval is not constant throughout the
 cropped data (e.g. gaps from missing records), listing the intervals detected
-and how many records have each.
+and how many records have each. Use \code{\link[=sampling_report]{sampling_report()}} on the imported
+data to see where the irregularities are.
 }
 \examples{
 # Set file path

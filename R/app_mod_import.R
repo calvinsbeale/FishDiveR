@@ -21,6 +21,7 @@ mod_import_ui <- function(id) {
         shiny::actionButton(ns("import_all"), "Import all"),
         shiny::actionButton(ns("remove_selected"), "Remove selected")
       ),
+      shiny::uiOutput(ns("sampling_details")),
       shiny::h6("Log", class = "mt-3"),
       shiny::verbatimTextOutput(ns("log"))
     ),
@@ -92,9 +93,29 @@ mod_import_server <- function(id, state) {
       display <- data.frame(
         `Tag ID` = status()$tag_ID,
         Imported = ifelse(status()$Imported, "Yes", ""),
+        Sampling = vapply(seq_len(nrow(status())), function(i) {
+          if (status()$Imported[i]) sampling_status(tag_sampling(status()$tag_ID[i])) else ""
+        }, character(1)),
         check.names = FALSE
       )
       DT::datatable(display, selection = "multiple", rownames = FALSE, fillContainer = FALSE, options = list(dom = "t", pageLength = 1000))
+    })
+
+    # Sampling report of an imported tag (cached with the archive summary)
+    tag_sampling <- function(tag) archive_summary(file.path(state$project, tag, "archive_days.rds"))$sampling
+
+    output$sampling_details <- shiny::renderUI({
+      rows <- input$tag_table_rows_selected
+      shiny::req(length(rows) == 1, isTRUE(status()$Imported[rows]))
+      tag <- status()$tag_ID[rows]
+      shiny::tagList(
+        shiny::h6(
+          paste("Sampling check:", tag),
+          help_tip("Checks the imported record for a constant sampling interval. See ?sampling_report for what each item means."),
+          class = "mt-3"
+        ),
+        shiny::tags$pre(paste(utils::capture.output(print(tag_sampling(tag))), collapse = "\n"))
+      )
     })
 
     output$log <- shiny::renderText({

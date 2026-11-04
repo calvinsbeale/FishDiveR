@@ -9,7 +9,8 @@
 - `create_wavelet()` now records the wavelet's sampling interval as `sampling_s` in `wavelet_meta`, and with `load_existing_wavelet = TRUE` uses the saved wavelet's own sampling interval for the figures.
 - `plot_TDR()` now attaches its ggplot to the returned data as the attribute `TDR_plot`.
 - `plot_TDR()` has a new `minmax_bins` argument for fast plotting of large archives: it plots only the shallowest and deepest record in each of that many time bins, keeping dive extremes that `every_nth` can miss. `plot_cluster_TDR()` has the same argument.
-- `import_tag_data()` now warns if the sampling interval is not constant, listing the intervals detected and their record counts.
+- New `sampling_report()` checks a depth record for a constant sampling interval and reports any irregularities: duplicate times, gaps, changes of sampling rate, short intervals, times out of order, and days with fewer records than expected. In the app, step 2 shows each imported tag's sampling check.
+- `import_tag_data()` now warns if the sampling interval is not constant, listing the intervals detected and their record counts, and suggests `sampling_report()` for details.
 
 ## Fixes
 - `create_wavelet()`: the wavelet power spectrum figure no longer has its end cut off for long, high-frequency records (e.g. 29 days at 1 s). Records with millions of samples are now thinned for drawing only; the saved wavelet is unchanged. Redraw existing figures with `load_existing_wavelet = TRUE`.

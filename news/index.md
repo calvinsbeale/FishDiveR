@@ -25,7 +25,13 @@
   when a tag’s settings change after it was imported: step 1 shows a
   warning when the tag is saved and in its Check column, and step 2
   marks the tag “Outdated” and lists what changed until it is
-  re-imported.
+  re-imported. For tags imported before the settings were saved, the app
+  checks the temperature column and time zone against the imported
+  record itself.
+- `import_tag_data(verbose = TRUE)` now reports the mean, minimum and
+  maximum temperature when a temperature column is imported.
+- The app’s table of tags in step 1 has a Temperature column, ticked for
+  tags imported with temperature data.
 - Printing a
   [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
   now lists each irregularity and incomplete day with its times, up to

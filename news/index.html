@@ -47,7 +47,10 @@
 <code><a href="../reference/plot_TDR.html">plot_TDR()</a></code> has a new <code>colour_temp</code> argument to colour the depth record by temperature, from blue (cold) to red (warm). The app’s depth record plot has a “Colour by temperature” option. Both need the tag imported with its temperature column.</li>
 <li>The app’s date breaks now include “28 day” and “2 month”, and records of over 400 days default to “2 month”.</li>
 <li>
-<code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> with <code>output = TRUE</code> now also saves the settings it used (archive, deployment and release times, columns and time zone) as <code>import_settings.rds</code> in the tag’s folder. The app uses this to warn when a tag’s settings change after it was imported: step 1 shows a warning when the tag is saved and in its Check column, and step 2 marks the tag “Outdated” and lists what changed until it is re-imported.</li>
+<code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> with <code>output = TRUE</code> now also saves the settings it used (archive, deployment and release times, columns and time zone) as <code>import_settings.rds</code> in the tag’s folder. The app uses this to warn when a tag’s settings change after it was imported: step 1 shows a warning when the tag is saved and in its Check column, and step 2 marks the tag “Outdated” and lists what changed until it is re-imported. For tags imported before the settings were saved, the app checks the temperature column and time zone against the imported record itself.</li>
+<li>
+<code>import_tag_data(verbose = TRUE)</code> now reports the mean, minimum and maximum temperature when a temperature column is imported.</li>
+<li>The app’s table of tags in step 1 has a Temperature column, ticked for tags imported with temperature data.</li>
 <li>Printing a <code><a href="../reference/sampling_report.html">sampling_report()</a></code> now lists each irregularity and incomplete day with its times, up to <code>max_rows</code> of each (5 by default; 20 in the app), and no longer rounds nearly regular records up to “100%” of intervals.</li>
 </ul></div>
 </div>

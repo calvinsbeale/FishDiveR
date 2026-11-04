@@ -124,7 +124,7 @@ archive_days <- readRDS(file.path(filepath, "data/archive_days.rds"))
 # A regular record
 sampling_report(archive_days)
 #> Sampling report: 14,400 records over 10 days (2000-01-01 to 2000-01-10, UTC)
-#> Expected interval: 60 s (  100% of intervals)
+#> Expected interval: 60 s (100% of intervals)
 #> Regular: every interval is 60 s.
 
 # Remove 5 records to make a gap

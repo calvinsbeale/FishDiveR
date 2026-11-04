@@ -288,6 +288,18 @@ suggest_thin_interval <- function(lower_period_mins, sampling_s) {
   if (length(ok) == 0) NA_real_ else max(ok)
 }
 
+#' Seconds as a short human-readable duration
+#' @noRd
+format_duration <- function(secs) {
+  if (secs < 1) {
+    "under 1 s"
+  } else if (secs < 60) {
+    paste(round(secs), "s")
+  } else {
+    paste(round(secs / 60, 1), "min")
+  }
+}
+
 #' Bytes as a short human-readable string
 #' @noRd
 format_bytes <- function(bytes) {

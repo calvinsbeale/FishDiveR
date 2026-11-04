@@ -77,7 +77,8 @@ mod_results_ui <- function(id) {
             value = FALSE
           ),
           shiny::numericInput(ns("dpi"), "Image resolution (dpi)", value = 150, min = 50, step = 50),
-          shiny::actionButton(ns("create_days"), "Create plots", class = "btn-primary")
+          shiny::actionButton(ns("create_days"), "Create plots", class = "btn-primary"),
+          shiny::div(class = "text-muted small", shiny::textOutput(ns("days_time")))
         ),
         shiny::selectInput(ns("days_figure"), "Figure", choices = NULL, width = "100%"),
         shiny::uiOutput(ns("days_note")),
@@ -238,6 +239,8 @@ mod_results_server <- function(id, state) {
     })
 
     ## Example days from each cluster
+    days_time <- shiny::reactiveVal(NULL)
+
     days_folder <- shiny::reactive({
       shiny::req(input$source)
       file.path(input$source, paste0("6_Cluster-plots.K=", k(), if (isTRUE(input$diel_shade)) "_shaded" else ""))
@@ -249,6 +252,7 @@ mod_results_server <- function(id, state) {
         shiny::showNotification("Fill in all the plot settings.", type = "error")
         return()
       }
+      started <- Sys.time()
       res <- shiny::withProgress(message = "Plotting example days", value = 0.5, run_logged({
         plot_clusters(
           tag_vector = result_tags(),
@@ -265,9 +269,13 @@ mod_results_server <- function(id, state) {
         )
         invisible(NULL)
       }))
-      results_log(c(paste0("== Example days: ", if (res$ok) "done" else "FAILED"), res$log))
+      took <- format_duration(as.numeric(difftime(Sys.time(), started, units = "secs")))
+      days_time(paste0(if (res$ok) "Last plots took " else "Failed after ", took, if (isTRUE(input$diel_shade)) " (with night shading)." else "."))
+      results_log(c(paste0("== Example days: ", if (res$ok) "done" else "FAILED", " (", took, ")"), res$log))
       state$refresh <- state$refresh + 1
     })
+
+    output$days_time <- shiny::renderText(days_time())
 
     days_files <- shiny::reactive({
       state$refresh

@@ -371,7 +371,8 @@ test_that("app makes daily statistics and runs PCA across tags", {
 
     session$setInputs(no_days = 1, days_every = 10, days_y_max = 300, days_y_step = 50, diel_shade = TRUE, dpi = 50)
     session$setInputs(create_days = 1)
-    expect_match(results_log()[1], "Example days: done")
+    expect_match(results_log()[1], "Example days: done \\(")
+    expect_match(days_time(), "Last plots took .* \\(with night shading\\)")
     expect_true("Cluster_facet.png" %in% days_files())
   })
 })

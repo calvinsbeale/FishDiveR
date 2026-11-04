@@ -31,7 +31,7 @@ jobs:
       RGL_USE_NULL: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install XQuartz on macOS
         if: runner.os == 'macOS'

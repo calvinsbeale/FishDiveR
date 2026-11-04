@@ -98,5 +98,5 @@ depthStats <- create_depth_stats(
 )
 #> Running create_depth_stats() on tag ID data
 #> Reading in GPS locations. Using actual sunrise and sunset times to calculate diel statistics
-#> Output folder: /tmp/RtmpUEtc5Z/data/3_Stats/data_depthStats.csv
+#> Output folder: /tmp/Rtmpn7IcYi/data/3_Stats/data_depthStats.csv
 ```

@@ -596,6 +596,8 @@ plots_list <- plot_clusters(
   of each cluster
 - [`run_app()`](https://calvinsbeale.github.io/FishDiveR/reference/run_app.md)
   : Launch the FishDiveR app
+- [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
+  : Report irregular sampling in a depth record
 - [`select_k()`](https://calvinsbeale.github.io/FishDiveR/reference/select_k.md)
   : Perform k selection
 - [`thin_archive()`](https://calvinsbeale.github.io/FishDiveR/reference/thin_archive.md)

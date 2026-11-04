@@ -102,6 +102,9 @@ A few things to check with your own data:
   [`import_tag_data()`](https://calvinsbeale.github.io/FishDiveR/reference/import_tag_data.md)
   warns if it finds more than one interval, listing each and how many
   records have it.
+  [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
+  then shows where the irregularities are: duplicate times, gaps,
+  changes of sampling rate, and days with fewer records than expected.
 - **Date-time format.** Dates are currently read in the format
   `00:01:00 01-Jan-2000`.
 

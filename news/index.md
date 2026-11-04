@@ -41,9 +41,17 @@
   time bins, keeping dive extremes that `every_nth` can miss.
   [`plot_cluster_TDR()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_cluster_TDR.md)
   has the same argument.
+- New
+  [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
+  checks a depth record for a constant sampling interval and reports any
+  irregularities: duplicate times, gaps, changes of sampling rate, short
+  intervals, times out of order, and days with fewer records than
+  expected. In the app, step 2 shows each imported tag’s sampling check.
 - [`import_tag_data()`](https://calvinsbeale.github.io/FishDiveR/reference/import_tag_data.md)
   now warns if the sampling interval is not constant, listing the
-  intervals detected and their record counts.
+  intervals detected and their record counts, and suggests
+  [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
+  for details.
 
 ### Fixes
 

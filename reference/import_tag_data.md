@@ -97,7 +97,9 @@ are saved as `archive_days.rds` within `output_folder`.
 
 A warning is given if the sampling interval is not constant throughout
 the cropped data (e.g. gaps from missing records), listing the intervals
-detected and how many records have each.
+detected and how many records have each. Use
+[`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
+on the imported data to see where the irregularities are.
 
 ## Examples
 
@@ -126,5 +128,5 @@ archive_days <- import_tag_data(
 #> Mean depth = 75.5 SD = 81.9
 #> Maximum depth = 256.6
 #> Number of full days in dataset: 10
-#> Output file: /tmp/RtmpUEtc5Z/data/archive_days.rds
+#> Output file: /tmp/Rtmpn7IcYi/data/archive_days.rds
 ```

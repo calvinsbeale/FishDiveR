@@ -174,7 +174,10 @@ hours.</li>
 <li>
 <strong>Sampling interval.</strong> The record needs a constant
 sampling interval. <code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> warns if it finds more
-than one interval, listing each and how many records have it.</li>
+than one interval, listing each and how many records have it.
+<code><a href="../reference/sampling_report.html">sampling_report()</a></code> then shows where the irregularities are:
+duplicate times, gaps, changes of sampling rate, and days with fewer
+records than expected.</li>
 <li>
 <strong>Date-time format.</strong> Dates are currently read in the
 format <code>00:01:00 01-Jan-2000</code>.</li>

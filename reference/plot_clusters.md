@@ -130,7 +130,7 @@ plot_clusters(
 #> Cluster 2 dates 2000-01-10 Tag: data
 #> Cluster 3 dates 2000-01-03 Tag: data
 #> Cluster 4 dates 2000-01-04 Tag: data
-#> Output folder: /tmp/RtmpUEtc5Z/data/6_Cluster-plots.K=4
+#> Output folder: /tmp/Rtmpn7IcYi/data/6_Cluster-plots.K=4
 #> [[1]]
 
 #> 

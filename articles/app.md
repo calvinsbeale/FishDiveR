@@ -108,6 +108,13 @@ days between deployment and release, and saved in the tag’s folder. The
 log shows each tag’s messages, including any warning that its sampling
 interval isn’t constant.
 
+The **Sampling** column checks each imported tag for a constant sampling
+interval, e.g. “Regular (5 s)” or “Irregular: 1 duplicate, 2 gaps”.
+Select a tag to see its full sampling check, from
+[`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md):
+where any duplicate times, gaps or changes of sampling rate are, and
+which days have fewer records than expected.
+
 The depth record of any imported tag can then be plotted. Set the points
 to plot, dates and axes, then click **Create plot**. Plots of large
 records can take a while, so the plot only redraws when you click.

@@ -55,8 +55,9 @@
 <code><a href="../reference/plot_TDR.html">plot_TDR()</a></code> now attaches its ggplot to the returned data as the attribute <code>TDR_plot</code>.</li>
 <li>
 <code><a href="../reference/plot_TDR.html">plot_TDR()</a></code> has a new <code>minmax_bins</code> argument for fast plotting of large archives: it plots only the shallowest and deepest record in each of that many time bins, keeping dive extremes that <code>every_nth</code> can miss. <code><a href="../reference/plot_cluster_TDR.html">plot_cluster_TDR()</a></code> has the same argument.</li>
+<li>New <code><a href="../reference/sampling_report.html">sampling_report()</a></code> checks a depth record for a constant sampling interval and reports any irregularities: duplicate times, gaps, changes of sampling rate, short intervals, times out of order, and days with fewer records than expected. In the app, step 2 shows each imported tag’s sampling check.</li>
 <li>
-<code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> now warns if the sampling interval is not constant, listing the intervals detected and their record counts.</li>
+<code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> now warns if the sampling interval is not constant, listing the intervals detected and their record counts, and suggests <code><a href="../reference/sampling_report.html">sampling_report()</a></code> for details.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="fixes-1-2-0">Fixes<a class="anchor" aria-label="anchor" href="#fixes-1-2-0"></a></h3>

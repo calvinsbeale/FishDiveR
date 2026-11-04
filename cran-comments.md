@@ -17,9 +17,12 @@ This is an update from 1.1.0 to 1.2.0. The main changes are:
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+Local: 0 errors | 0 warnings | 0 notes
 
-All URLs were checked with `urlchecker::url_check()`.
+win-builder (R-devel): 0 errors | 0 warnings | 1 note
+
+* Possibly misspelled words in DESCRIPTION: "et" and "al". These are from "et al." in the references to Sakamoto et al. (2009) and Beale et al. (2026), and are spelled correctly.
+* Possibly invalid URL: <https://calvinbeale.co.uk/fishdiver/> ("SSL connect error ... Connection was reset"). The URL is valid: it returns status 200 in a browser, with `urlchecker::url_check()`, and with curl using both OpenSSL and Schannel. The site is served through Cloudflare, and the connection from win-builder was reset during the SSL handshake, which I could not reproduce from elsewhere.
 
 ## Reverse dependencies
 

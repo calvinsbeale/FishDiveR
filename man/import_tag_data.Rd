@@ -65,7 +65,10 @@ column. Data is cropped by deployment and release times.
 \details{
 Data are cropped to full days from midnight to midnight in local time based on
 the time zone supplied. If \code{output = TRUE}, the cropped data are saved as
-\code{archive_days.rds} within \code{output_folder}.
+\code{archive_days.rds} in the tag's folder within \code{output_folder},
+with the settings used (archive, deployment and release times, columns and
+time zone) in \code{import_settings.rds}. The app uses these to warn when a
+tag's settings have changed since it was imported.
 
 A warning is given if the sampling interval is not constant throughout the
 cropped data (e.g. gaps from missing records), listing the intervals detected

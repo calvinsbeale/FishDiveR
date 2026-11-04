@@ -7,7 +7,10 @@
 #' @details
 #' Data are cropped to full days from midnight to midnight in local time based on
 #' the time zone supplied. If \code{output = TRUE}, the cropped data are saved as
-#' \code{archive_days.rds} within \code{output_folder}.
+#' \code{archive_days.rds} in the tag's folder within \code{output_folder},
+#' with the settings used (archive, deployment and release times, columns and
+#' time zone) in \code{import_settings.rds}. The app uses these to warn when a
+#' tag's settings have changed since it was imported.
 #'
 #' A warning is given if the sampling interval is not constant throughout the
 #' cropped data (e.g. gaps from missing records), listing the intervals detected
@@ -255,6 +258,17 @@ import_tag_data <- function(tag_ID,
 
     # Save the 'tag_archive' object to output_folder
     saveRDS(tag_archive, file = file.path(output_folder, tag_ID, "archive_days.rds"))
+
+    # Save the settings used, so later changes to them can be detected
+    saveRDS(list(
+      archive = normalizePath(archive, winslash = "/", mustWork = FALSE),
+      tag_deploy_UTC = tag_deploy_UTC,
+      tag_release_UTC = tag_release_UTC,
+      date_time_col = date_time_col,
+      depth_col = depth_col,
+      temp_col = temp_col,
+      time_zone = time_zone
+    ), file = file.path(output_folder, tag_ID, "import_settings.rds"))
 
     if (verbose) message(paste0("Output file: ", output_folder, "/", tag_ID, "/archive_days.rds"))
   }

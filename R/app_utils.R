@@ -122,14 +122,76 @@ tag_status <- function(meta, project_folder) {
   tags <- meta$tag_ID
   tag_file <- function(...) file.exists(file.path(project_folder, tags, ...))
 
+  imported <- tag_file("archive_days.rds")
   data.frame(
     tag_ID = tags,
-    Imported = tag_file("archive_days.rds"),
+    Imported = imported,
+    Settings_changed = vapply(seq_along(tags), function(i) {
+      if (imported[i]) paste(changed_import_settings(meta[i, , drop = FALSE], project_folder), collapse = ", ") else ""
+    }, character(1)),
     Wavelet = file.exists(file.path(project_folder, tags, "1_Wavelets", paste0(tags, "_wavelet.rds"))),
     Daily_stats = file.exists(file.path(project_folder, tags, "3_Stats", paste0(tags, "_waveStats.csv"))) &
       file.exists(file.path(project_folder, tags, "3_Stats", paste0(tags, "_depthStats.csv"))),
     stringsAsFactors = FALSE
   )
+}
+
+# Names of the tag settings that import_tag_data() saves in import_settings.rds
+import_setting_names <- c(
+  archive = "archive", tag_deploy_UTC = "deployment time", tag_release_UTC = "release time",
+  date_time_col = "date-time column", depth_col = "depth column", temp_col = "temperature column",
+  time_zone = "time zone"
+)
+
+#' Tag settings that differ from those the tag was imported with
+#'
+#' Compares a tag's settings with the import_settings.rds saved by
+#' import_tag_data() next to its archive_days.rds.
+#'
+#' @returns The names of the changed settings, or character(0) if none changed or
+#'   the settings used are unknown (imported before they were saved, or the
+#'   archive was replaced since).
+#' @noRd
+changed_import_settings <- function(tag, project_folder) {
+  settings_file <- file.path(project_folder, tag$tag_ID, "import_settings.rds")
+  archive_file <- file.path(project_folder, tag$tag_ID, "archive_days.rds")
+  if (!file.exists(settings_file) || !file.exists(archive_file)) {
+    return(character())
+  }
+  # Both files are written together: a newer archive came from elsewhere
+  if (difftime(file.mtime(archive_file), file.mtime(settings_file), units = "secs") > 60) {
+    return(character())
+  }
+  used <- readRDS(settings_file)
+
+  is_blank <- function(x) length(x) == 0 || is.na(x) || !nzchar(trimws(x))
+  as_path <- function(x) {
+    if (is_blank(x)) return("")
+    path <- normalizePath(x, winslash = "/", mustWork = FALSE)
+    # Windows file names ignore case
+    if (.Platform$OS.type == "windows") tolower(path) else path
+  }
+  as_time <- function(x) {
+    if (is_blank(x)) return(NA_real_)
+    t <- tryCatch(
+      as.POSIXct(x, tz = "UTC", tryFormats = c("%Y-%m-%d %H:%M:%OS", "%Y-%m-%d %H:%M", "%Y-%m-%d")),
+      error = function(e) NA
+    )
+    as.numeric(t)
+  }
+  as_col <- function(x) if (is_blank(x)) NA_integer_ else suppressWarnings(as.integer(x))
+  same <- function(a, b) identical(a, b)
+
+  changed <- c(
+    archive = !same(as_path(tag$archive), as_path(used$archive)),
+    tag_deploy_UTC = !same(as_time(tag$tag_deploy_UTC), as_time(used$tag_deploy_UTC)),
+    tag_release_UTC = !same(as_time(tag$tag_release_UTC), as_time(used$tag_release_UTC)),
+    date_time_col = !same(as_col(tag$date_time_col), as_col(used$date_time_col)),
+    depth_col = !same(as_col(tag$depth_col), as_col(used$depth_col)),
+    temp_col = !same(as_col(tag$temp_col), as_col(used$temp_col)),
+    time_zone = !same(as.character(tag$time_zone), as.character(used$time_zone))
+  )
+  unname(import_setting_names[names(changed)[changed]])
 }
 
 #' Evaluate an expression, collecting its messages, warnings and any error

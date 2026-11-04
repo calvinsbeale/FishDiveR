@@ -183,7 +183,18 @@ mod_project_server <- function(id, state) {
         return()
       }
       save_tags(upsert_tags(state$tags, tag))
-      shiny::showNotification(paste0("Saved tag '", tag$tag_ID, "'."))
+      changed <- changed_import_settings(tag, state$project)
+      if (length(changed) > 0) {
+        shiny::showNotification(
+          paste0(
+            "Saved tag '", tag$tag_ID, "'. It was imported with a different ", paste(changed, collapse = ", "),
+            ": re-import it in step 2."
+          ),
+          type = "warning", duration = 15
+        )
+      } else {
+        shiny::showNotification(paste0("Saved tag '", tag$tag_ID, "'."))
+      }
     })
 
     shiny::observeEvent(input$clear_form, {
@@ -196,10 +207,16 @@ mod_project_server <- function(id, state) {
     ## Tag table
     output$tag_table <- DT::renderDT({
       shiny::validate(shiny::need(state$project, "Open a project folder to see its tags."))
+      state$refresh # Re-check after imports
       tags <- state$tags
       shiny::validate(shiny::need(nrow(tags) > 0, "No tags yet. Add one with the form, load a tag table, or add the example tag."))
 
-      problems <- vapply(seq_len(nrow(tags)), function(i) paste(validate_tag(tags[i, ]), collapse = "; "), character(1))
+      problems <- vapply(seq_len(nrow(tags)), function(i) {
+        problems <- validate_tag(tags[i, ])
+        changed <- changed_import_settings(tags[i, ], state$project)
+        if (length(changed) > 0) problems <- c(problems, paste0("re-import: ", paste(changed, collapse = ", "), " changed"))
+        paste(problems, collapse = "; ")
+      }, character(1))
       display <- data.frame(
         `Tag ID` = tags$tag_ID,
         Archive = basename(tags$archive),

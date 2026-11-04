@@ -86,6 +86,22 @@ test_that("app imports tags and plots the depth record", {
     expect_equal(sampling_status(tag_sampling("example")), "Regular (60 s)")
     session$setInputs(tag_table_rows_selected = NULL)
 
+    # Changing a setting after import marks the tag as outdated until re-imported
+    expect_equal(status()$Settings_changed, "")
+    tags <- state$tags
+    tags$tag_release_UTC <- "2000-01-10 23:59:00"
+    state$tags <- tags
+    session$flushReact()
+    expect_equal(status()$Settings_changed, "release time")
+    expect_match(paste(as.character(output$outdated_note), collapse = ""), "example: release time changed since import")
+    session$setInputs(import_all = 2)
+    expect_equal(status()$Settings_changed, "")
+    expect_equal(nrow(readRDS(file.path(project, "example", "archive_days.rds"))), 9 * 1440)
+    tags$tag_release_UTC <- example_tag()$tag_release_UTC
+    state$tags <- tags
+    session$setInputs(import_all = 3)
+    expect_equal(status()$Settings_changed, "")
+
     session$setInputs(plot_tag = "example")
     session$setInputs(
       downsample = "n", every = 10, y_max = 300, y_step = 50,
@@ -114,6 +130,38 @@ test_that("app imports tags and plots the depth record", {
     expect_equal(nrow(read_tag_metadata(file.path(project, "tag_metadata.csv"))), 0)
     expect_true(file.exists(file.path(project, "example", "archive_days.rds")))
   })
+})
+
+test_that("changed_import_settings() compares a tag with the settings it was imported with", {
+  project <- file.path(tempdir(), "settings_project")
+  unlink(project, recursive = TRUE)
+  tag <- example_tag()
+  expect_equal(changed_import_settings(tag, project), character())
+
+  suppressMessages(import_tag_data(
+    tag_ID = tag$tag_ID, tag_deploy_UTC = tag$tag_deploy_UTC, tag_release_UTC = tag$tag_release_UTC,
+    archive = tag$archive, date_time_col = tag$date_time_col, depth_col = tag$depth_col, temp_col = tag$temp_col,
+    time_zone = tag$time_zone, output = TRUE, output_folder = project
+  ))
+  expect_true(file.exists(file.path(project, "example", "import_settings.rds")))
+  expect_equal(changed_import_settings(tag, project), character())
+
+  # Equivalent ways of writing the same settings are not changes
+  same <- tag
+  same$tag_deploy_UTC <- "2000-01-01 00:00"
+  if (.Platform$OS.type == "windows") same$archive <- toupper(gsub("/", "\\\\", tag$archive))
+  same$date_time_col <- "1"
+  expect_equal(changed_import_settings(same, project), character())
+
+  changed <- tag
+  changed$tag_deploy_UTC <- "2000-01-02 00:00:00"
+  changed$time_zone <- "Asia/Tokyo"
+  changed$temp_col <- 3L
+  expect_equal(changed_import_settings(changed, project), c("deployment time", "temperature column", "time zone"))
+
+  # An archive_days.rds replaced later, e.g. by an older version of FishDiveR, has unknown settings
+  Sys.setFileTime(file.path(project, "example", "import_settings.rds"), Sys.time() - 3600)
+  expect_equal(changed_import_settings(changed, project), character())
 })
 
 test_that("Browse opens in the project folder and fills the path", {

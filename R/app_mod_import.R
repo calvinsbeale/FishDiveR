@@ -15,6 +15,7 @@ mod_import_ui <- function(id) {
     bslib::card(
       bslib::card_header("Import tag archives"),
       shiny::p("Crops each archive to full local days between deployment and release, and saves it to the tag's folder."),
+      shiny::uiOutput(ns("outdated_note")),
       DT::DTOutput(ns("tag_table"), fill = FALSE),
       shiny::div(
         shiny::actionButton(ns("import_selected"), "Import selected", class = "btn-primary"),
@@ -92,13 +93,26 @@ mod_import_server <- function(id, state) {
       shiny::validate(shiny::need(nrow(state$tags) > 0, "Add tags in step 1."))
       display <- data.frame(
         `Tag ID` = status()$tag_ID,
-        Imported = ifelse(status()$Imported, "Yes", ""),
+        Imported = ifelse(status()$Imported, ifelse(nzchar(status()$Settings_changed), "Outdated", "Yes"), ""),
         Sampling = vapply(seq_len(nrow(status())), function(i) {
           if (status()$Imported[i]) sampling_status(tag_sampling(status()$tag_ID[i])) else ""
         }, character(1)),
         check.names = FALSE
       )
       DT::datatable(display, selection = "multiple", rownames = FALSE, fillContainer = FALSE, options = list(dom = "t", pageLength = 1000))
+    })
+
+    # Tags whose settings changed in step 1 since they were imported
+    output$outdated_note <- shiny::renderUI({
+      outdated <- status()[nzchar(status()$Settings_changed), , drop = FALSE]
+      shiny::req(nrow(outdated) > 0)
+      shiny::div(
+        class = "alert alert-warning",
+        shiny::strong("Re-import to use the current settings:"),
+        shiny::tags$ul(lapply(seq_len(nrow(outdated)), function(i) {
+          shiny::tags$li(paste0(outdated$tag_ID[i], ": ", outdated$Settings_changed[i], " changed since import"))
+        }))
+      )
     })
 
     # Sampling report of an imported tag (cached with the archive summary)

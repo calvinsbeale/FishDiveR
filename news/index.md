@@ -2,6 +2,22 @@
 
 ## FishDiveR (development version)
 
+### New features
+
+- [`import_tag_data()`](https://calvinsbeale.github.io/FishDiveR/reference/import_tag_data.md)
+  with `output = TRUE` now also saves the settings it used (archive,
+  deployment and release times, columns and time zone) as
+  `import_settings.rds` in the tag’s folder. The app uses this to warn
+  when a tag’s settings change after it was imported: step 1 shows a
+  warning when the tag is saved and in its Check column, and step 2
+  marks the tag “Outdated” and lists what changed until it is
+  re-imported.
+- Printing a
+  [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
+  now lists each irregularity and incomplete day with its times, up to
+  `max_rows` of each (5 by default; 20 in the app), and no longer rounds
+  nearly regular records up to “100%” of intervals.
+
 ## FishDiveR 1.2.0
 
 ### Breaking change

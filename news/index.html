@@ -40,6 +40,12 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="fishdiver-development-version">FishDiveR (development version)<a class="anchor" aria-label="anchor" href="#fishdiver-development-version"></a></h2>
+<div class="section level3">
+<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> with <code>output = TRUE</code> now also saves the settings it used (archive, deployment and release times, columns and time zone) as <code>import_settings.rds</code> in the tag’s folder. The app uses this to warn when a tag’s settings change after it was imported: step 1 shows a warning when the tag is saved and in its Check column, and step 2 marks the tag “Outdated” and lists what changed until it is re-imported.</li>
+<li>Printing a <code><a href="../reference/sampling_report.html">sampling_report()</a></code> now lists each irregularity and incomplete day with its times, up to <code>max_rows</code> of each (5 by default; 20 in the app), and no longer rounds nearly regular records up to “100%” of intervals.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="fishdiver-120">FishDiveR 1.2.0<a class="anchor" aria-label="anchor" href="#fishdiver-120"></a></h2>

@@ -108,6 +108,12 @@ days between deployment and release, and saved in the tag’s folder. The
 log shows each tag’s messages, including any warning that its sampling
 interval isn’t constant.
 
+If you change a tag’s archive, deployment or release time, columns or
+time zone after importing it, the imported record no longer matches its
+settings. Step 1 warns when you save the tag and in the table’s Check
+column, and step 2 marks the tag **Outdated** and lists what changed.
+Re-import it to use the new settings.
+
 The **Sampling** column checks each imported tag for a constant sampling
 interval, e.g. “Regular (5 s)” or “Irregular: 1 duplicate, 2 gaps”.
 Select a tag to see its full sampling check, from

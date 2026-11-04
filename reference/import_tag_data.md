@@ -93,7 +93,10 @@ A data frame of processed tag data. Columns kept are:
 
 Data are cropped to full days from midnight to midnight in local time
 based on the time zone supplied. If `output = TRUE`, the cropped data
-are saved as `archive_days.rds` within `output_folder`.
+are saved as `archive_days.rds` in the tag's folder within
+`output_folder`, with the settings used (archive, deployment and release
+times, columns and time zone) in `import_settings.rds`. The app uses
+these to warn when a tag's settings have changed since it was imported.
 
 A warning is given if the sampling interval is not constant throughout
 the cropped data (e.g. gaps from missing records), listing the intervals
@@ -128,5 +131,5 @@ archive_days <- import_tag_data(
 #> Mean depth = 75.5 SD = 81.9
 #> Maximum depth = 256.6
 #> Number of full days in dataset: 10
-#> Output file: /tmp/Rtmp9O0vxy/data/archive_days.rds
+#> Output file: /tmp/Rtmpcux66d/data/archive_days.rds
 ```

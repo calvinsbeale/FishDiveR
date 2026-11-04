@@ -1,12 +1,26 @@
 bibentry(
   bibtype  = "Article",
-  title    = "FishDiveR: Wavelet analyses and machine learning provide robust classification of animal behaviour from time-depth data",
-  author   = "Calvin Steven Beale, Adrian Gleiss",
-  journal  = "Movement Ecology" ,
+  title    = "{FishDiveR}: wavelet analyses and machine learning provide robust classification of animal behaviour from time-depth data",
+  author   = c(
+    person("Calvin S.", "Beale"),
+    person("Jenna L.", "Hounslow"),
+    person("Angela J. E.", "Beer"),
+    person("Matias", "Braccini"),
+    person("Mark V.", "Erdmann"),
+    person("Alastair", "Harry"),
+    person("Neil R.", "Loneragan"),
+    person("Mark", "Meekan"),
+    person("Stephen J.", "Newman"),
+    person("David", "Righton"),
+    person("Ferawati", "Runtuboy"),
+    person("Michael J.", "Travers"),
+    person("Serena", "Wright"),
+    person("Adrian C.", "Gleiss")
+  ),
+  journal  = "Movement Ecology",
   year     = 2026,
   volume   = 14,
-  number   = 8,
-  pages    = 16,
-  doi      = "10.1186/s40462-025-00622-w",
-  url      = "https://github.com/calvinsbeale/FishDiveR"
+  number   = 1,
+  pages    = 8,
+  doi      = "10.1186/s40462-025-00622-w"
 )

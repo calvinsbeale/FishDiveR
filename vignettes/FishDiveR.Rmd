@@ -38,7 +38,7 @@ The unit of analysis is the day: each 24-hour period, midnight to midnight in lo
 3. **Principal component analysis (PCA).** Neighbouring wavelet periods carry very similar information, so the many wavelet statistics are condensed into a few principal components.
 4. **K-means clustering.** The principal components and depth statistics are combined, and the days are grouped into *k* clusters of similar behaviour.
 
-The method is described in detail in Beale & Gleiss (2026), *Movement Ecology* 14:8, <https://doi.org/10.1186/s40462-025-00622-w>.
+The method is described in detail in Beale et al. (2026), *Movement Ecology* 14:8, <https://doi.org/10.1186/s40462-025-00622-w>.
 
 ## Setting up
 

@@ -97,6 +97,17 @@ When installing from GitHub, add `build_vignettes = TRUE` to include
 them, e.g.
 `remotes::install_github("calvinsbeale/FishDiveR", build_vignettes = TRUE)`.
 
+The vignettes and function reference are also on the package website,
+<https://calvinsbeale.github.io/FishDiveR/>. For more about FishDiveR,
+including a tutorial and analysis services, see
+<https://calvinbeale.co.uk/fishdiver/>.
+
+## Citation
+
+If you use FishDiveR, please cite Beale et al. (2026), *Movement
+Ecology* 14:8, <https://doi.org/10.1186/s40462-025-00622-w>.
+`citation("FishDiveR")` gives the full reference and a BibTeX entry.
+
 ## Usage
 
 ``` r

@@ -103,5 +103,5 @@ pc_data <- pca_data(
   output_folder = tempdir(),
   verbose = TRUE
 )
-#> Output file: C:\Users\Calvi\AppData\Local\Temp\RtmpmMSaFu/data/4_PCA/pc_data.rds
+#> Output file: /tmp/Rtmpxgg77y/data/4_PCA/pc_data.rds
 ```

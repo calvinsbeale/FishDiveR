@@ -35,7 +35,7 @@ midnight in local time, becomes one row of data to cluster.
     statistics are combined, and the days are grouped into *k* clusters
     of similar behaviour.
 
-The method is described in detail in Beale & Gleiss (2026), *Movement
+The method is described in detail in Beale et al. (2026), *Movement
 Ecology* 14:8, <https://doi.org/10.1186/s40462-025-00622-w>.
 
 ## Setting up
@@ -384,9 +384,9 @@ wavelet settings, and ideally the same sampling interval (see
 
 If you use FishDiveR, please cite:
 
-    Beale CS, Gleiss A (2026). "FishDiveR: Wavelet analyses and machine
-    learning provide robust classification of animal behaviour from
-    time-depth data." _Movement Ecology_, *14*(8), 16.
-    doi:10.1186/s40462-025-00622-w
+    Beale C, Hounslow J, Beer A, Braccini M, Erdmann M, Harry A, Loneragan
+    N, Meekan M, Newman S, Righton D, Runtuboy F, Travers M, Wright S,
+    Gleiss A (2026). "FishDiveR: wavelet analyses and machine learning
+    provide robust classification of animal behaviour from time-depth
+    data." _Movement Ecology_, *14*(1), 8. doi:10.1186/s40462-025-00622-w
     <https://doi.org/10.1186/s40462-025-00622-w>.
-    <https://github.com/calvinsbeale/FishDiveR>.

@@ -49,6 +49,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://calvinbeale.co.uk/fishdiver/" aria-label="FishDiveR website"><span class="fa fa-globe"></span> FishDiveR website</a></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/calvinsbeale/FishDiveR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
@@ -65,7 +66,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Getting started with FishDiveR</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/calvinsbeale/FishDiveR/blob/HEAD/vignettes/FishDiveR.Rmd" class="external-link"><code>vignettes/FishDiveR.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/calvinsbeale/FishDiveR/blob/main/vignettes/FishDiveR.Rmd" class="external-link"><code>vignettes/FishDiveR.Rmd</code></a></small>
       <div class="d-none name"><code>FishDiveR.Rmd</code></div>
     </div>
 
@@ -110,7 +111,7 @@ statistics are condensed into a few principal components.</li>
 depth statistics are combined, and the days are grouped into <em>k</em>
 clusters of similar behaviour.</li>
 </ol>
-<p>The method is described in detail in Beale &amp; Gleiss (2026),
+<p>The method is described in detail in Beale et al. (2026),
 <em>Movement Ecology</em> 14:8, <a href="https://doi.org/10.1186/s40462-025-00622-w" class="external-link uri">https://doi.org/10.1186/s40462-025-00622-w</a>.</p>
 </div>
 <div class="section level2">
@@ -124,7 +125,7 @@ folder.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Use rgl's off-screen device, as k_clustering() can draw a 3D plot</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>rgl.useNULL <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/calvinsbeale/FishDiveR" class="external-link">FishDiveR</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://calvinsbeale.github.io/FishDiveR/">FishDiveR</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; FishDiveR version 1.1.0.9000. Facilitating classification of aquatic animal behaviours from vertical movement data.</span></span>
 <span><span class="co">#&gt;  Type 'citation("FishDiveR")' for citing this R package in publications.</span></span>
 <span></span>
@@ -400,12 +401,12 @@ have the same wavelet settings, and ideally the same sampling interval
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <p>If you use FishDiveR, please cite:</p>
-<pre><code>Beale CS, Gleiss A (2026). "FishDiveR: Wavelet analyses and machine
-learning provide robust classification of animal behaviour from
-time-depth data." _Movement Ecology_, *14*(8), 16.
-doi:10.1186/s40462-025-00622-w
-&lt;https://doi.org/10.1186/s40462-025-00622-w&gt;.
-&lt;https://github.com/calvinsbeale/FishDiveR&gt;.</code></pre>
+<pre><code>Beale C, Hounslow J, Beer A, Braccini M, Erdmann M, Harry A, Loneragan
+N, Meekan M, Newman S, Righton D, Runtuboy F, Travers M, Wright S,
+Gleiss A (2026). "FishDiveR: wavelet analyses and machine learning
+provide robust classification of animal behaviour from time-depth
+data." _Movement Ecology_, *14*(1), 8. doi:10.1186/s40462-025-00622-w
+&lt;https://doi.org/10.1186/s40462-025-00622-w&gt;.</code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

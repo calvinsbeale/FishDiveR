@@ -16,8 +16,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Classify Aquatic Animal Behaviours from Vertical Movement Data">
-<meta name="description" content="Quantitatively analyse depth time-series data from pop-up satellite archival tags (PSATs) through the application of continuous wavelet transformation (CWT) combined with Principal Component Analysis (PCA), and k-means clustering. Import, crop, and plot depth time-depth records (TDRs). Using CWT to detect important signals within the non-stationary data, we create daily wavelet statistics to summarise vertical movements on different wavelet periods and combine with daily and diel depth statistics. Classify depth time-series with unsupervised k-means clustering into 24-hour periods of vertical movement behaviour with distinct patterns of vertical movement. Plot example days from each behaviour cluster, and plot the TDR coloured by cluster. Based on principals of combining CWT with k-means first developed by Sakamoto (2009) &lt;doi:10.1371/journal.pone.0005379&gt; and redeveloped by Beale and Gleiss (2026) &lt;doi:10.1186/s40462-025-00622-w&gt;.">
-<meta property="og:description" content="Quantitatively analyse depth time-series data from pop-up satellite archival tags (PSATs) through the application of continuous wavelet transformation (CWT) combined with Principal Component Analysis (PCA), and k-means clustering. Import, crop, and plot depth time-depth records (TDRs). Using CWT to detect important signals within the non-stationary data, we create daily wavelet statistics to summarise vertical movements on different wavelet periods and combine with daily and diel depth statistics. Classify depth time-series with unsupervised k-means clustering into 24-hour periods of vertical movement behaviour with distinct patterns of vertical movement. Plot example days from each behaviour cluster, and plot the TDR coloured by cluster. Based on principals of combining CWT with k-means first developed by Sakamoto (2009) &lt;doi:10.1371/journal.pone.0005379&gt; and redeveloped by Beale and Gleiss (2026) &lt;doi:10.1186/s40462-025-00622-w&gt;.">
+<meta name="description" content="Quantitatively analyse depth time-series data from pop-up satellite archival tags (PSATs) through the application of continuous wavelet transformation (CWT) combined with Principal Component Analysis (PCA), and k-means clustering. Import, crop, and plot depth time-depth records (TDRs). Using CWT to detect important signals within the non-stationary data, we create daily wavelet statistics to summarise vertical movements on different wavelet periods and combine with daily and diel depth statistics. Classify depth time-series with unsupervised k-means clustering into 24-hour periods of vertical movement behaviour with distinct patterns of vertical movement. Plot example days from each behaviour cluster, and plot the TDR coloured by cluster. Based on principles of combining CWT with k-means first developed by Sakamoto et al. (2009) &lt;doi:10.1371/journal.pone.0005379&gt; and redeveloped by Beale et al. (2026) &lt;doi:10.1186/s40462-025-00622-w&gt;.">
+<meta property="og:description" content="Quantitatively analyse depth time-series data from pop-up satellite archival tags (PSATs) through the application of continuous wavelet transformation (CWT) combined with Principal Component Analysis (PCA), and k-means clustering. Import, crop, and plot depth time-depth records (TDRs). Using CWT to detect important signals within the non-stationary data, we create daily wavelet statistics to summarise vertical movements on different wavelet periods and combine with daily and diel depth statistics. Classify depth time-series with unsupervised k-means clustering into 24-hour periods of vertical movement behaviour with distinct patterns of vertical movement. Plot example days from each behaviour cluster, and plot the TDR coloured by cluster. Based on principles of combining CWT with k-means first developed by Sakamoto et al. (2009) &lt;doi:10.1371/journal.pone.0005379&gt; and redeveloped by Beale et al. (2026) &lt;doi:10.1186/s40462-025-00622-w&gt;.">
 <meta property="og:image" content="https://calvinsbeale.github.io/FishDiveR/logo.png">
 </head>
 <body>
@@ -52,6 +52,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://calvinbeale.co.uk/fishdiver/" aria-label="FishDiveR website"><span class="fa fa-globe"></span> FishDiveR website</a></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/calvinsbeale/FishDiveR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
@@ -88,10 +89,10 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Development version (requires either the "remotes" or "devtools" package to install:</span></span>
 <span><span class="co"># install.packages("remotes") # This is an `R` package, smaller and easier than installing devtools </span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"calvinsbeale/FishDiveR"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"calvinsbeale/FishDiveR"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install-deprecated.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"calvinsbeale/FishDiveR"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"calvinsbeale/FishDiveR"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="point-and-click-app-in-development">Point-and-click app (in development)<a class="anchor" aria-label="anchor" href="#point-and-click-app-in-development"></a>
@@ -114,12 +115,18 @@
 <code><a href="articles/large-records.html">vignette("large-records", package = "FishDiveR")</a></code>: memory, thinning and fast plotting for long, high-frequency records.</li>
 </ul>
 <p>When installing from GitHub, add <code>build_vignettes = TRUE</code> to include them, e.g. <code>remotes::install_github("calvinsbeale/FishDiveR", build_vignettes = TRUE)</code>.</p>
+<p>The vignettes and function reference are also on the package website, <a href="https://calvinsbeale.github.io/FishDiveR/" class="uri">https://calvinsbeale.github.io/FishDiveR/</a>. For more about FishDiveR, including a tutorial and analysis services, see <a href="https://calvinbeale.co.uk/fishdiver/" class="external-link uri">https://calvinbeale.co.uk/fishdiver/</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
+</h2>
+<p>If you use FishDiveR, please cite Beale et al. (2026), <em>Movement Ecology</em> 14:8, <a href="https://doi.org/10.1186/s40462-025-00622-w" class="external-link uri">https://doi.org/10.1186/s40462-025-00622-w</a>. <code>citation("FishDiveR")</code> gives the full reference and a BibTeX entry.</p>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/calvinsbeale/FishDiveR" class="external-link">FishDiveR</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://calvinsbeale.github.io/FishDiveR/">FishDiveR</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; FishDiveR version 1.1.0. Facilitating classification of aquatic animal behaviours from vertical movement data.</span></span>
 <span><span class="co">#&gt;  Type 'citation("FishDiveR")' for citing this R package in publications.</span></span>
 <span><span class="co"># Set file path</span></span>

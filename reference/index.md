@@ -21,14 +21,14 @@
 - [`pca_scores()`](https://calvinsbeale.github.io/FishDiveR/reference/pca_scores.md)
   : Calculate Principal Component Analysis Scores not including depth
   statistics
-- [`plot_clusters()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_clusters.md)
-  : Plot the time-series depth records of the days closest to the centre
-  of each cluster
+- [`plot_TDR()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_TDR.md)
+  : Plot the time-series depth dataset
 - [`plot_cluster_TDR()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_cluster_TDR.md)
   : Plot the time-series depth records of the selected tag. Colour days
   by cluster
-- [`plot_TDR()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_TDR.md)
-  : Plot the time-series depth dataset
+- [`plot_clusters()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_clusters.md)
+  : Plot the time-series depth records of the days closest to the centre
+  of each cluster
 - [`run_app()`](https://calvinsbeale.github.io/FishDiveR/reference/run_app.md)
   : Launch the FishDiveR app
 - [`select_k()`](https://calvinsbeale.github.io/FishDiveR/reference/select_k.md)

@@ -1,4 +1,4 @@
-url: 'https://github.com/calvinsbeale/FishDiveR/'
+url: 'https://calvinsbeale.github.io/FishDiveR/'
 title: 'FishDiveR'
 description: 'Quantitatively analyse depth time-series data from pop-up satellite archival tags (PSATs) through the application of continuous wavelet transformation (CWT) combined with Principal Component Analysis (PCA), and k-means clustering.
   Import, crop, and plot depth time-depth records (TDRs). Using CWT to detect important signals within the non-stationary data, we create daily wavelet statistics to summarise vertical movements on different wavelet periods and combine with daily and diel depth statistics.

@@ -18,7 +18,7 @@
 
 ## Docs/Infra
 - New vignettes: "Getting started with FishDiveR" (the full workflow on the example data), "Using the FishDiveR app", and "Large, high-frequency records" (memory, thinning and fast plotting).
-- Citation updated to the published article: Beale & Gleiss (2026), *Movement Ecology* 14:8 <doi:10.1186/s40462-025-00622-w>.
+- Citation updated to the published article: Beale & Gleiss (2026), *Movement Ecology* 14:8 <https://doi.org/10.1186/s40462-025-00622-w>.
 - README updated for the CRAN release; added CRAN badges.
 - Documentation rebuilt with roxygen2 8.1.1.
 

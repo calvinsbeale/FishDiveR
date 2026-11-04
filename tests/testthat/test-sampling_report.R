@@ -31,7 +31,27 @@ test_that("sampling_report() finds gaps and incomplete days", {
   expect_true(report$gaps$on_grid)
   expect_equal(report$gaps$start, archive_days$date[4999])
   expect_equal(sum(report$days$percent < 100), 1)
-  expect_output(print(report), "Gaps: 1, 5 missing records, longest 6 min")
+
+  # Printed with the times of each gap and the incomplete day
+  printed <- paste(capture.output(print(report)), collapse = "\n")
+  gap_start <- format(archive_days$date[4999], "%Y-%m-%d %H:%M:%S")
+  expect_match(printed, "Gaps: 1\n", fixed = TRUE)
+  expect_match(printed, paste0("6 min from ", gap_start, " to .* \\(5 records missing\\)"))
+  expect_match(printed, "Days without the expected 1,440 records: 1 of 10")
+  expect_match(printed, ": 1,435 records (99.65%)", fixed = TRUE)
+  # Nearly all intervals are 60 s, but not shown as 100%
+  expect_match(printed, "60 s (99.99% of intervals)", fixed = TRUE)
+  expect_no_match(printed, "\\$")
+})
+
+test_that("sampling_report() prints at most max_rows of each irregularity", {
+  report <- sampling_report(archive_days[-seq(100, 1000, by = 100), ])
+  expect_equal(nrow(report$gaps), 10)
+  printed <- paste(capture.output(print(report)), collapse = "\n")
+  expect_match(printed, "Gaps: 10")
+  expect_match(printed, "... and 5 more", fixed = TRUE)
+  expect_equal(lengths(regmatches(printed, gregexpr("2 min from", printed))), 5)
+  expect_no_match(paste(capture.output(print(report, max_rows = 20)), collapse = "\n"), "more")
 })
 
 test_that("sampling_report() finds the duplicate and gap of a shifted hour", {
@@ -49,7 +69,9 @@ test_that("sampling_report() finds the duplicate and gap of a shifted hour", {
   expect_equal(report$gaps$start, as.POSIXct("2020-01-01 20:59:50", tz = "UTC"))
   expect_equal(report$gaps$missing_records, 1)
   expect_equal(nrow(report$rate_changes), 0)
-  expect_output(print(report), "Duplicate times: 1, first at 2020-01-01 20:00:00")
+  printed <- paste(capture.output(print(report)), collapse = "\n")
+  expect_match(printed, "Duplicate times: 1\n    Two records at 2020-01-01 20:00:00", fixed = TRUE)
+  expect_match(printed, "Gaps: 1\n    10 s from 2020-01-01 20:59:50 to 2020-01-01 21:00:00 (1 record missing)", fixed = TRUE)
 })
 
 test_that("sampling_report() finds rate changes, short intervals and times out of order", {

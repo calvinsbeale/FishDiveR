@@ -2,9 +2,12 @@
 % Please edit documentation in R/sampling_report.R
 \name{sampling_report}
 \alias{sampling_report}
+\alias{print.sampling_report}
 \title{Report irregular sampling in a depth record}
 \usage{
 sampling_report(archive, interval_s = NULL, min_run = 10)
+
+\method{print}{sampling_report}(x, max_rows = 5, ...)
 }
 \arguments{
 \item{archive}{Data frame of time series depth data with a POSIXct 'date'
@@ -16,6 +19,13 @@ to the most common interval.}
 
 \item{min_run}{Numerical. Minimum number of consecutive intervals of the same
 length to count as a change of sampling rate. Defaults to 10.}
+
+\item{x}{A 'sampling_report' object.}
+
+\item{max_rows}{Numerical. Maximum number of each kind of irregularity, and
+of incomplete days, to list when printing. Defaults to 5.}
+
+\item{...}{Not used.}
 }
 \value{
 A list of class 'sampling_report', printed as a summary, with:

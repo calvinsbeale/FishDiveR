@@ -114,7 +114,7 @@ mod_import_server <- function(id, state) {
           help_tip("Checks the imported record for a constant sampling interval. See ?sampling_report for what each item means."),
           class = "mt-3"
         ),
-        shiny::tags$pre(paste(utils::capture.output(print(tag_sampling(tag))), collapse = "\n"))
+        shiny::tags$pre(paste(utils::capture.output(print(tag_sampling(tag), max_rows = 20)), collapse = "\n"))
       )
     })
 

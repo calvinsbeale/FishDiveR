@@ -185,64 +185,80 @@ sampling_report <- function(archive, interval_s = NULL, min_run = 10) {
   )
 }
 
+#' @rdname sampling_report
+#' @param x A 'sampling_report' object.
+#' @param max_rows Numerical. Maximum number of each kind of irregularity, and
+#'   of incomplete days, to list when printing. Defaults to 5.
+#' @param ... Not used.
 #' @export
-print.sampling_report <- function(x, ...) {
+print.sampling_report <- function(x, max_rows = 5, ...) {
   fmt_time <- function(t) format(t, "%Y-%m-%d %H:%M:%S", tz = x$time_zone)
   fmt_num <- function(n) format(n, big.mark = ",", scientific = FALSE, trim = TRUE)
+  # Percentages rounded down, so that a nearly complete 99.999% shows as 99.99%, not 100%
+  fmt_pct <- function(p) paste0(formatC(floor(p * 100) / 100, format = "fg", digits = 4), "%")
+  records <- function(n) paste(fmt_num(n), if (n == 1) "record" else "records")
+
+  # Lists up to max_rows lines of one kind of irregularity under its heading
+  section <- function(heading, lines) {
+    if (length(lines) == 0) {
+      return()
+    }
+    cat("  ", heading, ": ", fmt_num(length(lines)), "\n", sep = "")
+    cat(paste0("    ", utils::head(lines, max_rows), "\n"), sep = "")
+    if (length(lines) > max_rows) {
+      cat("    ... and ", fmt_num(length(lines) - max_rows), " more\n", sep = "")
+    }
+  }
+
   main_pct <- x$intervals$percent[x$intervals$interval_s == x$interval_s]
   if (length(main_pct) == 0) main_pct <- 0
 
-  cat("Sampling report: ", fmt_num(x$n_records), " records over ", nrow(x$days), " days (",
+  cat("Sampling report: ", records(x$n_records), " over ", nrow(x$days), " days (",
     format(min(x$days$date)), " to ", format(max(x$days$date)), ", ", x$time_zone, ")\n",
     sep = ""
   )
-  if (x$n_no_depth > 0) cat(fmt_num(x$n_no_depth), " records with no depth were left out.\n", sep = "")
-  cat("Expected interval: ", x$interval_s, " s (", signif(main_pct, 4), "% of intervals)\n", sep = "")
+  if (x$n_no_depth > 0) cat(records(x$n_no_depth), " with no depth were left out.\n", sep = "")
+  cat("Expected interval: ", x$interval_s, " s (", fmt_pct(main_pct), " of intervals)\n", sep = "")
 
   if (x$regular) {
     cat("Regular: every interval is ", x$interval_s, " s.\n", sep = "")
   } else {
     cat("Irregular sampling found:\n")
+    # paste() of zero-length columns gives one empty string, so skip empty tables
     if (nrow(x$duplicates) > 0) {
-      cat("  Duplicate times: ", fmt_num(nrow(x$duplicates)), ", first at ", fmt_time(x$duplicates$date[1]), "\n", sep = "")
+      section("Duplicate times", paste("Two records at", fmt_time(x$duplicates$date)))
     }
     if (nrow(x$out_of_order) > 0) {
-      cat("  Out of order: ", fmt_num(nrow(x$out_of_order)), ", first at ", fmt_time(x$out_of_order$date[1]), "\n", sep = "")
+      section("Out of order", paste(fmt_time(x$out_of_order$date), "comes after", fmt_time(x$out_of_order$previous)))
     }
     if (nrow(x$rate_changes) > 0) {
-      cat("  Rate changes: ", nrow(x$rate_changes), "\n", sep = "")
-      rc <- utils::head(x$rate_changes, 5)
-      cat(sprintf(
-        "    %s s from %s to %s (%s intervals)\n",
-        rc$interval_s, fmt_time(rc$start), fmt_time(rc$end), fmt_num(rc$intervals)
-      ), sep = "")
-      if (nrow(x$rate_changes) > 5) cat("    ...\n")
+      section("Rate changes", sprintf(
+        "%s s from %s to %s (%s intervals)",
+        x$rate_changes$interval_s, fmt_time(x$rate_changes$start), fmt_time(x$rate_changes$end), fmt_num(x$rate_changes$intervals)
+      ))
     }
     if (nrow(x$gaps) > 0) {
-      longest <- which.max(x$gaps$length_s)
-      cat("  Gaps: ", fmt_num(nrow(x$gaps)), ", ", fmt_num(sum(x$gaps$missing_records)), " missing records, longest ",
-        format_seconds(x$gaps$length_s[longest]), " after ", fmt_time(x$gaps$start[longest]), "\n",
-        sep = ""
-      )
-      if (any(!x$gaps$on_grid)) {
-        cat("    ", fmt_num(sum(!x$gaps$on_grid)), " not a whole number of expected intervals\n", sep = "")
-      }
+      section("Gaps", paste0(
+        vapply(x$gaps$length_s, format_seconds, character(1)), " from ", fmt_time(x$gaps$start), " to ", fmt_time(x$gaps$end),
+        " (", vapply(x$gaps$missing_records, records, character(1)), " missing",
+        ifelse(x$gaps$on_grid, "", ", not a whole number of intervals"), ")"
+      ))
     }
     if (nrow(x$short) > 0) {
-      cat("  Short intervals: ", fmt_num(nrow(x$short)), ", first at ", fmt_time(x$short$date[1]), "\n", sep = "")
+      section("Short intervals", paste0(x$short$interval_s, " s from ", fmt_time(x$short$previous), " to ", fmt_time(x$short$date)))
     }
   }
 
   incomplete <- x$days[x$days$percent != 100, , drop = FALSE]
   if (nrow(incomplete) > 0) {
-    lowest <- which.min(incomplete$percent)
-    cat("Days without the expected ", fmt_num(x$days$expected[1]), " records: ", nrow(incomplete), " of ", nrow(x$days),
-      " (lowest ", signif(incomplete$percent[lowest], 4), "% on ", format(incomplete$date[lowest]), ")\n",
-      sep = ""
-    )
-  }
-  if (!x$regular) {
-    cat("Details: $duplicates, $out_of_order, $rate_changes, $gaps, $short, $days\n")
+    cat("Days without the expected ", records(x$days$expected[1]), ": ", nrow(incomplete), " of ", nrow(x$days), "\n", sep = "")
+    cat(paste0(
+      "    ", utils::head(paste0(format(incomplete$date), ": ", vapply(incomplete$records, records, character(1)), " (", fmt_pct(incomplete$percent), ")"), max_rows),
+      "\n"
+    ), sep = "")
+    if (nrow(incomplete) > max_rows) {
+      cat("    ... and ", fmt_num(nrow(incomplete) - max_rows), " more\n", sep = "")
+    }
   }
   invisible(x)
 }

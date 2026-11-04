@@ -4,7 +4,7 @@
 preview_bins <- 2000
 
 # Date break choices offered for the depth record plot; others can be typed
-date_break_choices <- c("6 hour", "12 hour", "1 day", "2 day", "7 day", "14 day", "1 month", "3 month", "6 month")
+date_break_choices <- c("6 hour", "12 hour", "1 day", "2 day", "7 day", "14 day", "28 day", "1 month", "2 month", "3 month", "6 month")
 
 #' @noRd
 mod_import_ui <- function(id) {
@@ -26,53 +26,98 @@ mod_import_ui <- function(id) {
       shiny::h6("Log", class = "mt-3"),
       shiny::verbatimTextOutput(ns("log"))
     ),
-    bslib::card(
-      bslib::card_header("Depth record"),
-      bslib::layout_sidebar(
-        sidebar = bslib::sidebar(
-          width = 300,
-          shiny::selectInput(ns("plot_tag"), "Tag", choices = NULL),
-          shiny::radioButtons(
-            ns("downsample"), "Points to plot",
-            choiceNames = list(
-              shiny::tagList(
-                "Fast preview ",
-                help_tip(paste0(
-                  "Splits the record into ", format(preview_bins, big.mark = ","), " time slices and plots only the ",
-                  "shallowest and deepest record in each. Every dive's extremes are kept, and long deployments plot ",
-                  "in about a second."
-                ))
-              ),
-              "Every n records",
-              "Every n seconds"
-            ),
-            choiceValues = c("minmax", "n", "s")
-          ),
-          shiny::conditionalPanel(
-            "input.downsample != 'minmax'",
-            ns = ns,
-            shiny::numericInput(ns("every"), "n", value = 10, min = 1, step = 1)
-          ),
-          shiny::dateRangeInput(ns("x_lim"), "Dates"),
-          bslib::layout_column_wrap(
-            width = "120px",
-            fill = FALSE,
-            shiny::numericInput(ns("y_max"), "Max depth (m)", value = 250, min = 1),
-            shiny::numericInput(ns("y_step"), "Depth ticks (m)", value = 50, min = 1)
-          ),
-          shiny::selectizeInput(
-            ns("date_breaks"), "Date breaks",
-            choices = date_break_choices, selected = "1 day",
-            options = list(create = TRUE)
-          ),
-          shiny::checkboxInput(ns("no_axis_titles"), "Remove axis titles"),
-          shiny::actionButton(ns("create_plot"), "Create plot", class = "btn-primary"),
-          shiny::actionButton(ns("save_plot"), "Save PNG to tag folder")
-        ),
-        shiny::uiOutput(ns("plot_note")),
-        shiny::plotOutput(ns("tdr_plot"), height = "500px", fill = FALSE)
+    bslib::navset_card_underline(
+      bslib::nav_panel(
+        "Depth record",
+        depth_record_panel(ns)
+      ),
+      bslib::nav_panel(
+        "Time at depth & temperature",
+        time_at_panel(ns)
       )
     )
+  )
+}
+
+#' Sidebar and plot of the depth record tab
+#' @noRd
+depth_record_panel <- function(ns) {
+  bslib::layout_sidebar(
+    sidebar = bslib::sidebar(
+      width = 300,
+      shiny::selectInput(ns("plot_tag"), "Tag", choices = NULL),
+      shiny::radioButtons(
+        ns("downsample"), "Points to plot",
+        choiceNames = list(
+          shiny::tagList(
+            "Fast preview ",
+            help_tip(paste0(
+              "Splits the record into ", format(preview_bins, big.mark = ","), " time slices and plots only the ",
+              "shallowest and deepest record in each. Every dive's extremes are kept, and long deployments plot ",
+              "in about a second."
+            ))
+          ),
+          "Every n records",
+          "Every n seconds"
+        ),
+        choiceValues = c("minmax", "n", "s")
+      ),
+      shiny::conditionalPanel(
+        "input.downsample != 'minmax'",
+        ns = ns,
+        shiny::numericInput(ns("every"), "n", value = 10, min = 1, step = 1)
+      ),
+      shiny::dateRangeInput(ns("x_lim"), "Dates"),
+      bslib::layout_column_wrap(
+        width = "120px",
+        fill = FALSE,
+        shiny::numericInput(ns("y_max"), "Max depth (m)", value = 250, min = 1),
+        shiny::numericInput(ns("y_step"), "Depth ticks (m)", value = 50, min = 1)
+      ),
+      shiny::selectizeInput(
+        ns("date_breaks"), "Date breaks",
+        choices = date_break_choices, selected = "1 day",
+        options = list(create = TRUE)
+      ),
+      shiny::checkboxInput(ns("colour_temp"), shiny::tagList(
+        "Colour by temperature ",
+        help_tip("Colours the depth record from blue (cold) to red (warm). Needs the tag's temperature column, set in step 1.")
+      )),
+      shiny::checkboxInput(ns("no_axis_titles"), "Remove axis titles"),
+      shiny::actionButton(ns("create_plot"), "Create plot", class = "btn-primary"),
+      shiny::actionButton(ns("save_plot"), "Save PNG to tag folder")
+    ),
+    shiny::uiOutput(ns("plot_note")),
+    shiny::plotOutput(ns("tdr_plot"), height = "500px", fill = FALSE)
+  )
+}
+
+#' Sidebar and plot of the time at depth and temperature tab
+#' @noRd
+time_at_panel <- function(ns) {
+  bslib::layout_sidebar(
+    sidebar = bslib::sidebar(
+      width = 300,
+      shiny::selectInput(ns("ta_tag"), "Tag", choices = NULL),
+      shiny::radioButtons(ns("ta_variable"), "Time at", choices = c(Depth = "depth", Temperature = "temp")),
+      shiny::radioButtons(ns("ta_by"), "For", choices = c("The whole record" = "all", "Each month" = "month", "Each day" = "day")),
+      shiny::numericInput(
+        ns("ta_width"),
+        shiny::tagList(
+          shiny::HTML("Range width (m or &deg;C) "),
+          help_tip(paste(
+            "Width of each depth or temperature range. Leave blank for about 12 ranges of round values covering the",
+            "middle 99.8% of the record, with one wider range at each end for the rest."
+          ))
+        ),
+        value = NA, min = 0
+      ),
+      shiny::checkboxInput(ns("ta_no_axis_titles"), "Remove axis titles"),
+      shiny::actionButton(ns("ta_create"), "Create plot", class = "btn-primary"),
+      shiny::actionButton(ns("ta_save"), "Save PNG to tag folder")
+    ),
+    shiny::uiOutput(ns("ta_note")),
+    shiny::uiOutput(ns("ta_plot_ui"))
   )
 }
 
@@ -206,7 +251,7 @@ mod_import_server <- function(id, state) {
       shiny::req(input$plot_tag)
       state$refresh
       archive <- readRDS(file.path(state$project, input$plot_tag, "archive_days.rds"))
-      list(max_depth = max(archive$depth), dates = range(archive$date_only))
+      list(max_depth = max(archive$depth), dates = range(archive$date_only), has_temp = has_temperature(archive))
     })
 
     # Reset the plot settings to suit each tag
@@ -230,6 +275,7 @@ mod_import_server <- function(id, state) {
       y_max = input$y_max,
       y_step = input$y_step,
       date_breaks = input$date_breaks,
+      colour_temp = input$colour_temp,
       no_axis_titles = input$no_axis_titles
     ))
     plotted_settings <- shiny::reactiveVal(NULL)
@@ -247,7 +293,8 @@ mod_import_server <- function(id, state) {
         minmax_bins = if (settings$downsample == "minmax") preview_bins else 0,
         X_lim = x_lim,
         Y_lim = c(0, settings$y_max, settings$y_step),
-        date_breaks = settings$date_breaks
+        date_breaks = settings$date_breaks,
+        colour_temp = isTRUE(settings$colour_temp)
       ))
     }
 
@@ -261,6 +308,7 @@ mod_import_server <- function(id, state) {
           isTRUE(nzchar(settings$date_breaks)),
         "Fill in all the plot settings."
       ))
+      shiny::validate(shiny::need(!isTRUE(settings$colour_temp) || archive_info()$has_temp, no_temperature_message))
 
       res <- run_plot_TDR(settings)
       shiny::validate(shiny::need(res$ok, paste(res$log, collapse = "\n")))
@@ -300,6 +348,91 @@ mod_import_server <- function(id, state) {
       saved <- tryCatch(
         {
           ggplot2::ggsave(file, plot = tdr_plot(), width = 12, height = 6, dpi = 300)
+          TRUE
+        },
+        error = function(e) {
+          shiny::showNotification(conditionMessage(e), type = "error", duration = 10)
+          FALSE
+        }
+      )
+      if (saved) shiny::showNotification(paste("Saved", file))
+    })
+
+    ## Time at depth and temperature
+    shiny::observe({
+      choices <- imported_tags()
+      current <- shiny::isolate(input$ta_tag)
+      shiny::updateSelectInput(session, "ta_tag", choices = choices, selected = if (isTRUE(current %in% choices)) current else choices[1])
+    })
+
+    ta_settings <- shiny::reactive(list(
+      tag = input$ta_tag,
+      variable = input$ta_variable,
+      by = input$ta_by,
+      width = input$ta_width,
+      no_axis_titles = input$ta_no_axis_titles
+    ))
+    ta_plotted <- shiny::reactiveVal(NULL)
+
+    time_at_plot <- shiny::bindEvent(shiny::reactive({
+      s <- ta_settings()
+      ta_plotted(s)
+      shiny::validate(shiny::need(s$tag, "Import a tag to plot its time at depth or temperature."))
+      shiny::validate(shiny::need(is.na(s$width) || isTRUE(s$width > 0), "The range width must be blank or a positive number."))
+
+      archive <- readRDS(file.path(state$project, s$tag, "archive_days.rds"))
+      if (s$variable == "temp") shiny::validate(shiny::need(has_temperature(archive), no_temperature_message))
+      breaks <- if (is.na(s$width)) NULL else width_breaks(archive[[s$variable]], s$width, s$variable)
+      shiny::validate(shiny::need(
+        length(breaks) <= 201,
+        paste("That range width gives", length(breaks) - 1, "ranges. Use a wider range for at most 200.")
+      ))
+
+      res <- run_logged(plot_time_at(archive, variable = s$variable, breaks = breaks, by = s$by))
+      shiny::validate(shiny::need(res$ok, paste(res$log, collapse = "\n")))
+      plot <- attr(res$value, "time_at_plot")
+      if (isTRUE(s$no_axis_titles)) {
+        plot <- plot + ggplot2::theme(axis.title = ggplot2::element_blank())
+      }
+      plot
+    }), input$ta_create)
+
+    # Size of the plot as shown and saved: taller for a panel per month
+    ta_size <- function(by) if (identical(by, "month")) c(12, 9) else c(8, 6)
+
+    output$ta_note <- shiny::renderUI({
+      plotted <- ta_plotted()
+      if (is.null(plotted)) {
+        shiny::p(class = "text-muted", "Choose the plot settings, then click Create plot.")
+      } else if (!identical(plotted, ta_settings())) {
+        shiny::p(class = "text-warning", "Settings have changed. Click Create plot to update the plot.")
+      }
+    })
+
+    output$ta_plot_ui <- shiny::renderUI({
+      height <- if (identical(ta_plotted()$by, "month")) "750px" else "500px"
+      shiny::plotOutput(session$ns("ta_plot"), height = height, fill = FALSE)
+    })
+
+    output$ta_plot <- shiny::renderPlot(
+      {
+        shiny::req(input$ta_create)
+        time_at_plot()
+      },
+      res = 96
+    )
+
+    shiny::observeEvent(input$ta_save, {
+      plotted <- ta_plotted()
+      if (is.null(plotted)) {
+        shiny::showNotification("Create a plot first.", type = "error")
+        return()
+      }
+      file <- file.path(state$project, plotted$tag, time_at_file(plotted$variable, plotted$by))
+      size <- ta_size(plotted$by)
+      saved <- tryCatch(
+        {
+          ggplot2::ggsave(file, plot = time_at_plot(), width = size[1], height = size[2], dpi = 300)
           TRUE
         },
         error = function(e) {

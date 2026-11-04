@@ -101,7 +101,9 @@ If you change a tag's archive, deployment or release time, columns or time zone 
 
 The **Sampling** column checks each imported tag for a constant sampling interval, e.g. "Regular (5 s)" or "Irregular: 1 duplicate, 2 gaps". Select a tag to see its full sampling check, from `sampling_report()`: where any duplicate times, gaps or changes of sampling rate are, and which days have fewer records than expected.
 
-The depth record of any imported tag can then be plotted. Set the points to plot, dates and axes, then click **Create plot**. Plots of large records can take a while, so the plot only redraws when you click. **Fast preview** plots the shallowest and deepest record in each of 2,000 time slices, which keeps every dive's extremes and plots long deployments in about a second.
+The depth record of any imported tag can then be plotted. Set the points to plot, dates and axes, then click **Create plot**. Plots of large records can take a while, so the plot only redraws when you click. **Fast preview** plots the shallowest and deepest record in each of 2,000 time slices, which keeps every dive's extremes and plots long deployments in about a second. **Colour by temperature** colours the record from blue (cold) to red (warm), for tags imported with a temperature column.
+
+The **Time at depth & temperature** tab shows the percentage of time a tag spent in each depth or temperature range, for the whole record, each month, or as a heat map of each day. Leave the range width blank for about 12 ranges of round values, or set your own, e.g. 25 m or 1 &deg;C. Plots can be saved to the tag's folder.
 
 ### 3. Wavelets
 

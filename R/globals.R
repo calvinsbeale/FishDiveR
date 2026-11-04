@@ -47,5 +47,9 @@ utils::globalVariables(c(
   "period_labs_factor",
   "component",
   "variance",
-  "cumulative"
+  "cumulative",
+  "temp",
+  "group",
+  "percent",
+  "midpoint"
 ))

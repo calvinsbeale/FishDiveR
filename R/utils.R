@@ -16,3 +16,12 @@ create_directory <- function(folder) {
     dir.create(folder, recursive = TRUE)
   }
 }
+
+# Colour scale for temperature, from blue (cold) to red (warm). Used by
+# plot_TDR() and plot_time_at().
+temperature_scale <- function(aesthetics = "colour", ...) {
+  ggplot2::scale_colour_distiller(palette = "RdYlBu", aesthetics = aesthetics, ...)
+}
+
+# Axis and legend title for temperature, with a degree sign
+temperature_label <- paste0("Temperature (", intToUtf8(176), "C)")

@@ -95,6 +95,15 @@ tdr <- plot_TDR(
 attr(tdr, "TDR_plot")
 ```
 
+If the tag was imported with a temperature column (`temp_col`), `plot_TDR(colour_temp = TRUE)` colours the depth record by temperature.
+
+`plot_time_at()` shows the percentage of time spent in each depth range, or with `variable = "temp"` each temperature range. `by = "month"` gives one histogram per month, and `by = "day"` a heat map of each day.
+
+```{r time-at-depth, fig.height = 5, fig.alt = "Percentage of time the example tag spent in each 25 m depth range."}
+time_at_depth <- plot_time_at(archive_days, breaks = seq(0, 275, by = 25))
+attr(time_at_depth, "time_at_plot")
+```
+
 ## 2. Wavelet analysis
 
 `create_wavelet()` runs the continuous wavelet transform over a range of periods, from `lower_period_mins` up to `upper_period_hours`, with `suboctaves` periods for each doubling of period.

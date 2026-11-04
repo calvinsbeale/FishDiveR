@@ -308,8 +308,10 @@ default_date_breaks <- function(n_days) {
     "7 day"
   } else if (n_days <= 180) {
     "14 day"
-  } else {
+  } else if (n_days <= 400) {
     "1 month"
+  } else {
+    "2 month"
   }
 }
 
@@ -466,4 +468,20 @@ kmeans_sources <- function(project_folder, tag_IDs) {
 default_depth_axis <- function(max_depth) {
   step <- if (max_depth <= 100) 10 else if (max_depth <= 500) 50 else 100
   c(max = ceiling(max_depth / step) * step, step = step)
+}
+
+#' Whether an imported archive has temperature data
+#' @noRd
+has_temperature <- function(archive) "temp" %in% names(archive) && any(!is.na(archive$temp))
+
+# Shown when a plot needs temperature but the tag was imported without it
+no_temperature_message <- "This tag has no temperature data. Set its temperature column in step 1, then re-import it."
+
+#' plot_time_at() breaks of a given width covering all values (from 0 for depth)
+#' @noRd
+width_breaks <- function(values, width, variable) {
+  values <- values[!is.na(values)]
+  lower <- if (variable == "depth") 0 else floor(min(values) / width) * width
+  upper <- max(ceiling(max(values) / width) * width, lower + width)
+  seq(lower, upper, by = width)
 }

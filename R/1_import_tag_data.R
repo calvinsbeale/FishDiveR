@@ -313,6 +313,10 @@ import_tag_data <- function(tag_ID,
 #' @param output Logical. If TRUE, a plot file is saved to \code{output_folder}. Defaults to FALSE.
 #' @param output_folder Output folder path used when \code{output = TRUE}. Defaults to NULL.
 #' @param verbose Logical. If TRUE, progress messages are shown. Defaults to FALSE.
+#' @param colour_temp Logical. If TRUE, the depth record is coloured by
+#'   temperature, from blue (cold) to red (warm). Needs a 'temp' column, i.e.
+#'   the tag imported with \code{temp_col} in [import_tag_data()]. Defaults to
+#'   FALSE.
 #'
 #' @returns A data frame of plot data. The ggplot object is attached as the
 #'   attribute 'TDR_plot'.
@@ -352,8 +356,12 @@ plot_TDR <- function(rds_file,
                      output = FALSE,
                      output_folder = NULL,
                      verbose = FALSE,
-                     minmax_bins = 0) {
+                     minmax_bins = 0,
+                     colour_temp = FALSE) {
   # Check format of inputs, on error stop
+  if (!is.logical(colour_temp) || length(colour_temp) != 1 || is.na(colour_temp)) {
+    stop("colour_temp must be TRUE or FALSE.")
+  }
   if (!is.character(rds_file)) {
     stop("rds_file must be a character string.")
   }
@@ -395,6 +403,10 @@ plot_TDR <- function(rds_file,
 
   # Read in tag archive
   archive_days <- readRDS(file = file.path(data_folder, rds_file))
+
+  if (colour_temp && (!"temp" %in% names(archive_days) || all(is.na(archive_days$temp)))) {
+    stop("colour_temp = TRUE needs temperature data: import the tag with temp_col in import_tag_data().")
+  }
 
   # Calculate the time differences between consecutive records
   time_diffs <- diff(as.numeric(archive_days$date))
@@ -457,10 +469,10 @@ plot_TDR <- function(rds_file,
   if (verbose) message("Maximum depth is ", max(archive_days$depth), " meters")
 
   # Select plot data
-  plot_data <- archive_days[, c("date", "depth")]
+  plot_data <- as.data.frame(archive_days)[, c("date", "depth", if (colour_temp) "temp")]
 
   TDR_plot <- ggplot(plot_data, aes(x = date, y = depth)) +
-    geom_path() +
+    (if (colour_temp) geom_path(aes(colour = temp)) else geom_path()) +
     scale_y_reverse(limits = c(Y_lim[2], Y_lim[1]), breaks = seq(Y_lim[1], Y_lim[2], Y_lim[3]), expand = c(0, 0)) +
     scale_x_datetime(date_breaks = date_breaks, date_labels = "%Y-%m-%d", expand = c(0, 0, 0, 0), position = "top") +
     labs(
@@ -473,6 +485,13 @@ plot_TDR <- function(rds_file,
       axis.title = element_text(size = 16), # Set font size and style for x-axis label
       # plot.margin = unit(c(0, 3, 0.1, 0.1), "lines") # top, right, bottom, left
     )
+
+  if (colour_temp) {
+    TDR_plot <- TDR_plot +
+      temperature_scale() +
+      labs(colour = temperature_label) +
+      theme(legend.text = element_text(size = 12), legend.title = element_text(size = 14))
+  }
 
   if (isTRUE(verbose) && interactive()) {
     print(TDR_plot)

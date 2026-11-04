@@ -123,6 +123,30 @@ test_that("app imports tags and plots the depth record", {
     session$setInputs(downsample = "minmax", create_plot = 2)
     expect_lte(nrow(tdr_plot()$data), 2 * preview_bins)
 
+    # The example tag has no temperature to colour by
+    session$setInputs(colour_temp = TRUE, create_plot = 3)
+    expect_error(tdr_plot(), "no temperature data")
+    session$setInputs(colour_temp = FALSE)
+    expect_true(all(c("28 day", "2 month") %in% date_break_choices))
+
+    # Time at depth for each day, with 25 m ranges
+    session$setInputs(ta_tag = "example", ta_variable = "depth", ta_by = "day", ta_width = 25, ta_no_axis_titles = FALSE)
+    expect_null(ta_plotted())
+    session$setInputs(ta_create = 1)
+    plot <- time_at_plot()
+    expect_s3_class(plot, "ggplot")
+    expect_equal(nlevels(plot$data$range), 11)
+    session$setInputs(ta_save = 1)
+    expect_true(file.exists(file.path(project, "example", "time_at_depth_by_day.png")))
+
+    # Automatic ranges for the whole record; no temperature for time at temperature
+    session$setInputs(ta_by = "all", ta_width = NA, ta_create = 2)
+    expect_s3_class(time_at_plot(), "ggplot")
+    session$setInputs(ta_variable = "temp", ta_create = 3)
+    expect_error(time_at_plot(), "no temperature data")
+    session$setInputs(ta_variable = "depth", ta_width = 0.01, ta_create = 4)
+    expect_error(time_at_plot(), "Use a wider range")
+
     # Remove the tag after confirming
     session$setInputs(tag_table_rows_selected = 1, remove_selected = 1)
     session$setInputs(confirm_remove = 1)

@@ -17,7 +17,8 @@ plot_TDR(
   output = FALSE,
   output_folder = NULL,
   verbose = FALSE,
-  minmax_bins = 0
+  minmax_bins = 0,
+  colour_temp = FALSE
 )
 }
 \arguments{
@@ -61,6 +62,11 @@ plotting of large archives. Splits the record into this many equal time
 bins and plots only the shallowest and deepest record in each, so dive
 extremes are kept. E.g. 2000. Overrides every_nth and every_s if != 0.
 Defaults to 0.}
+
+\item{colour_temp}{Logical. If TRUE, the depth record is coloured by
+temperature, from blue (cold) to red (warm). Needs a 'temp' column, i.e.
+the tag imported with \code{temp_col} in \code{\link[=import_tag_data]{import_tag_data()}}. Defaults to
+FALSE.}
 }
 \value{
 A data frame of plot data. The ggplot object is attached as the

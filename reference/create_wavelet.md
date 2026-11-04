@@ -167,5 +167,5 @@ my.w <- create_wavelet(
 #> Class attributes are accessible through following names:
 #> series loess.span dt dj Wave Phase Ampl Power Power.avg Power.pval Power.avg.pval Ridge Period Scale nc nr coi.1 coi.2 axis.1 axis.2 date.format date.tz 
 #> 
-#> Wavelet saved to /tmp/Rtmpxgg77y/data/1_Wavelets/data_wavelet.rds
+#> Wavelet saved to /tmp/RtmpVyf71x/data/1_Wavelets/data_wavelet.rds
 ```

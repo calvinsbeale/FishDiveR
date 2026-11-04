@@ -9,9 +9,9 @@ plotted and examined further. `FishDiveR` allows the user to import tag
 data from comma-separated-value (csv) archives which include a time-date
 stamp and a depth column.
 
-See <https://rdcu.be/e3CET> for accompanying peer-reviewed publication
-and detailed use cases. Feel free to contact the author for further
-information and updates.
+See <https://doi.org/10.1186/s40462-025-00622-w> for the accompanying
+peer-reviewed publication and detailed use cases. Feel free to contact
+the author for further information and updates.
 
 The various functions: - Import and crop the archive. - Plot the depth
 time-series record. - Calculate daily and diel statistics for use in
@@ -70,11 +70,11 @@ devtools::install_github("calvinsbeale/FishDiveR")
 
 ## Point-and-click app (in development)
 
-The development version includes an app that runs FishDiveR from your
-web browser, without writing code. It runs locally on your computer, so
-your data never leave your machine. It covers the whole workflow for
-several tags at once: importing, depth plots, wavelet analysis, daily
-statistics, PCA, k-means clustering, and plots of the results.
+FishDiveR includes an app that runs FishDiveR from your web browser,
+without writing code. It runs locally on your computer, so your data
+never leave your machine. It covers the whole workflow for several tags
+at once: importing, depth plots, wavelet analysis, daily statistics,
+PCA, k-means clustering, and plots of the results.
 
 ``` r
 
@@ -113,7 +113,7 @@ Ecology* 14:8, <https://doi.org/10.1186/s40462-025-00622-w>.
 ``` r
 
 library(FishDiveR)
-#> FishDiveR version 1.1.0. Facilitating classification of aquatic animal behaviours from vertical movement data.
+#> FishDiveR version 1.2.0. Facilitating classification of aquatic animal behaviours from vertical movement data.
 #>  Type 'citation("FishDiveR")' for citing this R package in publications.
 # Set file path
 filepath <- system.file("extdata", package = "FishDiveR")

@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">FishDiveR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,7 @@
 
 <p><strong>Vertical movement analysis of depth time-series data.</strong></p>
 <p>The goal of <code>FishDiveR</code> is to provide a methodology for quantitatively analysing time-series depth data from animal tags in <code>R</code>. Ultimately allowing the user to cluster the data into behaviours which can be plotted and examined further. <code>FishDiveR</code> allows the user to import tag data from comma-separated-value (csv) archives which include a time-date stamp and a depth column.</p>
-<p>See <a href="https://rdcu.be/e3CET" class="external-link uri">https://rdcu.be/e3CET</a> for accompanying peer-reviewed publication and detailed use cases. Feel free to contact the author for further information and updates.</p>
+<p>See <a href="https://doi.org/10.1186/s40462-025-00622-w" class="external-link uri">https://doi.org/10.1186/s40462-025-00622-w</a> for the accompanying peer-reviewed publication and detailed use cases. Feel free to contact the author for further information and updates.</p>
 <p>The various functions: - Import and crop the archive. - Plot the depth time-series record. - Calculate daily and diel statistics for use in k-means clustering. - Perform wavelet analysis using the <code>WaveletComp</code> package. - Perform principal component analysis using the <code>FactoMineR</code> package. - Combine PC scores and depth statistics. - Aid in the selection of k for K-means clustering. - Perform K-means clustering. - Plot the depth time-series record, with days coloured by cluster assignment. - Plot the depth time-series of the days best representing the behaviour clusters.</p>
 <p>While the package only requires a minimum of three full days (midnight to midnight) to run, meaningful clustering of behaviour can only occur with a reasonable amount of data. A meaningful amount of data varies with every individual of every species, the more complex and varied the diving behaviours, the more days are required to accurately cluster them into groups. Further to this, the frequency of time-series data greatly impacts the ability of the package to infer behaviours from depth changes. Data recorded at 1 second frequency contains much more information to analyse than data recorded at 10 minute frequency. In general we recommend a bare-minimum of 5 minute time series frequency, with more active species requiring a higher frequency of data collection.</p>
 <blockquote>
@@ -97,7 +97,7 @@
 <div class="section level2">
 <h2 id="point-and-click-app-in-development">Point-and-click app (in development)<a class="anchor" aria-label="anchor" href="#point-and-click-app-in-development"></a>
 </h2>
-<p>The development version includes an app that runs FishDiveR from your web browser, without writing code. It runs locally on your computer, so your data never leave your machine. It covers the whole workflow for several tags at once: importing, depth plots, wavelet analysis, daily statistics, PCA, k-means clustering, and plots of the results.</p>
+<p>FishDiveR includes an app that runs FishDiveR from your web browser, without writing code. It runs locally on your computer, so your data never leave your machine. It covers the whole workflow for several tags at once: importing, depth plots, wavelet analysis, daily statistics, PCA, k-means clustering, and plots of the results.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shiny"</span>, <span class="st">"bslib"</span>, <span class="st">"DT"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">FishDiveR</span><span class="fu">::</span><span class="fu"><a href="reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -127,7 +127,7 @@
 </h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://calvinsbeale.github.io/FishDiveR/">FishDiveR</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; FishDiveR version 1.1.0. Facilitating classification of aquatic animal behaviours from vertical movement data.</span></span>
+<span><span class="co">#&gt; FishDiveR version 1.2.0. Facilitating classification of aquatic animal behaviours from vertical movement data.</span></span>
 <span><span class="co">#&gt;  Type 'citation("FishDiveR")' for citing this R package in publications.</span></span>
 <span><span class="co"># Set file path</span></span>
 <span><span class="va">filepath</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, package <span class="op">=</span> <span class="st">"FishDiveR"</span><span class="op">)</span></span>

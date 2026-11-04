@@ -142,6 +142,6 @@ plot_cluster_TDR(
 #> Maximum depth is 262.2
 #> Data sampling interval is 60 seconds
 #> Plotting every 10 records
-#> Output file: /tmp/Rtmpxgg77y/data_TDR_k=4.png
+#> Output file: /tmp/RtmpVyf71x/data_TDR_k=4.png
 
 ```

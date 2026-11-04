@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FishDiveR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,14 +39,14 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="fishdiver-development-version">FishDiveR (development version)<a class="anchor" aria-label="anchor" href="#fishdiver-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.2.0" id="fishdiver-120">FishDiveR 1.2.0<a class="anchor" aria-label="anchor" href="#fishdiver-120"></a></h2>
 <div class="section level3">
-<h3 id="breaking-change-development-version">Breaking change<a class="anchor" aria-label="anchor" href="#breaking-change-development-version"></a></h3>
+<h3 id="breaking-change-1-2-0">Breaking change<a class="anchor" aria-label="anchor" href="#breaking-change-1-2-0"></a></h3>
 <ul><li>
 <code><a href="../reference/create_wavelet.html">create_wavelet()</a></code> no longer has the <code>allow_irregular_sampling</code> argument (it was not functional), and no longer stops on non-constant sampling intervals.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<h3 id="new-features-1-2-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-2-0"></a></h3>
 <ul><li>New <code><a href="../reference/run_app.html">run_app()</a></code> opens a point-and-click app for FishDiveR that runs locally in your browser (in development). It manages a project folder and a table of tags, and covers the whole workflow: importing tags, plotting their depth records, the wavelet analysis (with memory estimates and optional thinning), daily statistics, PCA across tags, choosing k and k-means clustering (with an interactive 3D view), and plotting depth records by cluster and example days from each cluster. Needs the ‘shiny’, ‘bslib’ and ‘DT’ packages.</li>
 <li>New <code><a href="../reference/thin_archive.html">thin_archive()</a></code> block-averages a depth record to a longer sampling interval (e.g. 1 s to 15 s) before <code><a href="../reference/create_wavelet.html">create_wavelet()</a></code>, cutting the wavelet’s memory and run time for long, high-frequency records. In the app, step 3 has a thinning option with a suggested interval based on the lower period.</li>
 <li>
@@ -59,7 +59,7 @@
 <code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> now warns if the sampling interval is not constant, listing the intervals detected and their record counts.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
+<h3 id="fixes-1-2-0">Fixes<a class="anchor" aria-label="anchor" href="#fixes-1-2-0"></a></h3>
 <ul><li>
 <code><a href="../reference/create_wavelet.html">create_wavelet()</a></code>: the wavelet power spectrum figure no longer has its end cut off for long, high-frequency records (e.g. 29 days at 1 s). Records with millions of samples are now thinned for drawing only; the saved wavelet is unchanged. Redraw existing figures with <code>load_existing_wavelet = TRUE</code>.</li>
 <li>
@@ -68,7 +68,7 @@
 <code><a href="../reference/plot_clusters.html">plot_clusters()</a></code> with <code>diel_shade = TRUE</code>: night is now shaded with one rectangle per night period, drawn beneath the depth line, instead of one semi-transparent rectangle per depth record drawn on top. Shading is now about as fast as no shading (e.g. 8 s instead of 19 minutes for 2 days per cluster at 1 s sampling), night-time dives are no longer hidden, and the shade no longer varies with sampling rate or <code>every_nth</code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="docsinfra-development-version">Docs/Infra<a class="anchor" aria-label="anchor" href="#docsinfra-development-version"></a></h3>
+<h3 id="docsinfra-1-2-0">Docs/Infra<a class="anchor" aria-label="anchor" href="#docsinfra-1-2-0"></a></h3>
 <ul><li>New vignettes: “Getting started with FishDiveR” (the full workflow on the example data), “Using the FishDiveR app”, and “Large, high-frequency records” (memory, thinning and fast plotting).</li>
 <li>Citation updated to the published article, with all 14 authors: Beale et al. (2026), <em>Movement Ecology</em> 14:8 <a href="https://doi.org/10.1186/s40462-025-00622-w" class="external-link uri">https://doi.org/10.1186/s40462-025-00622-w</a>.</li>
 <li>New package website at <a href="https://calvinsbeale.github.io/FishDiveR/" class="uri">https://calvinsbeale.github.io/FishDiveR/</a>, rebuilt automatically on every push to main. More about FishDiveR, including a tutorial and analysis services, at <a href="https://calvinbeale.co.uk/fishdiver/" class="external-link uri">https://calvinbeale.co.uk/fishdiver/</a>.</li>

@@ -47,3 +47,7 @@ jobs:
           clean: false
           branch: gh-pages
           folder: docs
+          # Push normally rather than force-push, so that a rejected push (e.g.
+          # GitHub's intermittent "fatal error in commit_refs") is retried
+          force: false
+          attempt-limit: 5

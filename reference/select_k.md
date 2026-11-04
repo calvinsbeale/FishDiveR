@@ -106,5 +106,5 @@ selecting_k <- select_k(
 #> K = 6 Average silhouette width = 0.392
 #> K = 7 Average silhouette width = 0.243
 #> K = 8 Average silhouette width = 0.154
-#> Single tag output file: /tmp/Rtmpn7IcYi/data/5_k-means/Select_k.3_PCs.png
+#> Single tag output file: /tmp/RtmpQyI9qK/data/5_k-means/Select_k.3_PCs.png
 ```

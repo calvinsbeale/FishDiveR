@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/calvinsbeale/FishDiveR/blob/main/inst/CITATION)
+[`inst/CITATION`](https://github.com/calvinsbeale/FishDiveR/blob/v1.2.0/inst/CITATION)
 
 Beale C, Hounslow J, Beer A, Braccini M, Erdmann M, Harry A, Loneragan
 N, Meekan M, Newman S, Righton D, Runtuboy F, Travers M, Wright S,

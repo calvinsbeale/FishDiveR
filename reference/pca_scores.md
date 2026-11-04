@@ -72,5 +72,5 @@ pc_scores <- pca_scores(
   output_folder = tempdir(),
   verbose = TRUE
 )
-#> Output file: /tmp/Rtmpn7IcYi/data/4_PCA/pc_scores.rds
+#> Output file: /tmp/RtmpQyI9qK/data/4_PCA/pc_scores.rds
 ```

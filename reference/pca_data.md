@@ -103,5 +103,5 @@ pc_data <- pca_data(
   output_folder = tempdir(),
   verbose = TRUE
 )
-#> Output file: /tmp/RtmpQyI9qK/data/4_PCA/pc_data.rds
+#> Output file: /tmp/Rtmp9O0vxy/data/4_PCA/pc_data.rds
 ```

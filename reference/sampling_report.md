@@ -9,6 +9,9 @@ order, and days with fewer records than expected.
 
 ``` r
 sampling_report(archive, interval_s = NULL, min_run = 10)
+
+# S3 method for class 'sampling_report'
+print(x, max_rows = 5, ...)
 ```
 
 ## Arguments
@@ -29,6 +32,19 @@ sampling_report(archive, interval_s = NULL, min_run = 10)
 
   Numerical. Minimum number of consecutive intervals of the same length
   to count as a change of sampling rate. Defaults to 10.
+
+- x:
+
+  A 'sampling_report' object.
+
+- max_rows:
+
+  Numerical. Maximum number of each kind of irregularity, and of
+  incomplete days, to list when printing. Defaults to 5.
+
+- ...:
+
+  Not used.
 
 ## Value
 
@@ -108,7 +124,7 @@ archive_days <- readRDS(file.path(filepath, "data/archive_days.rds"))
 # A regular record
 sampling_report(archive_days)
 #> Sampling report: 14,400 records over 10 days (2000-01-01 to 2000-01-10, UTC)
-#> Expected interval: 60 s (100% of intervals)
+#> Expected interval: 60 s (  100% of intervals)
 #> Regular: every interval is 60 s.
 
 # Remove 5 records to make a gap
@@ -117,9 +133,10 @@ report
 #> Sampling report: 14,395 records over 10 days (2000-01-01 to 2000-01-10, UTC)
 #> Expected interval: 60 s (99.99% of intervals)
 #> Irregular sampling found:
-#>   Gaps: 1, 5 missing records, longest 6 min after 2000-01-04 11:18:00
-#> Days without the expected 1,440 records: 1 of 10 (lowest 99.65% on 2000-01-04)
-#> Details: $duplicates, $out_of_order, $rate_changes, $gaps, $short, $days
+#>   Gaps: 1
+#>     6 min from 2000-01-04 11:18:00 to 2000-01-04 11:24:00 (5 records missing)
+#> Days without the expected 1,440 records: 1 of 10
+#>     2000-01-04: 1,435 records (99.65%)
 report$gaps
 #>    row               start                 end length_s missing_records on_grid
 #> 1 5000 2000-01-04 11:18:00 2000-01-04 11:24:00      360               5    TRUE

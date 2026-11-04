@@ -50,7 +50,7 @@ a temporary folder; for your own data, use a permanent folder.
 # Use rgl's off-screen device, as k_clustering() can draw a 3D plot
 options(rgl.useNULL = TRUE)
 library(FishDiveR)
-#> FishDiveR version 1.2.0. Facilitating classification of aquatic animal behaviours from vertical movement data.
+#> FishDiveR version 1.2.0.9000. Facilitating classification of aquatic animal behaviours from vertical movement data.
 #>  Type 'citation("FishDiveR")' for citing this R package in publications.
 
 # Example data shipped with the package

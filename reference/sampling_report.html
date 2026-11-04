@@ -13,7 +13,7 @@ days with fewer records than expected."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">FishDiveR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@ days with fewer records than expected."><meta property="og:image" content="https
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Report irregular sampling in a depth record</h1>
-      <small class="dont-index">Source: <a href="https://github.com/calvinsbeale/FishDiveR/blob/v1.2.0/R/sampling_report.R" class="external-link"><code>R/sampling_report.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/calvinsbeale/FishDiveR/blob/main/R/sampling_report.R" class="external-link"><code>R/sampling_report.R</code></a></small>
       <div class="d-none name"><code>sampling_report.Rd</code></div>
     </div>
 
@@ -54,7 +54,10 @@ days with fewer records than expected.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sampling_report</span><span class="op">(</span><span class="va">archive</span>, interval_s <span class="op">=</span> <span class="cn">NULL</span>, min_run <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sampling_report</span><span class="op">(</span><span class="va">archive</span>, interval_s <span class="op">=</span> <span class="cn">NULL</span>, min_run <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'sampling_report'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, max_rows <span class="op">=</span> <span class="fl">5</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,6 +78,19 @@ to the most common interval.</p></dd>
 <dt id="arg-min-run">min_run<a class="anchor" aria-label="anchor" href="#arg-min-run"></a></dt>
 <dd><p>Numerical. Minimum number of consecutive intervals of the same
 length to count as a change of sampling rate. Defaults to 10.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>A 'sampling_report' object.</p></dd>
+
+
+<dt id="arg-max-rows">max_rows<a class="anchor" aria-label="anchor" href="#arg-max-rows"></a></dt>
+<dd><p>Numerical. Maximum number of each kind of irregularity, and
+of incomplete days, to list when printing. Defaults to 5.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Not used.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -139,7 +155,7 @@ number expected at the expected interval.</p>
 <span class="r-in"><span><span class="co"># A regular record</span></span></span>
 <span class="r-in"><span><span class="fu">sampling_report</span><span class="op">(</span><span class="va">archive_days</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sampling report: 14,400 records over 10 days (2000-01-01 to 2000-01-10, UTC)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Expected interval: 60 s (100% of intervals)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Expected interval: 60 s (  100% of intervals)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Regular: every interval is 60 s.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Remove 5 records to make a gap</span></span></span>
@@ -148,9 +164,10 @@ number expected at the expected interval.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sampling report: 14,395 records over 10 days (2000-01-01 to 2000-01-10, UTC)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Expected interval: 60 s (99.99% of intervals)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Irregular sampling found:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Gaps: 1, 5 missing records, longest 6 min after 2000-01-04 11:18:00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Days without the expected 1,440 records: 1 of 10 (lowest 99.65% on 2000-01-04)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Details: $duplicates, $out_of_order, $rate_changes, $gaps, $short, $days</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Gaps: 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     6 min from 2000-01-04 11:18:00 to 2000-01-04 11:24:00 (5 records missing)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Days without the expected 1,440 records: 1 of 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2000-01-04: 1,435 records (99.65%)</span>
 <span class="r-in"><span><span class="va">report</span><span class="op">$</span><span class="va">gaps</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    row               start                 end length_s missing_records on_grid</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 5000 2000-01-04 11:18:00 2000-01-04 11:24:00      360               5    TRUE</span>

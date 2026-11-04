@@ -195,7 +195,7 @@ print.sampling_report <- function(x, max_rows = 5, ...) {
   fmt_time <- function(t) format(t, "%Y-%m-%d %H:%M:%S", tz = x$time_zone)
   fmt_num <- function(n) format(n, big.mark = ",", scientific = FALSE, trim = TRUE)
   # Percentages rounded down, so that a nearly complete 99.999% shows as 99.99%, not 100%
-  fmt_pct <- function(p) paste0(formatC(floor(p * 100) / 100, format = "fg", digits = 4), "%")
+  fmt_pct <- function(p) paste0(trimws(formatC(floor(p * 100) / 100, format = "fg", digits = 4)), "%")
   records <- function(n) paste(fmt_num(n), if (n == 1) "record" else "records")
 
   # Lists up to max_rows lines of one kind of irregularity under its heading

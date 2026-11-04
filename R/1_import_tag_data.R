@@ -219,6 +219,21 @@ import_tag_data <- function(tag_ID,
 
   if (verbose) message(paste0("Maximum depth = ", max(tag_archive$depth)))
 
+  # Print mean, minimum and maximum temperatures
+  if (verbose && "temp" %in% names(tag_archive)) {
+    temp <- tag_archive$temp
+    if (all(is.na(temp))) {
+      message("No temperature values in the temperature column.")
+    } else {
+      message(paste0(
+        "Mean temperature = ", round(mean(temp, na.rm = TRUE), 1),
+        " Minimum = ", round(min(temp, na.rm = TRUE), 1),
+        " Maximum = ", round(max(temp, na.rm = TRUE), 1), " (", intToUtf8(176), "C)",
+        if (anyNA(temp)) paste0(". Records with no temperature: ", sum(is.na(temp)))
+      ))
+    }
+  }
+
   # Calculate the number of days between the first and last data points
   first_date <- as.Date(format(tag_archive$date[1], format = "%Y-%m-%d", tz = time_zone))
   last_date <- as.Date(format(tag_archive$date[length(tag_archive$date)], format = "%Y-%m-%d", tz = time_zone))

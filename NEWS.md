@@ -4,7 +4,9 @@
 - New `plot_time_at()` plots time at depth or time at temperature: the percentage of time in each depth or temperature range, for the whole record, each month, or as a heat map of each day. It returns the table of percentages, with the plot attached. In the app, step 2 has a new "Time at depth & temperature" tab.
 - `plot_TDR()` has a new `colour_temp` argument to colour the depth record by temperature, from blue (cold) to red (warm). The app's depth record plot has a "Colour by temperature" option. Both need the tag imported with its temperature column.
 - The app's date breaks now include "28 day" and "2 month", and records of over 400 days default to "2 month".
-- `import_tag_data()` with `output = TRUE` now also saves the settings it used (archive, deployment and release times, columns and time zone) as `import_settings.rds` in the tag's folder. The app uses this to warn when a tag's settings change after it was imported: step 1 shows a warning when the tag is saved and in its Check column, and step 2 marks the tag "Outdated" and lists what changed until it is re-imported.
+- `import_tag_data()` with `output = TRUE` now also saves the settings it used (archive, deployment and release times, columns and time zone) as `import_settings.rds` in the tag's folder. The app uses this to warn when a tag's settings change after it was imported: step 1 shows a warning when the tag is saved and in its Check column, and step 2 marks the tag "Outdated" and lists what changed until it is re-imported. For tags imported before the settings were saved, the app checks the temperature column and time zone against the imported record itself.
+- `import_tag_data(verbose = TRUE)` now reports the mean, minimum and maximum temperature when a temperature column is imported.
+- The app's table of tags in step 1 has a Temperature column, ticked for tags imported with temperature data.
 - Printing a `sampling_report()` now lists each irregularity and incomplete day with its times, up to `max_rows` of each (5 by default; 20 in the app), and no longer rounds nearly regular records up to "100%" of intervals.
 
 # FishDiveR 1.2.0

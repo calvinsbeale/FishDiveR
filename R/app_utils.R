@@ -143,24 +143,43 @@ import_setting_names <- c(
   time_zone = "time zone"
 )
 
+#' Tag settings that differ from what an imported archive shows
+#'
+#' For archives with no record of the settings used: a temperature column set
+#' for an archive without temperature (or the reverse), or a different time
+#' zone. Dates are not compared, as a record can rightly start after deployment.
+#' @noRd
+changed_from_archive <- function(tag, archive_file) {
+  summary <- archive_summary(archive_file)
+  temp_col <- tag$temp_col
+  has_temp_col <- !(length(temp_col) == 0 || is.na(temp_col) || !nzchar(trimws(temp_col)))
+  changed <- c(
+    temp_col = has_temp_col != summary$has_temp_col,
+    time_zone = !is.na(summary$time_zone) && !identical(as.character(tag$time_zone), summary$time_zone)
+  )
+  unname(import_setting_names[names(changed)[changed]])
+}
+
 #' Tag settings that differ from those the tag was imported with
 #'
 #' Compares a tag's settings with the import_settings.rds saved by
-#' import_tag_data() next to its archive_days.rds.
+#' import_tag_data() next to its archive_days.rds. If the settings used are
+#' unknown (imported before they were saved, or the archive was replaced since),
+#' checks what the archive itself shows: whether it has temperature, and its
+#' time zone.
 #'
-#' @returns The names of the changed settings, or character(0) if none changed or
-#'   the settings used are unknown (imported before they were saved, or the
-#'   archive was replaced since).
+#' @returns The names of the changed settings, or character(0) if none changed.
 #' @noRd
 changed_import_settings <- function(tag, project_folder) {
   settings_file <- file.path(project_folder, tag$tag_ID, "import_settings.rds")
   archive_file <- file.path(project_folder, tag$tag_ID, "archive_days.rds")
-  if (!file.exists(settings_file) || !file.exists(archive_file)) {
+  if (!file.exists(archive_file)) {
     return(character())
   }
   # Both files are written together: a newer archive came from elsewhere
-  if (difftime(file.mtime(archive_file), file.mtime(settings_file), units = "secs") > 60) {
-    return(character())
+  if (!file.exists(settings_file) ||
+    difftime(file.mtime(archive_file), file.mtime(settings_file), units = "secs") > 60) {
+    return(changed_from_archive(tag, archive_file))
   }
   used <- readRDS(settings_file)
 
@@ -390,7 +409,10 @@ archive_summary <- function(file) {
     sampling_s = report$interval_s,
     max_depth = max(archive$depth),
     dates = range(archive$date_only),
-    sampling = report
+    sampling = report,
+    has_temp_col = "temp" %in% names(archive),
+    has_temp = has_temperature(archive),
+    time_zone = if (is.null(attr(archive, "time_zone"))) NA_character_ else attr(archive, "time_zone")
   )
   archive_summary_cache[[key]] <- summary
   summary
@@ -485,3 +507,25 @@ width_breaks <- function(values, width, variable) {
   upper <- max(ceiling(max(values) / width) * width, lower + width)
   seq(lower, upper, by = width)
 }
+
+#' Whether a tag's imported archive has temperature data, or NA if not imported
+#'
+#' Read from the import_settings.rds saved with the archive, or else from the
+#' archive itself.
+#' @noRd
+imported_temperature <- function(tag, project_folder) {
+  archive_file <- file.path(project_folder, tag$tag_ID, "archive_days.rds")
+  settings_file <- file.path(project_folder, tag$tag_ID, "import_settings.rds")
+  if (!file.exists(archive_file)) {
+    return(NA)
+  }
+  if (file.exists(settings_file) &&
+    difftime(file.mtime(archive_file), file.mtime(settings_file), units = "secs") <= 60) {
+    temp_col <- readRDS(settings_file)$temp_col
+    return(!(length(temp_col) == 0 || is.na(temp_col)))
+  }
+  archive_summary(archive_file)$has_temp
+}
+
+# Tick shown in tables, e.g. for tags with temperature data
+tick_mark <- intToUtf8(10003)

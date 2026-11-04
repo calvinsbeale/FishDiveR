@@ -161,6 +161,7 @@ test_that("changed_import_settings() compares a tag with the settings it was imp
   unlink(project, recursive = TRUE)
   tag <- example_tag()
   expect_equal(changed_import_settings(tag, project), character())
+  expect_true(is.na(imported_temperature(tag, project)))
 
   suppressMessages(import_tag_data(
     tag_ID = tag$tag_ID, tag_deploy_UTC = tag$tag_deploy_UTC, tag_release_UTC = tag$tag_release_UTC,
@@ -169,6 +170,7 @@ test_that("changed_import_settings() compares a tag with the settings it was imp
   ))
   expect_true(file.exists(file.path(project, "example", "import_settings.rds")))
   expect_equal(changed_import_settings(tag, project), character())
+  expect_false(imported_temperature(tag, project))
 
   # Equivalent ways of writing the same settings are not changes
   same <- tag
@@ -183,9 +185,32 @@ test_that("changed_import_settings() compares a tag with the settings it was imp
   changed$temp_col <- 3L
   expect_equal(changed_import_settings(changed, project), c("deployment time", "temperature column", "time zone"))
 
-  # An archive_days.rds replaced later, e.g. by an older version of FishDiveR, has unknown settings
+  # Without the settings used (imported before they were saved, or the archive
+  # replaced since), the temperature column and time zone are checked against
+  # the archive itself
   Sys.setFileTime(file.path(project, "example", "import_settings.rds"), Sys.time() - 3600)
-  expect_equal(changed_import_settings(changed, project), character())
+  expect_equal(changed_import_settings(changed, project), c("temperature column", "time zone"))
+  unlink(file.path(project, "example", "import_settings.rds"))
+  expect_equal(changed_import_settings(tag, project), character())
+  expect_false(imported_temperature(tag, project))
+
+  # A tag imported with temperature
+  temp_csv <- file.path(tempdir(), "temp-Archive.csv")
+  archive <- utils::read.csv(tag$archive)
+  archive$temp <- 20 + archive$depth / 100
+  utils::write.csv(archive, temp_csv, row.names = FALSE)
+  with_temp <- tag
+  with_temp$archive <- temp_csv
+  with_temp$temp_col <- 3L
+  suppressMessages(import_tag_data(
+    tag_ID = tag$tag_ID, tag_deploy_UTC = tag$tag_deploy_UTC, tag_release_UTC = tag$tag_release_UTC,
+    archive = temp_csv, date_time_col = 1, depth_col = 2, temp_col = 3,
+    time_zone = tag$time_zone, output = TRUE, output_folder = project
+  ))
+  expect_true(imported_temperature(with_temp, project))
+  unlink(file.path(project, "example", "import_settings.rds"))
+  expect_true(imported_temperature(with_temp, project))
+  expect_equal(changed_import_settings(tag, project), "temperature column")
 })
 
 test_that("Browse opens in the project folder and fills the path", {

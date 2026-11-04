@@ -20,6 +20,7 @@ test_that("sampling_report() finds nothing wrong with a regular record", {
   }
   expect_true(all(report$days$percent == 100))
   expect_output(print(report), "Regular: every interval is 60 s")
+  expect_output(print(report), "60 s (100% of intervals)", fixed = TRUE)
 })
 
 test_that("sampling_report() finds gaps and incomplete days", {

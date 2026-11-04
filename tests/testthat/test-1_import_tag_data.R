@@ -120,3 +120,22 @@ test_that("import_tag_data() warns on irregular sampling intervals", {
     "Sampling frequency is not constant. Intervals detected: 60s: .* records; 360s: 1 records"
   )
 })
+
+test_that("import_tag_data() reports temperatures when imported", {
+  temp_file <- file.path(tempdir(), "temp-log-Archive.csv")
+  archive <- utils::read.csv(system.file("extdata", "data/data-Archive.csv", package = "FishDiveR"))
+  archive$temp <- 20 + archive$depth / 100
+  archive$temp[3] <- NA
+  utils::write.csv(archive, temp_file, row.names = FALSE)
+
+  import <- function() {
+    import_tag_data(
+      tag_ID = "data", tag_deploy_UTC = "2000-01-01 00:00:00", tag_release_UTC = "2000-01-11 23:59:00",
+      archive = temp_file, temp_col = 3, time_zone = "UTC", verbose = TRUE
+    )
+  }
+  messages <- paste(capture_messages(archive_days <- import()), collapse = "")
+  expect_match(messages, "Mean temperature = [0-9.]+ Minimum = 20 Maximum = 22.6")
+  expect_match(messages, "Records with no temperature: 1")
+  expect_true("temp" %in% names(archive_days))
+})

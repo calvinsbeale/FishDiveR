@@ -224,6 +224,10 @@ mod_project_server <- function(id, state) {
         `Release (UTC)` = tags$tag_release_UTC,
         `Time zone` = tags$time_zone,
         GPS = ifelse(is.na(tags$GPS), "", basename(tags$GPS)),
+        # Ticked once the tag is imported with temperature data
+        Temperature = vapply(seq_len(nrow(tags)), function(i) {
+          if (isTRUE(imported_temperature(tags[i, ], state$project))) tick_mark else ""
+        }, character(1)),
         Check = ifelse(nzchar(problems), problems, "OK"),
         check.names = FALSE
       )

@@ -21,6 +21,9 @@
 #'   Defaults to NULL, choosing the folder in the app.
 #' @param launch.browser Logical. If TRUE, the app opens in your web browser.
 #'   Defaults to TRUE.
+#' @param stop_on_close Logical. If TRUE, the app stops a few seconds after its
+#'   last browser tab is closed, rather than running until R is stopped. Used by
+#'   the standalone Windows app. Defaults to FALSE.
 #' @param ... Further arguments passed to \code{shiny::runApp()}, e.g. \code{port}.
 #'
 #' @returns Called for its side effect of running the app. Returns invisibly
@@ -33,7 +36,7 @@
 #'   run_app()
 #' }
 #'
-run_app <- function(project_folder = NULL, launch.browser = TRUE, ...) {
+run_app <- function(project_folder = NULL, launch.browser = TRUE, stop_on_close = FALSE, ...) {
   needed <- c("shiny", "bslib", "DT")
   missing_pkgs <- needed[!vapply(needed, requireNamespace, logical(1), quietly = TRUE)]
   if (length(missing_pkgs) > 0) {
@@ -47,6 +50,27 @@ run_app <- function(project_folder = NULL, launch.browser = TRUE, ...) {
     stop("project_folder '", project_folder, "' does not exist.", call. = FALSE)
   }
 
-  app <- shiny::shinyApp(ui = app_ui(), server = app_server(project_folder))
+  server <- app_server(project_folder)
+  if (isTRUE(stop_on_close)) server <- stop_when_closed(server)
+  app <- shiny::shinyApp(ui = app_ui(), server = server)
   invisible(shiny::runApp(app, launch.browser = launch.browser, ...))
+}
+
+#' Stop the app once no browser tab has had it open for `delay` seconds
+#'
+#' Wraps an app server so that closing the app's last tab or window stops the
+#' app. The delay lets a reloaded page reconnect without the app stopping.
+#' @noRd
+stop_when_closed <- function(server, delay = 5) {
+  # Evaluate now: run_app() reassigns its 'server' to this wrapper
+  force(server)
+  open_sessions <- 0
+  function(input, output, session) {
+    open_sessions <<- open_sessions + 1
+    session$onSessionEnded(function() {
+      open_sessions <<- open_sessions - 1
+      later::later(function() if (open_sessions == 0) shiny::stopApp(), delay)
+    })
+    server(input, output, session)
+  }
 }

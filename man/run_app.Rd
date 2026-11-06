@@ -4,7 +4,12 @@
 \alias{run_app}
 \title{Launch the FishDiveR app}
 \usage{
-run_app(project_folder = NULL, launch.browser = TRUE, ...)
+run_app(
+  project_folder = NULL,
+  launch.browser = TRUE,
+  stop_on_close = FALSE,
+  ...
+)
 }
 \arguments{
 \item{project_folder}{Optional. Path of a project folder to open on launch.
@@ -12,6 +17,10 @@ Defaults to NULL, choosing the folder in the app.}
 
 \item{launch.browser}{Logical. If TRUE, the app opens in your web browser.
 Defaults to TRUE.}
+
+\item{stop_on_close}{Logical. If TRUE, the app stops a few seconds after its
+last browser tab is closed, rather than running until R is stopped. Used by
+the standalone Windows app. Defaults to FALSE.}
 
 \item{...}{Further arguments passed to \code{shiny::runApp()}, e.g. \code{port}.}
 }

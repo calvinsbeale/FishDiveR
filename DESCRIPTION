@@ -38,6 +38,7 @@ Suggests:
     bslib,
     DT,
     knitr,
+    later,
     rmarkdown,
     rstudioapi,
     shiny (>= 1.7.0),

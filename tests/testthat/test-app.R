@@ -255,6 +255,34 @@ test_that("run_app() checks project_folder", {
   expect_error(run_app(project_folder = file.path(tempdir(), "no-such-folder")), "does not exist")
 })
 
+test_that("stop_when_closed() stops the app after its last tab closes", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("later")
+  stopped <- 0
+  local_mocked_bindings(stopApp = function(...) stopped <<- stopped + 1, .package = "shiny")
+  server <- stop_when_closed(function(input, output, session) NULL, delay = 0)
+
+  first <- shiny::MockShinySession$new()
+  second <- shiny::MockShinySession$new()
+  server(NULL, NULL, first)
+  server(NULL, NULL, second)
+
+  # One of two tabs closed: the app keeps running
+  first$close()
+  later::run_now()
+  expect_equal(stopped, 0)
+
+  # Last tab closed: the app stops
+  second$close()
+  later::run_now()
+  expect_equal(stopped, 1)
+
+  # Wrapping a server into the same name, as run_app() does, still runs it
+  server <- function(input, output, session) "ran"
+  server <- stop_when_closed(server, delay = 0)
+  expect_equal(server(NULL, NULL, shiny::MockShinySession$new()), "ran")
+})
+
 test_that("wavelet size estimates match WaveletComp output", {
   wavelet <- readRDS(system.file("extdata", "data", "1_Wavelets", "data_wavelet.rds", package = "FishDiveR"))
   lp <- attr(wavelet, "LP")

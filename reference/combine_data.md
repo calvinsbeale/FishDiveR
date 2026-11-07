@@ -72,5 +72,5 @@ combined_stats <- combine_data(
   output_folder = tempdir(),
   verbose = TRUE
 )
-#> Saving combined metrics to:/tmp/RtmpZTcYEl/data/5_k-means/combined_stats.rds
+#> Saving combined metrics to:/tmp/Rtmp27WBoj/data/5_k-means/combined_stats.rds
 ```

@@ -1,4 +1,4 @@
-# FishDiveR (development version)
+# FishDiveR 1.3.0
 
 ## New features
 - New `plot_time_at()` plots time at depth or time at temperature: the percentage of time in each depth or temperature range, for the whole record, each month, or as a heat map of each day. It returns the table of percentages, with the plot attached. In the app, step 2 has a new "Time at depth & temperature" tab.
@@ -9,7 +9,7 @@
 - The app's table of tags in step 1 has a Temperature column, ticked for tags imported with temperature data.
 - Printing a `sampling_report()` now lists each irregularity and incomplete day with its times, up to `max_rows` of each (5 by default; 20 in the app), and no longer rounds nearly regular records up to "100%" of intervals.
 
-# FishDiveR 1.2.0
+# FishDiveR 1.2.0 (not released on CRAN; included in 1.3.0)
 
 ## Breaking change
 - `create_wavelet()` no longer has the `allow_irregular_sampling` argument (it was not functional), and no longer stops on non-constant sampling intervals.

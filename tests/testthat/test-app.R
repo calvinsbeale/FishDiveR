@@ -270,6 +270,9 @@ test_that("wavelet size estimates match WaveletComp output", {
 })
 
 test_that("app runs wavelets for imported tags", {
+  # Runs whole wavelets: too slow for CRAN's check time, which the tests of
+  # create_wavelet() cover
+  skip_on_cran()
   skip_if_not_installed("shiny")
   skip_if_not_installed("DT")
 
@@ -333,6 +336,9 @@ test_that("suggest_thin_interval() keeps enough records per cycle", {
 })
 
 test_that("app thins records before the wavelet", {
+  # Runs a whole wavelet: too slow for CRAN's check time, which the tests of
+  # thin_archive() cover
+  skip_on_cran()
   skip_if_not_installed("shiny")
   skip_if_not_installed("DT")
 
@@ -385,6 +391,9 @@ test_that("suggest_n_pcs() keeps eigenvalues of 1 or more and at least 70% varia
 })
 
 test_that("app makes daily statistics and runs PCA across tags", {
+  # Runs the whole workflow for two tags: too slow for CRAN's check time,
+  # which the tests of each step's function cover
+  skip_on_cran()
   skip_if_not_installed("shiny")
   skip_if_not_installed("DT")
 

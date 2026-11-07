@@ -1,6 +1,6 @@
 # Changelog
 
-## FishDiveR (development version)
+## FishDiveR 1.3.0
 
 ### New features
 
@@ -38,7 +38,7 @@
   `max_rows` of each (5 by default; 20 in the app), and no longer rounds
   nearly regular records up to “100%” of intervals.
 
-## FishDiveR 1.2.0
+## FishDiveR 1.2.0 (not released on CRAN; included in 1.3.0)
 
 ### Breaking change
 

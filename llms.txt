@@ -113,7 +113,7 @@ Ecology* 14:8, <https://doi.org/10.1186/s40462-025-00622-w>.
 ``` r
 
 library(FishDiveR)
-#> FishDiveR version 1.2.0. Facilitating classification of aquatic animal behaviours from vertical movement data.
+#> FishDiveR version 1.3.0. Facilitating classification of aquatic animal behaviours from vertical movement data.
 #>  Type 'citation("FishDiveR")' for citing this R package in publications.
 # Set file path
 filepath <- system.file("extdata", package = "FishDiveR")

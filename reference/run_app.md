@@ -7,12 +7,7 @@ leave your machine.
 ## Usage
 
 ``` r
-run_app(
-  project_folder = NULL,
-  launch.browser = TRUE,
-  stop_on_close = FALSE,
-  ...
-)
+run_app(project_folder = NULL, launch.browser = TRUE, ...)
 ```
 
 ## Arguments
@@ -25,12 +20,6 @@ run_app(
 - launch.browser:
 
   Logical. If TRUE, the app opens in your web browser. Defaults to TRUE.
-
-- stop_on_close:
-
-  Logical. If TRUE, the app stops a few seconds after its last browser
-  tab is closed, rather than running until R is stopped. Used by the
-  standalone Windows app. Defaults to FALSE.
 
 - ...:
 

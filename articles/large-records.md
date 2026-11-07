@@ -9,7 +9,7 @@ reduce it without losing the behaviour you are interested in.
 ``` r
 
 library(FishDiveR)
-#> FishDiveR version 1.3.0. Facilitating classification of aquatic animal behaviours from vertical movement data.
+#> FishDiveR version 1.3.0.9000. Facilitating classification of aquatic animal behaviours from vertical movement data.
 #>  Type 'citation("FishDiveR")' for citing this R package in publications.
 example_folder <- system.file("extdata", package = "FishDiveR")
 archive_days <- readRDS(file.path(example_folder, "data", "archive_days.rds"))

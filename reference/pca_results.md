@@ -89,9 +89,9 @@ pc_results <- pca_results(
 )
 #> Non-numerical columns being excluded: tag_ID, date_only
 #> 7 principal components of 9 have eigenvalues >= 1
-#> Output file: /tmp/Rtmp5l6iJ6/data/4_PCA/eigenvalues_cum_var.csv
+#> Output file: /tmp/RtmpWzFNWS/data/4_PCA/eigenvalues_cum_var.csv
 #> Keeping 1 PC's contributing to a cumulative 47.9402033916319% of variance
-#> Output file: /tmp/Rtmp5l6iJ6/data/4_PCA/pc_results.rds contains the selected number of principal components.
+#> Output file: /tmp/RtmpWzFNWS/data/4_PCA/pc_results.rds contains the selected number of principal components.
 
 # \donttest{
 # Full example using the complete dataset
@@ -109,9 +109,9 @@ pc_results <- pca_results(
 )
 #> Non-numerical columns being excluded: tag_ID, date_only
 #> 7 principal components of 9 have eigenvalues >= 1
-#> Output file: /tmp/Rtmp5l6iJ6/data/4_PCA/eigenvalues_cum_var.csv
+#> Output file: /tmp/RtmpWzFNWS/data/4_PCA/eigenvalues_cum_var.csv
 #> Keeping 3 PC's contributing to a cumulative 91.691872847357% of variance
-#> Output folder: /tmp/Rtmp5l6iJ6/data/4_PCA
-#> Output file: /tmp/Rtmp5l6iJ6/data/4_PCA/pc_results.rds contains the selected number of principal components.
+#> Output folder: /tmp/RtmpWzFNWS/data/4_PCA
+#> Output file: /tmp/RtmpWzFNWS/data/4_PCA/pc_results.rds contains the selected number of principal components.
 # }
 ```

@@ -2,7 +2,22 @@
 
 ## FishDiveR (development version)
 
+### New features
+
+- In the app, the deployment and release times in step 1 are typed as
+  digits only: the dashes, space and colons of `yyyy-mm-dd hh:mm:ss` are
+  added as you type, dates pasted with other separators
+  (e.g. `2024/3/5 8:30`) are tidied, a date without a time gets
+  `00:00:00`, and impossible dates or times are marked. A calendar opens
+  as soon as the box has the cursor, to pick the year, then the month,
+  then the day; once the date is picked or typed, a clock follows, to
+  pick the hour, then the minute, then the second. Calendar and clock
+  buttons beside the box open them too. The fixed sunrise and sunset
+  times in step 4 work the same way, as `hh:mm:ss` with the clock.
+
 ## FishDiveR 1.3.0
+
+CRAN release: 2026-11-07
 
 ### New features
 

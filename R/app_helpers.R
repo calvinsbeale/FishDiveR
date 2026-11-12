@@ -28,6 +28,80 @@ help_tip <- function(text) {
   )
 }
 
+#' Text box for a date-time or a time, typed in a fixed format
+#'
+#' Only the digits are typed: the separators of `pattern` are added as they
+#' are typed, pasted text such as "2024/3/5 8:30" is tidied, a date without a
+#' time gets 00:00:00, and the box is marked if the value is not a valid date
+#' or time.
+#'
+#' A date-time box shows a calendar as soon as it has the cursor, opening on
+#' the years, then the months, then the days. Once the date is chosen or
+#' typed, a clock replaces it, to click the hour, then the minute, then the
+#' second. A time box shows the clock. Buttons beside the box open them too.
+#'
+#' The input's value is the text, as from shiny::textInput(), and
+#' shiny::updateTextInput() sets it. See inst/app/masked_input.js.
+#' @noRd
+masked_input <- function(id, label, pattern = c("yyyy-mm-dd hh:mm:ss", "hh:mm:ss"), value = "", width = NULL) {
+  pattern <- match.arg(pattern)
+  datetime <- pattern == "yyyy-mm-dd hh:mm:ss"
+
+  box <- shiny::tags$input(
+    id = id, type = "text", class = "form-control shiny-input-text fd-masked", value = value,
+    placeholder = pattern, maxlength = nchar(pattern), inputmode = "numeric",
+    autocomplete = "off", spellcheck = "false",
+    `data-pattern` = pattern,
+    # A date-time needs at least the date, a time at least the hour
+    `data-min-length` = if (datetime) 10 else 2
+  )
+  # The pickers open when the box has the cursor, so tabbing skips the buttons
+  picker_button <- function(class, title, icon) {
+    shiny::tags$button(
+      type = "button", class = paste("btn btn-outline-secondary", class), `data-fd-input` = id,
+      tabindex = "-1", title = title, `aria-label` = title, shiny::icon(icon)
+    )
+  }
+  box <- shiny::div(
+    class = "input-group",
+    box,
+    if (datetime) picker_button("fd-calendar", "Choose the date", "calendar"),
+    picker_button("fd-clock-button", "Choose the time", "clock")
+  )
+  if (datetime) {
+    # The calendar drops down from this hidden, zero-size input under the box
+    anchor <- shiny::tags$input(
+      type = "text", class = "fd-calendar-anchor", tabindex = "-1", `aria-hidden` = "true",
+      style = "display: block; width: 0; height: 0; padding: 0; margin: 0; border: 0; opacity: 0;"
+    )
+    box <- shiny::tagList(box, anchor)
+  }
+  tag <- shiny::div(
+    class = "mb-3 fd-masked-group",
+    style = if (!is.null(width)) paste0("width: ", shiny::validateCssUnit(width), ";"),
+    shiny::tags$label(label, `for` = id, class = "form-label"),
+    box,
+    shiny::div(
+      class = "invalid-feedback",
+      if (datetime) "Enter a real date and time, as yyyy-mm-dd hh:mm:ss." else "Enter a real time, as hh:mm:ss."
+    )
+  )
+  htmltools::attachDependencies(tag, masked_input_dependencies(), append = TRUE)
+}
+
+#' Scripts for masked_input(): the calendar used by shiny::dateInput(), and the
+#' typing rules
+#' @noRd
+masked_input_dependencies <- function() {
+  c(
+    htmltools::findDependencies(shiny::dateInput("fd_datepicker", NULL)),
+    list(htmltools::htmlDependency(
+      "fd-masked-input", as.character(utils::packageVersion("FishDiveR")),
+      src = system.file("app", package = "FishDiveR"), script = "masked_input.js"
+    ))
+  )
+}
+
 #' Next button at the bottom right of a step
 #' @noRd
 next_button <- function(step) {

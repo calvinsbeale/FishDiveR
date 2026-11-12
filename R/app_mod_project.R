@@ -24,8 +24,8 @@ mod_project_ui <- function(id) {
         bslib::card_header("Add or edit a tag"),
         shiny::textInput(ns("tag_ID"), "Tag ID", width = "100%"),
         path_input(ns("archive"), "Archive csv file"),
-        shiny::textInput(ns("tag_deploy_UTC"), "Deploy time (UTC)", placeholder = "yyyy-mm-dd hh:mm:ss", width = "100%"),
-        shiny::textInput(ns("tag_release_UTC"), "Release time (UTC)", placeholder = "yyyy-mm-dd hh:mm:ss", width = "100%"),
+        masked_input(ns("tag_deploy_UTC"), "Deploy time (UTC)"),
+        masked_input(ns("tag_release_UTC"), "Release time (UTC)"),
         shiny::selectizeInput(ns("time_zone"), "Local time zone", choices = OlsonNames(), selected = "UTC", width = "100%"),
         bslib::layout_columns(
           col_widths = c(4, 4, 4),

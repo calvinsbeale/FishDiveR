@@ -48,6 +48,39 @@ test_that("validate_tag() reports problems", {
   expect_true(any(grepl("depth column", problems)))
 })
 
+test_that("masked_input() makes a text box with its pattern, calendar and scripts", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("htmltools")
+
+  box <- masked_input("deploy", "Deploy time (UTC)", value = "2024-03-05 08:30:00")
+  html <- as.character(box)
+  expect_match(html, 'id="deploy"', fixed = TRUE)
+  expect_match(html, 'type="text"', fixed = TRUE)
+  expect_match(html, 'data-pattern="yyyy-mm-dd hh:mm:ss"', fixed = TRUE)
+  expect_match(html, 'maxlength="19"', fixed = TRUE)
+  expect_match(html, 'value="2024-03-05 08:30:00"', fixed = TRUE)
+  expect_match(html, 'data-fd-input="deploy"', fixed = TRUE)
+  expect_match(html, "fd-calendar-anchor", fixed = TRUE)
+  expect_match(html, "fd-calendar\"", fixed = TRUE)
+  expect_match(html, "fd-clock-button", fixed = TRUE)
+  # Tabbing goes from box to box, skipping the picker buttons
+  expect_equal(lengths(regmatches(html, gregexpr('tabindex="-1"', html))), 3)
+
+  deps <- vapply(htmltools::findDependencies(box), function(d) d$name, character(1))
+  expect_true("fd-masked-input" %in% deps)
+  expect_true("bootstrap-datepicker-js" %in% deps)
+  script <- htmltools::findDependencies(box)[[which(deps == "fd-masked-input")]]
+  expect_true(file.exists(file.path(script$src$file, script$script)))
+
+  # A time has a clock, but no calendar
+  html <- as.character(masked_input("sunrise", "Sunrise", pattern = "hh:mm:ss", value = "06:00:00"))
+  expect_match(html, 'data-pattern="hh:mm:ss"', fixed = TRUE)
+  expect_match(html, 'maxlength="8"', fixed = TRUE)
+  expect_match(html, "fd-clock-button", fixed = TRUE)
+  expect_no_match(html, "fd-calendar")
+  expect_error(masked_input("x", "x", pattern = "dd/mm/yyyy"))
+})
+
 test_that("run_logged() collects messages, warnings and errors", {
   res <- run_logged({
     message("hello")

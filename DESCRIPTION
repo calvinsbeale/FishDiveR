@@ -36,6 +36,7 @@ Imports:
     WaveletComp
 Suggests:
     bslib,
+    htmltools,
     DT,
     knitr,
     rmarkdown,

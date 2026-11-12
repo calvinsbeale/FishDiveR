@@ -93,6 +93,8 @@ The steps are tabs along the top of the app, in workflow order. The **Next** but
 
 Open or create the project folder, then add tags with the form, load a tag table csv, or add the example tag to try things out. Select a tag in the table to edit or remove it. Removing a tag from the table keeps its results in the project folder.
 
+For the deployment and release times, type only the digits: the dashes, space and colons of `yyyy-mm-dd hh:mm:ss` are added as you type, and dates pasted with other separators, such as `2024/3/5 8:30`, are tidied. Or pick them: a calendar opens as soon as you click or tab into the box, on the years, then the months, then the days. Once the date is picked or typed, a clock follows, to click the hour, then the minute, then the second. The calendar and clock buttons beside the box open them too. A date without a time is taken as `00:00:00`, and an impossible date or time is marked in red. The fixed sunrise and sunset times in step 4 have the same clock.
+
 ### 2. Import
 
 Import some or all of the tags. Each archive is cropped to whole local days between deployment and release, and saved in the tag's folder. The log shows each tag's messages, including any warning that its sampling interval isn't constant.

@@ -45,8 +45,8 @@ mod_stats_ui <- function(id) {
           bslib::layout_column_wrap(
             width = "160px",
             fill = FALSE,
-            shiny::textInput(ns("sunrise_time"), "Fixed sunrise (local)", value = "06:00:00", placeholder = "hh:mm:ss"),
-            shiny::textInput(ns("sunset_time"), "Fixed sunset (local)", value = "18:00:00", placeholder = "hh:mm:ss")
+            masked_input(ns("sunrise_time"), "Fixed sunrise (local)", pattern = "hh:mm:ss", value = "06:00:00"),
+            masked_input(ns("sunset_time"), "Fixed sunset (local)", pattern = "hh:mm:ss", value = "18:00:00")
           )
         )
       ),

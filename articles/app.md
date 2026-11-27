@@ -115,9 +115,24 @@ the same clock.
 ### 2. Import
 
 Import some or all of the tags. Each archive is cropped to whole local
-days between deployment and release, and saved in the tag’s folder. The
-log shows each tag’s messages, including any warning that its sampling
-interval isn’t constant.
+days between deployment and release, put on a regular time grid, and
+saved in the tag’s folder. The log shows each tag’s messages, including
+warnings about gaps.
+
+Two settings above the table control the gaps:
+
+- **Fill gaps up to (min)** (5 by default, at most 360): gaps up to this
+  long are filled by straight lines between the records either side and
+  analysed. Longer gaps are left out of the statistics, as is the
+  wavelet power near them: about 1.35 times each period either side, so
+  about 1.4 days for a 24 hour period.
+- **Keep days with at least (%)** (70 by default): days with less than
+  this percentage of real, unfilled records are left out of the
+  statistics. A day with a 6 hour gap has 75%.
+
+Changing either marks imported tags **Outdated** until they are
+re-imported. The **Days kept** column shows how many of each tag’s days
+will be analysed.
 
 If you change a tag’s archive, deployment or release time, columns or
 time zone after importing it, the imported record no longer matches its
@@ -128,9 +143,11 @@ Re-import it to use the new settings.
 The **Sampling** column checks each imported tag for a constant sampling
 interval, e.g. “Regular (5 s)” or “Irregular: 1 duplicate, 2 gaps”.
 Select a tag to see its full sampling check, from
-[`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md):
-where any duplicate times, gaps or changes of sampling rate are, and
-which days have fewer records than expected.
+[`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
+on the original records: where any duplicate times, gaps or changes of
+sampling rate are, and which days have fewer records than expected.
+Below it are the gaps that were filled, the longer gaps left out, and
+the days left out.
 
 The depth record of any imported tag can then be plotted. Set the points
 to plot, dates and axes, then click **Create plot**. Plots of large
@@ -169,9 +186,13 @@ without recalculating it.
 
 Create the daily wavelet and depth statistics. Diel (day and night)
 statistics use each tag’s GPS file, or fixed sunrise and sunset times
-for all tags. The table shows how many days each tag’s statistics cover;
-the wavelet and depth statistics must cover the same days, as they are
-matched day by day. Select a tag to view its statistics.
+for all tags. The table shows how many days each tag’s statistics cover.
+The wavelet statistics can cover fewer days than the depth statistics,
+as they also leave out days near long gaps; days are matched by date for
+clustering. **Leave out wavelet power near the start and end of each
+tag** treats the ends of each record like gaps, leaving out about the
+first and last 1.4 days for a 24 hour upper period. Select a tag to view
+its statistics.
 
 ### 5. PCA
 

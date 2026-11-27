@@ -16,6 +16,8 @@ import_tag_data(
   depth_col = 2,
   temp_col = NA,
   time_zone,
+  max_fill_mins = 5,
+  min_coverage = 70,
   output = FALSE,
   output_folder = NULL,
   verbose = FALSE
@@ -60,6 +62,17 @@ import_tag_data(
 
   Time zone of the data. E.g. "Asia/Tokyo"
 
+- max_fill_mins:
+
+  The longest gap, in minutes, to fill by interpolation for analysis
+  (default 5, at most 360). See
+  [`regularise_archive()`](https://calvinsbeale.github.io/FishDiveR/reference/regularise_archive.md).
+
+- min_coverage:
+
+  The percentage of a day's records that must be real (not filled) for
+  the day to be analysed (default 70).
+
 - output:
 
   Logical. If TRUE, output is saved to `output_folder`. Defaults to
@@ -86,8 +99,15 @@ A data frame of processed tag data. Columns kept are:
 
 - 'date_only' an as.Date version of the 'date' column
 
+- 'filled' and 'long_gap', marking records filled by interpolation, and
+  those in gaps too long to analyse
+
 - An attribute 'time_zone' is added to the date frame containing the
   time zone of the 'date'
+
+- The attributes of
+  [`regularise_archive()`](https://calvinsbeale.github.io/FishDiveR/reference/regularise_archive.md),
+  including each day's coverage and the gaps found
 
 ## Details
 
@@ -98,11 +118,14 @@ are saved as `archive_days.rds` in the tag's folder within
 times, columns and time zone) in `import_settings.rds`. The app uses
 these to warn when a tag's settings have changed since it was imported.
 
-A warning is given if the sampling interval is not constant throughout
-the cropped data (e.g. gaps from missing records), listing the intervals
-detected and how many records have each. Use
-[`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
-on the imported data to see where the irregularities are.
+The cropped data are then put on a regular time grid by
+[`regularise_archive()`](https://calvinsbeale.github.io/FishDiveR/reference/regularise_archive.md),
+as the wavelet analysis needs. Gaps of up to `max_fill_mins` are filled
+by interpolation, with a warning. Longer gaps are filled only so that
+the wavelet can run, and are left out of the statistics. Days with less
+than `min_coverage` percent of their records are left out of the
+statistics. The sampling check of the records before they were put on
+the grid is kept as `attr(archive, "sampling_report")`.
 
 ## Examples
 
@@ -131,5 +154,6 @@ archive_days <- import_tag_data(
 #> Mean depth = 75.5 SD = 81.9
 #> Maximum depth = 256.6
 #> Number of full days in dataset: 10
-#> Output file: /tmp/RtmpnmzaAr/data/archive_days.rds
+#> Regular grid: every 60 s, 14,400 records. Filled 0 records in short gaps; 0 in long gaps (not analysed). 10 of 10 days kept (at least 70% real records).
+#> Output file: /tmp/RtmpMLXK2Y/data/archive_days.rds
 ```

@@ -155,28 +155,43 @@ is saved as <code>archive_days.rds</code> in the tag’s folder.</p>
 <span>  output_folder <span class="op">=</span> <span class="va">project</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">archive_days</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                   date depth  date_only</span></span>
-<span><span class="co">#&gt;                 &lt;POSc&gt; &lt;num&gt;     &lt;Date&gt;</span></span>
-<span><span class="co">#&gt; 1: 2000-01-01 00:00:00  13.9 2000-01-01</span></span>
-<span><span class="co">#&gt; 2: 2000-01-01 00:01:00  10.8 2000-01-01</span></span>
-<span><span class="co">#&gt; 3: 2000-01-01 00:02:00  16.5 2000-01-01</span></span>
-<span><span class="co">#&gt; 4: 2000-01-01 00:03:00  14.8 2000-01-01</span></span>
-<span><span class="co">#&gt; 5: 2000-01-01 00:04:00   4.7 2000-01-01</span></span>
-<span><span class="co">#&gt; 6: 2000-01-01 00:05:00  12.1 2000-01-01</span></span></code></pre></div>
+<span><span class="co">#&gt;                  date depth  date_only filled long_gap</span></span>
+<span><span class="co">#&gt; 1 2000-01-01 00:00:00  13.9 2000-01-01  FALSE    FALSE</span></span>
+<span><span class="co">#&gt; 2 2000-01-01 00:01:00  10.8 2000-01-01  FALSE    FALSE</span></span>
+<span><span class="co">#&gt; 3 2000-01-01 00:02:00  16.5 2000-01-01  FALSE    FALSE</span></span>
+<span><span class="co">#&gt; 4 2000-01-01 00:03:00  14.8 2000-01-01  FALSE    FALSE</span></span>
+<span><span class="co">#&gt; 5 2000-01-01 00:04:00   4.7 2000-01-01  FALSE    FALSE</span></span>
+<span><span class="co">#&gt; 6 2000-01-01 00:05:00  12.1 2000-01-01  FALSE    FALSE</span></span></code></pre></div>
 <p>A few things to check with your own data:</p>
 <ul>
 <li>
 <strong>Time zone.</strong> Days are split at local midnight, so
-give the time zone the animal was in. Time zones with daylight saving
-are not supported, as the clock changes create days of 23 and 25
-hours.</li>
+give the time zone the animal was in. In time zones with daylight
+saving, days with a clock change have 23 or 25 hours: each day is
+analysed in full, and the example-day plots show it against the time
+since midnight.</li>
 <li>
-<strong>Sampling interval.</strong> The record needs a constant
-sampling interval. <code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> warns if it finds more
-than one interval, listing each and how many records have it.
-<code><a href="../reference/sampling_report.html">sampling_report()</a></code> then shows where the irregularities are:
-duplicate times, gaps, changes of sampling rate, and days with fewer
-records than expected.</li>
+<strong>Sampling interval and gaps.</strong> The wavelet needs
+records a constant time apart, so <code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> puts
+the record on a regular time grid with
+<code><a href="../reference/regularise_archive.html">regularise_archive()</a></code>:
+<ul>
+<li>Gaps of up to <code>max_fill_mins</code> (5 minutes by default, at
+most 6 hours) are filled by straight lines between the records either
+side, with a warning.</li>
+<li>Longer gaps are filled only so that the wavelet can run. They are
+left out of the depth statistics, and
+<code><a href="../reference/create_wavelet_stats.html">create_wavelet_stats()</a></code> leaves out the wavelet power within
+about 1.35 times each period of them: about 1.4 days either side for a
+24 hour period.</li>
+<li>Days with less than <code>min_coverage</code> (70% by default) real,
+unfilled records are left out of the statistics. A day with a 6 hour gap
+has 75%.</li>
+</ul>
+The check of the original records, from <code><a href="../reference/sampling_report.html">sampling_report()</a></code>,
+is kept as <code>attr(archive_days, "sampling_report")</code>: it shows
+any duplicate times, gaps and changes of sampling rate. Each day’s
+coverage is in <code>attr(archive_days, "day_coverage")</code>.</li>
 <li>
 <strong>Date-time format.</strong> Dates are currently read in the
 format <code>00:01:00 01-Jan-2000</code>.</li>
@@ -256,6 +271,11 @@ how to estimate this and how to reduce it with
 <p><code><a href="../reference/create_wavelet_stats.html">create_wavelet_stats()</a></code> summarises the wavelet for each
 day and period: mean and variance of the amplitude, phase and power, and
 the mean squared power.</p>
+<p>Wavelet power is too low near the start and end of a record, as it is
+near a long gap. <code>mask_ends = TRUE</code> leaves it out in the same
+way, so for a 24 hour upper period the first and last day or two are
+left out. The days left out, and why, are in
+<code>attr(wave_stats, "dropped_days")</code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">wave_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_wavelet_stats.html">create_wavelet_stats</a></span><span class="op">(</span><span class="va">wavelet</span>, tag_ID <span class="op">=</span> <span class="st">"data"</span>, output <span class="op">=</span> <span class="cn">TRUE</span>, output_folder <span class="op">=</span> <span class="va">project</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">wave_stats</span><span class="op">)</span></span>

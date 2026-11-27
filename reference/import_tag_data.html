@@ -60,6 +60,8 @@ column. Data is cropped by deployment and release times.</p>
 <span>  depth_col <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  temp_col <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  <span class="va">time_zone</span>,</span>
+<span>  max_fill_mins <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  min_coverage <span class="op">=</span> <span class="fl">70</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  output_folder <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -106,6 +108,16 @@ data/123456/123456-Archive.csv")</p></dd>
 <dd><p>Time zone of the data. E.g. "Asia/Tokyo"</p></dd>
 
 
+<dt id="arg-max-fill-mins">max_fill_mins<a class="anchor" aria-label="anchor" href="#arg-max-fill-mins"></a></dt>
+<dd><p>The longest gap, in minutes, to fill by interpolation
+for analysis (default 5, at most 360). See <code><a href="regularise_archive.html">regularise_archive()</a></code>.</p></dd>
+
+
+<dt id="arg-min-coverage">min_coverage<a class="anchor" aria-label="anchor" href="#arg-min-coverage"></a></dt>
+<dd><p>The percentage of a day's records that must be real (not
+filled) for the day to be analysed (default 70).</p></dd>
+
+
 <dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>
 <dd><p>Logical. If TRUE, output is saved to <code>output_folder</code>.
 Defaults to FALSE.</p></dd>
@@ -126,7 +138,11 @@ Defaults to FALSE.</p></dd>
 <li><p>'depth' numerical depth data</p></li>
 <li><p>'temp' numerical temperature data</p></li>
 <li><p>'date_only' an as.Date version of the 'date' column</p></li>
+<li><p>'filled' and 'long_gap', marking records filled by interpolation, and
+those in gaps too long to analyse</p></li>
 <li><p>An attribute 'time_zone' is added to the date frame containing the time zone of the 'date'</p></li>
+<li><p>The attributes of <code><a href="regularise_archive.html">regularise_archive()</a></code>, including each day's coverage
+and the gaps found</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -136,10 +152,13 @@ the time zone supplied. If <code>output = TRUE</code>, the cropped data are save
 with the settings used (archive, deployment and release times, columns and
 time zone) in <code>import_settings.rds</code>. The app uses these to warn when a
 tag's settings have changed since it was imported.</p>
-<p>A warning is given if the sampling interval is not constant throughout the
-cropped data (e.g. gaps from missing records), listing the intervals detected
-and how many records have each. Use <code><a href="sampling_report.html">sampling_report()</a></code> on the imported
-data to see where the irregularities are.</p>
+<p>The cropped data are then put on a regular time grid by
+<code><a href="regularise_archive.html">regularise_archive()</a></code>, as the wavelet analysis needs. Gaps of up to
+<code>max_fill_mins</code> are filled by interpolation, with a warning. Longer
+gaps are filled only so that the wavelet can run, and are left out of the
+statistics. Days with less than <code>min_coverage</code> percent of their records
+are left out of the statistics. The sampling check of the records before
+they were put on the grid is kept as <code>attr(archive, "sampling_report")</code>.</p>
     </div>
 
     <div class="section level2">
@@ -168,7 +187,8 @@ data to see where the irregularities are.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Mean depth = 75.5 SD = 81.9</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Maximum depth = 256.6</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Number of full days in dataset: 10</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Output file: /tmp/RtmpnmzaAr/data/archive_days.rds</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Regular grid: every 60 s, 14,400 records. Filled 0 records in short gaps; 0 in long gaps (not analysed). 10 of 10 days kept (at least 70% real records).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Output file: /tmp/RtmpMLXK2Y/data/archive_days.rds</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

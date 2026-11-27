@@ -79,8 +79,9 @@ multiple of the current sampling interval and divide a day evenly, e.g. 5,
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The thinned archive, with the same columns and 'time_zone'
-attribute. Returned unchanged if <code>interval_s</code> equals the current
-sampling interval.</p>
+attribute. A block is marked 'filled' or 'long_gap' if any of its records
+are (see <code><a href="regularise_archive.html">regularise_archive()</a></code>). Returned unchanged if <code>interval_s</code>
+equals the current sampling interval.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

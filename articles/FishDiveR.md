@@ -83,28 +83,43 @@ archive_days <- import_tag_data(
   output_folder = project
 )
 head(archive_days)
-#>                   date depth  date_only
-#>                 <POSc> <num>     <Date>
-#> 1: 2000-01-01 00:00:00  13.9 2000-01-01
-#> 2: 2000-01-01 00:01:00  10.8 2000-01-01
-#> 3: 2000-01-01 00:02:00  16.5 2000-01-01
-#> 4: 2000-01-01 00:03:00  14.8 2000-01-01
-#> 5: 2000-01-01 00:04:00   4.7 2000-01-01
-#> 6: 2000-01-01 00:05:00  12.1 2000-01-01
+#>                  date depth  date_only filled long_gap
+#> 1 2000-01-01 00:00:00  13.9 2000-01-01  FALSE    FALSE
+#> 2 2000-01-01 00:01:00  10.8 2000-01-01  FALSE    FALSE
+#> 3 2000-01-01 00:02:00  16.5 2000-01-01  FALSE    FALSE
+#> 4 2000-01-01 00:03:00  14.8 2000-01-01  FALSE    FALSE
+#> 5 2000-01-01 00:04:00   4.7 2000-01-01  FALSE    FALSE
+#> 6 2000-01-01 00:05:00  12.1 2000-01-01  FALSE    FALSE
 ```
 
 A few things to check with your own data:
 
 - **Time zone.** Days are split at local midnight, so give the time zone
-  the animal was in. Time zones with daylight saving are not supported,
-  as the clock changes create days of 23 and 25 hours.
-- **Sampling interval.** The record needs a constant sampling interval.
+  the animal was in. In time zones with daylight saving, days with a
+  clock change have 23 or 25 hours: each day is analysed in full, and
+  the example-day plots show it against the time since midnight.
+- **Sampling interval and gaps.** The wavelet needs records a constant
+  time apart, so
   [`import_tag_data()`](https://calvinsbeale.github.io/FishDiveR/reference/import_tag_data.md)
-  warns if it finds more than one interval, listing each and how many
-  records have it.
-  [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)
-  then shows where the irregularities are: duplicate times, gaps,
-  changes of sampling rate, and days with fewer records than expected.
+  puts the record on a regular time grid with
+  [`regularise_archive()`](https://calvinsbeale.github.io/FishDiveR/reference/regularise_archive.md):
+  - Gaps of up to `max_fill_mins` (5 minutes by default, at most 6
+    hours) are filled by straight lines between the records either side,
+    with a warning.
+  - Longer gaps are filled only so that the wavelet can run. They are
+    left out of the depth statistics, and
+    [`create_wavelet_stats()`](https://calvinsbeale.github.io/FishDiveR/reference/create_wavelet_stats.md)
+    leaves out the wavelet power within about 1.35 times each period of
+    them: about 1.4 days either side for a 24 hour period.
+  - Days with less than `min_coverage` (70% by default) real, unfilled
+    records are left out of the statistics. A day with a 6 hour gap has
+    75%.
+
+  The check of the original records, from
+  [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md),
+  is kept as `attr(archive_days, "sampling_report")`: it shows any
+  duplicate times, gaps and changes of sampling rate. Each day’s
+  coverage is in `attr(archive_days, "day_coverage")`.
 - **Date-time format.** Dates are currently read in the format
   `00:01:00 01-Jan-2000`.
 
@@ -197,6 +212,11 @@ explains how to estimate this and how to reduce it with
 [`create_wavelet_stats()`](https://calvinsbeale.github.io/FishDiveR/reference/create_wavelet_stats.md)
 summarises the wavelet for each day and period: mean and variance of the
 amplitude, phase and power, and the mean squared power.
+
+Wavelet power is too low near the start and end of a record, as it is
+near a long gap. `mask_ends = TRUE` leaves it out in the same way, so
+for a 24 hour upper period the first and last day or two are left out.
+The days left out, and why, are in `attr(wave_stats, "dropped_days")`.
 
 ``` r
 

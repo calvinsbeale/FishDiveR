@@ -11,7 +11,9 @@ create_wavelet_stats(
   tag_ID,
   output = FALSE,
   output_folder = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  mask_ends = FALSE,
+  min_coverage = NULL
 )
 ```
 
@@ -40,6 +42,19 @@ create_wavelet_stats(
 
   Logical. If TRUE, progress messages are shown. Defaults to FALSE.
 
+- mask_ends:
+
+  Logical. If TRUE, also leave out the wavelet power near the start and
+  end of the record, as near a long gap. Defaults to FALSE.
+
+- min_coverage:
+
+  The percentage of a day's records, and of its wavelet power at every
+  period, that must be valid for the day to be analysed. NULL (the
+  default) uses the archive's setting from
+  [`regularise_archive()`](https://calvinsbeale.github.io/FishDiveR/reference/regularise_archive.md),
+  or 70.
+
 ## Value
 
 A data frame containing the seven wavelet statistics for each period.
@@ -58,6 +73,25 @@ One observation is available per period per day:
 - Phase_mean
 
 - Phase_variance
+
+## Details
+
+Each day is the wavelet's records on that local date. Days with less
+than `min_coverage` percent real records (see
+[`regularise_archive()`](https://calvinsbeale.github.io/FishDiveR/reference/regularise_archive.md))
+are left out.
+
+Wavelet power near a gap too long to fill, where the wavelet ran over
+filled values, is not valid. For each period, the power within the
+e-folding time of its scale (the square root of 2 times the scale, about
+1.35 times the period) either side of the gap is left out of the day's
+statistics (Torrence & Compo 1998). With `mask_ends = TRUE`, the power
+this close to the start and end of the record is left out too. A day is
+left out if less than `min_coverage` percent of its power is valid at
+any period, e.g. within about 1.4 days of a gap for a 24 hour upper
+period.
+
+The days left out, and why, are in the attribute 'dropped_days'.
 
 ## Examples
 
@@ -78,5 +112,5 @@ waveStats <- create_wavelet_stats(
 )
 #> Running create_wavelet_stats() on tag ID data
 #> 
-#> Output file: /tmp/RtmpnmzaAr/data/3_Stats/data_waveStats.csv 
+#> Output file: /tmp/RtmpMLXK2Y/data/3_Stats/data_waveStats.csv 
 ```

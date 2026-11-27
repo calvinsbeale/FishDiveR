@@ -224,9 +224,25 @@ The fixed sunrise and sunset times in step 4 have the same clock.</p>
 <h3 id="import">2. Import<a class="anchor" aria-label="anchor" href="#import"></a>
 </h3>
 <p>Import some or all of the tags. Each archive is cropped to whole
-local days between deployment and release, and saved in the tag’s
-folder. The log shows each tag’s messages, including any warning that
-its sampling interval isn’t constant.</p>
+local days between deployment and release, put on a regular time grid,
+and saved in the tag’s folder. The log shows each tag’s messages,
+including warnings about gaps.</p>
+<p>Two settings above the table control the gaps:</p>
+<ul>
+<li>
+<strong>Fill gaps up to (min)</strong> (5 by default, at most 360):
+gaps up to this long are filled by straight lines between the records
+either side and analysed. Longer gaps are left out of the statistics, as
+is the wavelet power near them: about 1.35 times each period either
+side, so about 1.4 days for a 24 hour period.</li>
+<li>
+<strong>Keep days with at least (%)</strong> (70 by default): days
+with less than this percentage of real, unfilled records are left out of
+the statistics. A day with a 6 hour gap has 75%.</li>
+</ul>
+<p>Changing either marks imported tags <strong>Outdated</strong> until
+they are re-imported. The <strong>Days kept</strong> column shows how
+many of each tag’s days will be analysed.</p>
 <p>If you change a tag’s archive, deployment or release time, columns or
 time zone after importing it, the imported record no longer matches its
 settings. Step 1 warns when you save the tag and in the table’s Check
@@ -235,9 +251,10 @@ what changed. Re-import it to use the new settings.</p>
 <p>The <strong>Sampling</strong> column checks each imported tag for a
 constant sampling interval, e.g. “Regular (5 s)” or “Irregular: 1
 duplicate, 2 gaps”. Select a tag to see its full sampling check, from
-<code><a href="../reference/sampling_report.html">sampling_report()</a></code>: where any duplicate times, gaps or
-changes of sampling rate are, and which days have fewer records than
-expected.</p>
+<code><a href="../reference/sampling_report.html">sampling_report()</a></code> on the original records: where any
+duplicate times, gaps or changes of sampling rate are, and which days
+have fewer records than expected. Below it are the gaps that were
+filled, the longer gaps left out, and the days left out.</p>
 <p>The depth record of any imported tag can then be plotted. Set the
 points to plot, dates and axes, then click <strong>Create plot</strong>.
 Plots of large records can take a while, so the plot only redraws when
@@ -275,9 +292,13 @@ saved wavelet without recalculating it.</p>
 </h3>
 <p>Create the daily wavelet and depth statistics. Diel (day and night)
 statistics use each tag’s GPS file, or fixed sunrise and sunset times
-for all tags. The table shows how many days each tag’s statistics cover;
-the wavelet and depth statistics must cover the same days, as they are
-matched day by day. Select a tag to view its statistics.</p>
+for all tags. The table shows how many days each tag’s statistics cover.
+The wavelet statistics can cover fewer days than the depth statistics,
+as they also leave out days near long gaps; days are matched by date for
+clustering. <strong>Leave out wavelet power near the start and end of
+each tag</strong> treats the ends of each record like gaps, leaving out
+about the first and last 1.4 days for a 24 hour upper period. Select a
+tag to view its statistics.</p>
 </div>
 <div class="section level3">
 <h3 id="pca">5. PCA<a class="anchor" aria-label="anchor" href="#pca"></a>

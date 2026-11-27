@@ -596,6 +596,8 @@ plots_list <- plot_clusters(
   of each cluster
 - [`plot_time_at()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_time_at.md)
   : Plot time at depth or time at temperature
+- [`regularise_archive()`](https://calvinsbeale.github.io/FishDiveR/reference/regularise_archive.md)
+  : Put a depth record on a regular time grid, filling short gaps
 - [`run_app()`](https://calvinsbeale.github.io/FishDiveR/reference/run_app.md)
   : Launch the FishDiveR app
 - [`sampling_report()`](https://calvinsbeale.github.io/FishDiveR/reference/sampling_report.md)

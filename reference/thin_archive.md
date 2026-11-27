@@ -32,7 +32,9 @@ thin_archive(archive, interval_s, verbose = FALSE)
 
 ## Value
 
-The thinned archive, with the same columns and 'time_zone' attribute.
+The thinned archive, with the same columns and 'time_zone' attribute. A
+block is marked 'filled' or 'long_gap' if any of its records are (see
+[`regularise_archive()`](https://calvinsbeale.github.io/FishDiveR/reference/regularise_archive.md)).
 Returned unchanged if `interval_s` equals the current sampling interval.
 
 ## Details

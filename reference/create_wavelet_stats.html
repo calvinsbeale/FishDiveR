@@ -53,7 +53,9 @@ time periods</p>
 <span>  <span class="va">tag_ID</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  output_folder <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  mask_ends <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  min_coverage <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -84,6 +86,18 @@ Defaults to FALSE.</p></dd>
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Logical. If TRUE, progress messages are shown. Defaults to FALSE.</p></dd>
 
+
+<dt id="arg-mask-ends">mask_ends<a class="anchor" aria-label="anchor" href="#arg-mask-ends"></a></dt>
+<dd><p>Logical. If TRUE, also leave out the wavelet power near the
+start and end of the record, as near a long gap. Defaults to FALSE.</p></dd>
+
+
+<dt id="arg-min-coverage">min_coverage<a class="anchor" aria-label="anchor" href="#arg-min-coverage"></a></dt>
+<dd><p>The percentage of a day's records, and of its wavelet
+power at every period, that must be valid for the day to be analysed.
+NULL (the default) uses the archive's setting from <code><a href="regularise_archive.html">regularise_archive()</a></code>,
+or 70.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -96,6 +110,22 @@ period. One observation is available per period per day:</p><ul><li><p>Amplitude
 <li><p>Phase_mean</p></li>
 <li><p>Phase_variance</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Each day is the wavelet's records on that local date. Days with
+less than <code>min_coverage</code> percent real records (see
+<code><a href="regularise_archive.html">regularise_archive()</a></code>) are left out.</p>
+<p>Wavelet power near a gap too long to fill, where the wavelet ran over
+filled values, is not valid. For each period, the power within the
+e-folding time of its scale (the square root of 2 times the scale, about
+1.35 times the period) either side of the gap is left out of the day's
+statistics (Torrence &amp; Compo 1998). With <code>mask_ends = TRUE</code>, the
+power this close to the start and end of the record is left out too. A
+day is left out if less than <code>min_coverage</code> percent of its power is
+valid at any period, e.g. within about 1.4 days of a gap for a 24 hour
+upper period.</p>
+<p>The days left out, and why, are in the attribute 'dropped_days'.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -115,7 +145,7 @@ period. One observation is available per period per day:</p><ul><li><p>Amplitude
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Running create_wavelet_stats() on tag ID data</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Output file: /tmp/RtmpnmzaAr/data/3_Stats/data_waveStats.csv </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Output file: /tmp/RtmpMLXK2Y/data/3_Stats/data_waveStats.csv </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

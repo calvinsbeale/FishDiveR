@@ -45,9 +45,20 @@ mod_stats_ui <- function(id) {
           bslib::layout_column_wrap(
             width = "160px",
             fill = FALSE,
-            shiny::textInput(ns("sunrise_time"), "Fixed sunrise (local)", value = "06:00:00", placeholder = "hh:mm:ss"),
-            shiny::textInput(ns("sunset_time"), "Fixed sunset (local)", value = "18:00:00", placeholder = "hh:mm:ss")
+            masked_input(ns("sunrise_time"), "Fixed sunrise (local)", pattern = "hh:mm:ss", value = "06:00:00"),
+            masked_input(ns("sunset_time"), "Fixed sunset (local)", pattern = "hh:mm:ss", value = "18:00:00")
           )
+        )
+      ),
+      shiny::checkboxInput(
+        ns("mask_ends"),
+        shiny::tagList(
+          "Leave out wavelet power near the start and end of each tag ",
+          help_tip(paste(
+            "Wavelet power near the ends of a record is too low, as near a gap. This leaves it out as for gaps:",
+            "within about 1.35 times each period of the ends, so about 1.4 days at each end for a 24 hour upper period.",
+            "Days with less than the import's minimum coverage of valid power are left out."
+          ))
         )
       ),
       DT::DTOutput(ns("tag_table"), fill = FALSE),
@@ -168,10 +179,12 @@ mod_stats_server <- function(id, state) {
           ", so only depth statistics can be made. Run the wavelet in step 3 first."
         ))
       }
-      mismatch <- info$tag_ID[!is.na(info$wave_days) & !is.na(info$depth_days) & info$wave_days != info$depth_days]
+      # The wavelet statistics can leave out days near gaps that the depth
+      # statistics keep, but not the other way round
+      mismatch <- info$tag_ID[!is.na(info$wave_days) & !is.na(info$depth_days) & info$wave_days > info$depth_days]
       if (length(mismatch) > 0) {
         msgs <- c(msgs, paste0(
-          "Wavelet and depth statistics cover different numbers of days for ", paste(mismatch, collapse = ", "),
+          "The wavelet statistics cover more days than the depth statistics for ", paste(mismatch, collapse = ", "),
           ". They are matched day by day for clustering, so run both again."
         ))
       }
@@ -205,7 +218,10 @@ mod_stats_server <- function(id, state) {
           wave_res <- if (row$wavelet) {
             run_logged({
               wavelet <- readRDS(file.path(state$project, tag, "1_Wavelets", paste0(tag, "_wavelet.rds")))
-              create_wavelet_stats(wavelet, tag_ID = tag, output = TRUE, output_folder = state$project, verbose = TRUE)
+              create_wavelet_stats(
+                wavelet, tag_ID = tag, output = TRUE, output_folder = state$project, verbose = TRUE,
+                mask_ends = isTRUE(input$mask_ends)
+              )
               invisible(NULL)
             })
           } else {

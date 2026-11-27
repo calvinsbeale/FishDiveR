@@ -18,8 +18,9 @@ multiple of the current sampling interval and divide a day evenly, e.g. 5,
 }
 \value{
 The thinned archive, with the same columns and 'time_zone'
-attribute. Returned unchanged if \code{interval_s} equals the current
-sampling interval.
+attribute. A block is marked 'filled' or 'long_gap' if any of its records
+are (see \code{\link[=regularise_archive]{regularise_archive()}}). Returned unchanged if \code{interval_s}
+equals the current sampling interval.
 }
 \description{
 \code{thin_archive} averages a processed depth record into blocks of

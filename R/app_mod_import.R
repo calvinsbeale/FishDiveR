@@ -14,7 +14,37 @@ mod_import_ui <- function(id) {
     col_widths = bslib::breakpoints(sm = 12, xl = c(4, 8)),
     bslib::card(
       bslib::card_header("Import tag archives"),
-      shiny::p("Crops each archive to full local days between deployment and release, and saves it to the tag's folder."),
+      shiny::p(
+        "Crops each archive to full local days between deployment and release, puts it on a regular time grid, and",
+        "saves it to the tag's folder."
+      ),
+      bslib::layout_column_wrap(
+        width = "180px",
+        fill = FALSE,
+        shiny::numericInput(
+          ns("max_fill"),
+          shiny::tagList(
+            "Fill gaps up to (min) ",
+            help_tip(paste(
+              "Gaps up to this long, from one record to the next, are filled by straight-line interpolation and analysed,",
+              "with a warning. Longer gaps are left out of the statistics, as is the wavelet power near them",
+              "(about 1.35 times each period either side). At most 360 minutes (6 hours)."
+            ))
+          ),
+          value = 5, min = 0, max = 360, step = 1
+        ),
+        shiny::numericInput(
+          ns("min_coverage"),
+          shiny::tagList(
+            "Keep days with at least (%) ",
+            help_tip(paste(
+              "Days with less than this percentage of real (not filled) records are left out of the statistics.",
+              "A day with a 6 hour gap has 75%."
+            ))
+          ),
+          value = 70, min = 0, max = 100, step = 5
+        )
+      ),
       shiny::uiOutput(ns("outdated_note")),
       DT::DTOutput(ns("tag_table"), fill = FALSE),
       shiny::div(
@@ -127,10 +157,30 @@ mod_import_server <- function(id, state) {
     import_log <- shiny::reactiveVal(character())
     remove_tags <- remove_tags_server(input, session, state)
 
+    # Gap settings, if valid (the import_tag_data() defaults until set)
+    gap_settings <- shiny::reactive({
+      max_fill <- if (is.null(input$max_fill)) 5 else input$max_fill
+      min_coverage <- if (is.null(input$min_coverage)) 70 else input$min_coverage
+      list(
+        max_fill = if (is.numeric(max_fill) && !is.na(max_fill) && max_fill >= 0 && max_fill <= 360) max_fill else NA,
+        min_coverage = if (is.numeric(min_coverage) && !is.na(min_coverage) && min_coverage >= 0 && min_coverage <= 100) min_coverage else NA
+      )
+    })
+
     status <- shiny::reactive({
       state$refresh
       shiny::req(state$project)
-      tag_status(state$tags, state$project)
+      status <- tag_status(state$tags, state$project)
+      # Also outdated if imported with other gap settings
+      gaps <- gap_settings()
+      if (!is.na(gaps$max_fill) && !is.na(gaps$min_coverage)) {
+        gap_changed <- vapply(status$tag_ID, function(tag) {
+          paste(changed_gap_settings(tag, state$project, gaps$max_fill, gaps$min_coverage), collapse = ", ")
+        }, character(1))
+        both <- nzchar(status$Settings_changed) & nzchar(gap_changed)
+        status$Settings_changed <- paste0(status$Settings_changed, ifelse(both, ", ", ""), gap_changed)
+      }
+      status
     })
 
     output$tag_table <- DT::renderDT({
@@ -141,6 +191,9 @@ mod_import_server <- function(id, state) {
         Imported = ifelse(status()$Imported, ifelse(nzchar(status()$Settings_changed), "Outdated", "Yes"), ""),
         Sampling = vapply(seq_len(nrow(status())), function(i) {
           if (status()$Imported[i]) sampling_status(tag_sampling(status()$tag_ID[i])) else ""
+        }, character(1)),
+        `Days kept` = vapply(seq_len(nrow(status())), function(i) {
+          if (status()$Imported[i]) days_kept_text(tag_summary(status()$tag_ID[i])) else ""
         }, character(1)),
         check.names = FALSE
       )
@@ -160,8 +213,9 @@ mod_import_server <- function(id, state) {
       )
     })
 
-    # Sampling report of an imported tag (cached with the archive summary)
-    tag_sampling <- function(tag) archive_summary(file.path(state$project, tag, "archive_days.rds"))$sampling
+    # Summary and sampling report of an imported tag (cached)
+    tag_summary <- function(tag) archive_summary(file.path(state$project, tag, "archive_days.rds"))
+    tag_sampling <- function(tag) tag_summary(tag)$sampling
 
     output$sampling_details <- shiny::renderUI({
       rows <- input$tag_table_rows_selected
@@ -170,10 +224,16 @@ mod_import_server <- function(id, state) {
       shiny::tagList(
         shiny::h6(
           paste("Sampling check:", tag),
-          help_tip("Checks the imported record for a constant sampling interval. See ?sampling_report for what each item means."),
+          help_tip(paste(
+            "Checks the archive's records for a constant sampling interval, before they were put on a regular grid,",
+            "then says how gaps were filled and which days are kept. See ?sampling_report and ?regularise_archive."
+          )),
           class = "mt-3"
         ),
-        shiny::tags$pre(paste(utils::capture.output(print(tag_sampling(tag), max_rows = 20)), collapse = "\n"))
+        shiny::tags$pre(paste(c(
+          utils::capture.output(print(tag_sampling(tag), max_rows = 20)), "",
+          gap_summary_lines(tag_summary(tag))
+        ), collapse = "\n"))
       )
     })
 
@@ -191,6 +251,14 @@ mod_import_server <- function(id, state) {
     }
 
     import_tags <- function(tags) {
+      gaps <- gap_settings()
+      if (is.na(gaps$max_fill) || is.na(gaps$min_coverage)) {
+        shiny::showNotification(
+          "Fill gaps up to 0 to 360 minutes, and keep days with 0 to 100% of their records.",
+          type = "error", duration = 10
+        )
+        return()
+      }
       log <- character()
       shiny::withProgress(message = "Importing", value = 0, {
         for (i in seq_len(nrow(tags))) {
@@ -212,6 +280,8 @@ mod_import_server <- function(id, state) {
             depth_col = tag$depth_col,
             temp_col = tag$temp_col,
             time_zone = tag$time_zone,
+            max_fill_mins = gaps$max_fill,
+            min_coverage = gaps$min_coverage,
             output = TRUE,
             output_folder = state$project,
             verbose = TRUE

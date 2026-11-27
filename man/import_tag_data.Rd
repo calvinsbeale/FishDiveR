@@ -13,6 +13,9 @@ import_tag_data(
   depth_col = 2,
   temp_col = NA,
   time_zone,
+  date_format = NULL,
+  max_fill_mins = 5,
+  min_coverage = 70,
   output = FALSE,
   output_folder = NULL,
   verbose = FALSE
@@ -31,13 +34,29 @@ E.g. "2013-10-25 02:46:00"}
 \item{archive}{File path of the time-series depth archive. E.g. ("C:/Tag
 data/123456/123456-Archive.csv")}
 
-\item{date_time_col}{Column number of the date time series}
+\item{date_time_col}{Column number of the date time series. Date-times are
+in UTC, and their format is detected (see \code{date_format}).}
 
 \item{depth_col}{Column number of the depth series}
 
 \item{temp_col}{(Optional) Column number of temperature series}
 
 \item{time_zone}{Time zone of the data. E.g. "Asia/Tokyo"}
+
+\item{date_format}{NULL (the default) to detect the format of the
+date-times, or a \code{\link[=strptime]{strptime()}} format, e.g. "\%d/\%m/\%Y \%H:\%M:\%S". Detected
+formats are dates as year-month-day, day/month/year, month/day/year or day
+month-name year (e.g. 2024-03-05, 05/03/2024 or 05-Mar-2024), with times
+as hh:mm:ss or hh:mm, before or after the date, e.g. "00:01:00
+01-Jan-2000" (Wildlife Computers) or "2000-01-01T00:01:00Z". Where no
+day is above 12, the order of day and month is taken from the spacing of
+the records.}
+
+\item{max_fill_mins}{The longest gap, in minutes, to fill by interpolation
+for analysis (default 5, at most 360). See \code{\link[=regularise_archive]{regularise_archive()}}.}
+
+\item{min_coverage}{The percentage of a day's records that must be real (not
+filled) for the day to be analysed (default 70).}
 
 \item{output}{Logical. If TRUE, output is saved to \code{output_folder}.
 Defaults to FALSE.}
@@ -54,7 +73,11 @@ A data frame of processed tag data. Columns kept are:
 \item 'depth' numerical depth data
 \item 'temp' numerical temperature data
 \item 'date_only' an as.Date version of the 'date' column
+\item 'filled' and 'long_gap', marking records filled by interpolation, and
+those in gaps too long to analyse
 \item An attribute 'time_zone' is added to the date frame containing the time zone of the 'date'
+\item The attributes of \code{\link[=regularise_archive]{regularise_archive()}}, including each day's coverage
+and the gaps found
 }
 }
 \description{
@@ -70,10 +93,13 @@ with the settings used (archive, deployment and release times, columns and
 time zone) in \code{import_settings.rds}. The app uses these to warn when a
 tag's settings have changed since it was imported.
 
-A warning is given if the sampling interval is not constant throughout the
-cropped data (e.g. gaps from missing records), listing the intervals detected
-and how many records have each. Use \code{\link[=sampling_report]{sampling_report()}} on the imported
-data to see where the irregularities are.
+The cropped data are then put on a regular time grid by
+\code{\link[=regularise_archive]{regularise_archive()}}, as the wavelet analysis needs. Gaps of up to
+\code{max_fill_mins} are filled by interpolation, with a warning. Longer
+gaps are filled only so that the wavelet can run, and are left out of the
+statistics. Days with less than \code{min_coverage} percent of their records
+are left out of the statistics. The sampling check of the records before
+they were put on the grid is kept as \code{attr(archive, "sampling_report")}.
 }
 \examples{
 # Set file path

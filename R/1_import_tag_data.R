@@ -12,10 +12,13 @@
 #' time zone) in \code{import_settings.rds}. The app uses these to warn when a
 #' tag's settings have changed since it was imported.
 #'
-#' A warning is given if the sampling interval is not constant throughout the
-#' cropped data (e.g. gaps from missing records), listing the intervals detected
-#' and how many records have each. Use [sampling_report()] on the imported
-#' data to see where the irregularities are.
+#' The cropped data are then put on a regular time grid by
+#' [regularise_archive()], as the wavelet analysis needs. Gaps of up to
+#' \code{max_fill_mins} are filled by interpolation, with a warning. Longer
+#' gaps are filled only so that the wavelet can run, and are left out of the
+#' statistics. Days with less than \code{min_coverage} percent of their records
+#' are left out of the statistics. The sampling check of the records before
+#' they were put on the grid is kept as \code{attr(archive, "sampling_report")}.
 #'
 #' @name import_tag_data
 #'
@@ -31,10 +34,23 @@
 #'   "2014-04-23 23:17:35"
 #' @param archive File path of the time-series depth archive. E.g. ("C:/Tag
 #'   data/123456/123456-Archive.csv")
-#' @param date_time_col Column number of the date time series
+#' @param date_time_col Column number of the date time series. Date-times are
+#'   in UTC, and their format is detected (see \code{date_format}).
+#' @param date_format NULL (the default) to detect the format of the
+#'   date-times, or a [strptime()] format, e.g. "%d/%m/%Y %H:%M:%S". Detected
+#'   formats are dates as year-month-day, day/month/year, month/day/year or day
+#'   month-name year (e.g. 2024-03-05, 05/03/2024 or 05-Mar-2024), with times
+#'   as hh:mm:ss or hh:mm, before or after the date, e.g. "00:01:00
+#'   01-Jan-2000" (Wildlife Computers) or "2000-01-01T00:01:00Z". Where no
+#'   day is above 12, the order of day and month is taken from the spacing of
+#'   the records.
 #' @param depth_col Column number of the depth series
 #' @param temp_col (Optional) Column number of temperature series
 #' @param time_zone Time zone of the data. E.g. "Asia/Tokyo"
+#' @param max_fill_mins The longest gap, in minutes, to fill by interpolation
+#'   for analysis (default 5, at most 360). See [regularise_archive()].
+#' @param min_coverage The percentage of a day's records that must be real (not
+#'   filled) for the day to be analysed (default 70).
 #' @param output Logical. If TRUE, output is saved to \code{output_folder}.
 #'   Defaults to FALSE.
 #' @param output_folder Output folder path. If \code{output = TRUE},
@@ -46,7 +62,11 @@
 #'   * 'depth' numerical depth data
 #'   * 'temp' numerical temperature data
 #'   * 'date_only' an as.Date version of the 'date' column
+#'   * 'filled' and 'long_gap', marking records filled by interpolation, and
+#'     those in gaps too long to analyse
 #'   * An attribute 'time_zone' is added to the date frame containing the time zone of the 'date'
+#'   * The attributes of [regularise_archive()], including each day's coverage
+#'     and the gaps found
 #'
 #' @export
 #'
@@ -78,6 +98,9 @@ import_tag_data <- function(tag_ID,
                             depth_col = 2,
                             temp_col = NA,
                             time_zone,
+                            date_format = NULL,
+                            max_fill_mins = 5,
+                            min_coverage = 70,
                             output = FALSE,
                             output_folder = NULL,
                             verbose = FALSE) {
@@ -107,13 +130,17 @@ import_tag_data <- function(tag_ID,
   if (!time_zone %in% OlsonNames()) {
     stop("time_zone must be an accepted R time zone.")
   }
-
-  # Read the data using fread
-  if (is.na(temp_col)) {
-    tag_archive <- data.table::fread(archive, select = c(date_time_col, depth_col), col.names = c("date", "depth"))
-  } else {
-    tag_archive <- data.table::fread(archive, select = c(date_time_col, depth_col, temp_col), col.names = c("date", "depth", "temp"))
+  if (!is.null(date_format) && (!is.character(date_format) || length(date_format) != 1 || !grepl("%", date_format))) {
+    stop("date_format must be NULL, to detect it, or a strptime() format such as '%d/%m/%Y %H:%M:%S'.")
   }
+
+  # Read the data using fread, with the date-times as text to read below
+  cols <- if (is.na(temp_col)) c(date_time_col, depth_col) else c(date_time_col, depth_col, temp_col)
+  tag_archive <- data.table::fread(
+    archive,
+    select = cols, col.names = c("date", "depth", if (!is.na(temp_col)) "temp"),
+    colClasses = list(character = date_time_col)
+  )
 
   # Check that the number of rows is at least 1
   if (nrow(tag_archive) < 1) {
@@ -131,8 +158,34 @@ import_tag_data <- function(tag_ID,
     stop("Error: The tag archive has no rows after removing NA values in the Depth column.")
   }
 
-  # Set date as a POSIXct object
-  tag_archive$date <- as.POSIXct(tag_archive$date, format = "%H:%M:%S %d-%b-%Y", tz = "UTC")
+  # Read the date-times (UTC), detecting their format unless given
+  if (is.null(date_format)) {
+    detected <- detect_date_format(tag_archive$date, what = paste0("date-time column (", date_time_col, ")"))
+    date_format <- detected$format
+    if (verbose) message("Date-times read as ", describe_date_format(detected))
+    if (detected$ambiguous) {
+      warning(
+        "No day in the date-times is above 12, and the spacing of the records doesn't show which is the day: they ",
+        "were read as ", detected$label, ". Give date_format if they are month/day.",
+        call. = FALSE
+      )
+    }
+  }
+  dates <- parse_date_times(tag_archive$date, date_format)
+  unread <- is.na(dates)
+  if (all(unread)) {
+    stop("Could not read any date-times in column ", date_time_col, " with the format '", date_format, "'.")
+  }
+  if (any(unread)) {
+    warning(
+      format(sum(unread), big.mark = ","), " date-time", if (sum(unread) > 1) "s", " could not be read and ",
+      if (sum(unread) > 1) "were" else "was", " left out, e.g. '", tag_archive$date[which(unread)[1]], "'.",
+      call. = FALSE
+    )
+    tag_archive <- tag_archive[!unread, ]
+    dates <- dates[!unread]
+  }
+  tag_archive$date <- dates
 
   # Find the range of dates in tag_archive
   min_date <- min(tag_archive$date, na.rm = TRUE)
@@ -248,21 +301,11 @@ import_tag_data <- function(tag_ID,
   # Set time zone attribute
   attr(tag_archive, "time_zone") <- time_zone
 
-  # Check the sampling frequency is constant throughout the dataset
-  # Differences in seconds between consecutive timestamps
-  diffs <- as.numeric(diff(tag_archive$date), units = "secs")
-
-  # Remove non-finite values (defensive)
-  diffs <- diffs[is.finite(diffs)]
-
-  if (length(unique(diffs)) > 1L) {
-    interval_counts <- table(diffs)
-    msg <- paste0(names(interval_counts), "s: ", as.integer(interval_counts), " records", collapse = "; ")
-    warning("Sampling frequency is not constant. Intervals detected: ", msg,
-      ". Run sampling_report() on the imported archive for details.",
-      call. = FALSE
-    )
-  }
+  # Put the records on a regular time grid, filling short gaps
+  tag_archive <- regularise_archive(
+    tag_archive,
+    max_fill_mins = max_fill_mins, min_coverage = min_coverage, verbose = verbose
+  )
 
   if (isTRUE(output)) {
     if (is.null(output_folder)) {
@@ -282,7 +325,9 @@ import_tag_data <- function(tag_ID,
       date_time_col = date_time_col,
       depth_col = depth_col,
       temp_col = temp_col,
-      time_zone = time_zone
+      time_zone = time_zone,
+      max_fill_mins = max_fill_mins,
+      min_coverage = min_coverage
     ), file = file.path(output_folder, tag_ID, "import_settings.rds"))
 
     if (verbose) message(paste0("Output file: ", output_folder, "/", tag_ID, "/archive_days.rds"))
@@ -486,8 +531,13 @@ plot_TDR <- function(rds_file,
   # Select plot data
   plot_data <- as.data.frame(archive_days)[, c("date", "depth", if (colour_temp) "temp")]
 
+  # Break the line at gaps too long to fill (see regularise_archive())
+  if ("long_gap" %in% names(archive_days)) {
+    plot_data$depth[as.logical(archive_days$long_gap)] <- NA
+  }
+
   TDR_plot <- ggplot(plot_data, aes(x = date, y = depth)) +
-    (if (colour_temp) geom_path(aes(colour = temp)) else geom_path()) +
+    (if (colour_temp) geom_path(aes(colour = temp), na.rm = TRUE) else geom_path(na.rm = TRUE)) +
     scale_y_reverse(limits = c(Y_lim[2], Y_lim[1]), breaks = seq(Y_lim[1], Y_lim[2], Y_lim[3]), expand = c(0, 0)) +
     scale_x_datetime(date_breaks = date_breaks, date_labels = "%Y-%m-%d", expand = c(0, 0, 0, 0), position = "top") +
     labs(

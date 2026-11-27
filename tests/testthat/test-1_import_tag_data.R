@@ -21,10 +21,13 @@ test_that("process_tag_data() imports a tag archive", {
 
   # Check the dimensions of the dataframe
   expect_true(nrow(archive_days) >= 1) # one or more observations
-  expect_length(names(archive_days), 3) # three columns
+  expect_length(names(archive_days), 5) # five columns
 
   # Check the names of the columns
-  expect_equal(names(archive_days), c("date", "depth", "date_only"))
+  expect_equal(names(archive_days), c("date", "depth", "date_only", "filled", "long_gap"))
+  # A regular record has no gaps
+  expect_false(any(archive_days$filled))
+  expect_true(all(attr(archive_days, "day_coverage")$kept))
 
   # Check that archive_days.Rds file is created in the save directory
   expected_filepath <- file.path(tempdir(), "data/archive_days.rds")
@@ -94,7 +97,7 @@ test_that("plot_TDR() minmax_bins keeps the shallowest and deepest records", {
   expect_error(plot_TDR("data/archive_days.rds", data_folder = filepath, minmax_bins = -1), "minmax_bins")
 })
 
-test_that("import_tag_data() warns on irregular sampling intervals", {
+test_that("import_tag_data() puts irregular records on a regular grid, with warnings", {
   archive_file <- system.file("extdata", "data/data-Archive.csv", package = "FishDiveR")
 
   import_args <- list(
@@ -114,11 +117,29 @@ test_that("import_tag_data() warns on irregular sampling intervals", {
   archive <- utils::read.csv(archive_file)
   utils::write.csv(archive[-(5000:5004), ], irregular_file, row.names = FALSE)
 
+  # The 6 minute gap is longer than the 5 minute fill limit
   import_args$archive <- irregular_file
   expect_warning(
-    do.call(import_tag_data, import_args),
-    "Sampling frequency is not constant. Intervals detected: 60s: .* records; 360s: 1 records"
+    archive <- do.call(import_tag_data, import_args),
+    "1 gap longer than 5 min \\(the longest 6 min\\) was not filled for analysis"
   )
+  expect_true(all(diff(as.numeric(archive$date)) == 60))
+  expect_equal(sum(archive$long_gap), 5)
+  expect_false(attr(archive, "sampling_report")$regular)
+
+  # Filled with a longer limit
+  import_args$max_fill_mins <- 10
+  expect_warning(archive <- do.call(import_tag_data, import_args), "Filled 1 gap of up to 6 min")
+  expect_false(any(archive$long_gap))
+  expect_equal(sum(archive$filled), 5)
+
+  # The gap settings are saved with the import
+  import_args$output <- TRUE
+  import_args$output_folder <- file.path(tempdir(), "gap_settings")
+  suppressWarnings(do.call(import_tag_data, import_args))
+  settings <- readRDS(file.path(tempdir(), "gap_settings", "data", "import_settings.rds"))
+  expect_equal(settings$max_fill_mins, 10)
+  expect_equal(settings$min_coverage, 70)
 })
 
 test_that("import_tag_data() reports temperatures when imported", {

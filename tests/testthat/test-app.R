@@ -48,6 +48,39 @@ test_that("validate_tag() reports problems", {
   expect_true(any(grepl("depth column", problems)))
 })
 
+test_that("masked_input() makes a text box with its pattern, calendar and scripts", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("htmltools")
+
+  box <- masked_input("deploy", "Deploy time (UTC)", value = "2024-03-05 08:30:00")
+  html <- as.character(box)
+  expect_match(html, 'id="deploy"', fixed = TRUE)
+  expect_match(html, 'type="text"', fixed = TRUE)
+  expect_match(html, 'data-pattern="yyyy-mm-dd hh:mm:ss"', fixed = TRUE)
+  expect_match(html, 'maxlength="19"', fixed = TRUE)
+  expect_match(html, 'value="2024-03-05 08:30:00"', fixed = TRUE)
+  expect_match(html, 'data-fd-input="deploy"', fixed = TRUE)
+  expect_match(html, "fd-calendar-anchor", fixed = TRUE)
+  expect_match(html, "fd-calendar\"", fixed = TRUE)
+  expect_match(html, "fd-clock-button", fixed = TRUE)
+  # Tabbing goes from box to box, skipping the picker buttons
+  expect_equal(lengths(regmatches(html, gregexpr('tabindex="-1"', html))), 3)
+
+  deps <- vapply(htmltools::findDependencies(box), function(d) d$name, character(1))
+  expect_true("fd-masked-input" %in% deps)
+  expect_true("bootstrap-datepicker-js" %in% deps)
+  script <- htmltools::findDependencies(box)[[which(deps == "fd-masked-input")]]
+  expect_true(file.exists(file.path(script$src$file, script$script)))
+
+  # A time has a clock, but no calendar
+  html <- as.character(masked_input("sunrise", "Sunrise", pattern = "hh:mm:ss", value = "06:00:00"))
+  expect_match(html, 'data-pattern="hh:mm:ss"', fixed = TRUE)
+  expect_match(html, 'maxlength="8"', fixed = TRUE)
+  expect_match(html, "fd-clock-button", fixed = TRUE)
+  expect_no_match(html, "fd-calendar")
+  expect_error(masked_input("x", "x", pattern = "dd/mm/yyyy"))
+})
+
 test_that("run_logged() collects messages, warnings and errors", {
   res <- run_logged({
     message("hello")
@@ -298,6 +331,9 @@ test_that("wavelet size estimates match WaveletComp output", {
 })
 
 test_that("app runs wavelets for imported tags", {
+  # Runs whole wavelets: too slow for CRAN's check time, which the tests of
+  # create_wavelet() cover
+  skip_on_cran()
   skip_if_not_installed("shiny")
   skip_if_not_installed("DT")
 
@@ -361,6 +397,9 @@ test_that("suggest_thin_interval() keeps enough records per cycle", {
 })
 
 test_that("app thins records before the wavelet", {
+  # Runs a whole wavelet: too slow for CRAN's check time, which the tests of
+  # thin_archive() cover
+  skip_on_cran()
   skip_if_not_installed("shiny")
   skip_if_not_installed("DT")
 
@@ -413,6 +452,9 @@ test_that("suggest_n_pcs() keeps eigenvalues of 1 or more and at least 70% varia
 })
 
 test_that("app makes daily statistics and runs PCA across tags", {
+  # Runs the whole workflow for two tags: too slow for CRAN's check time,
+  # which the tests of each step's function cover
+  skip_on_cran()
   skip_if_not_installed("shiny")
   skip_if_not_installed("DT")
 
@@ -534,4 +576,37 @@ test_that("diel statistics need a GPS file for every tag in GPS mode", {
     expect_equal(diel_source(tag_info()), "Fixed times")
     expect_length(diel_problems(tag_info()), 0)
   })
+})
+
+test_that("the app summarises gaps and marks imports with other gap settings", {
+  project <- file.path(tempdir(), "app_project_gaps")
+  unlink(project, recursive = TRUE)
+  dir.create(project)
+  tag <- example_tag()
+  gappy_file <- file.path(project, "gappy-Archive.csv")
+  archive <- utils::read.csv(tag$archive)
+  utils::write.csv(archive[-c(100:102, 5000:5300), ], gappy_file, row.names = FALSE)
+  suppressWarnings(import_tag_data(
+    tag_ID = "gappy", tag_deploy_UTC = tag$tag_deploy_UTC, tag_release_UTC = tag$tag_release_UTC,
+    archive = gappy_file, time_zone = tag$time_zone, min_coverage = 85, output = TRUE, output_folder = project
+  ))
+
+  summary <- archive_summary(file.path(project, "gappy", "archive_days.rds"))
+  expect_equal(days_kept_text(summary), "9 of 10")
+  # The sampling check is of the original records
+  expect_false(summary$sampling$regular)
+  lines <- gap_summary_lines(summary)
+  expect_match(lines, "Filled by interpolation (up to 5 min): 1 gap, 3 records", all = FALSE, fixed = TRUE)
+  expect_match(lines, "Longer gaps, left out of the analysis: 1 (the longest 5.03 h)", all = FALSE, fixed = TRUE)
+  expect_match(lines, "Days kept: 9 of 10 (at least 85% real records)", all = FALSE, fixed = TRUE)
+  expect_match(lines, "2000-01-04: 79.1% of records", all = FALSE)
+
+  expect_length(changed_gap_settings("gappy", project, 5, 85), 0)
+  expect_equal(changed_gap_settings("gappy", project, 10, 70), c("gap fill limit", "day coverage"))
+  # Imported before gaps were filled
+  settings <- readRDS(file.path(project, "gappy", "import_settings.rds"))
+  settings$max_fill_mins <- NULL
+  saveRDS(settings, file.path(project, "gappy", "import_settings.rds"))
+  expect_equal(changed_gap_settings("gappy", project, 5, 70), "gap filling")
+  expect_length(changed_gap_settings("not_imported", project, 5, 70), 0)
 })

@@ -321,6 +321,10 @@ create_wavelet <- function(archive,
     # Create new wavelet
     my.w <- perform_wavelet_analysis()
 
+    # Keep the long gaps and day coverage from regularise_archive(), so
+    # create_wavelet_stats() can leave out the power near the gaps
+    my.w <- add_gap_attrs(my.w, archive)
+
     # Add LP, UP and SO attributes to the wavelet
     attr(my.w, "LP") <- lower_period_mins
     attr(my.w, "UP") <- upper_period_days

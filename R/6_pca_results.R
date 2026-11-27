@@ -431,6 +431,9 @@ pca_results <- function(pc_data,
     attr(pc_results, "unique_tag_ID") <- unique_tag_ID
   }
 
+  # The tag and day of each row, so the depth statistics can be matched to it
+  attr(pc_results, "days") <- data.frame(tag_ID = as.character(pc_data$tag_ID), date_only = as.Date(pc_data$date_only))
+
   if (output) {
     # Save the 'pc_results' object with selected number of principal components
     saveRDS(pc_results, file = file.path(save_folder, "pc_results.rds"))
@@ -794,6 +797,9 @@ pca_scores <- function(pc_results = results,
   # Add an attribute for the number of PC's kept
   attr(pc_scores, "No.Components") <- Max.C
 
+  # The tag and day of each row
+  attr(pc_scores, "days") <- attr(pc_results, "days")
+
   if (output) {
     # Save the 'pc_scores' object to output_folder
     saveRDS(pc_scores, file = file.path(save_folder, "pc_scores.rds"))
@@ -924,6 +930,28 @@ combine_data <- function(
 
   # Set date_only as a date
   depth_data$date_only <- as.Date(depth_data$date_only)
+
+  # Match the depth statistics to the tags and days of the PCA scores. The
+  # wavelet statistics can leave out days near gaps that the depth statistics
+  # keep (see create_wavelet_stats()).
+  days <- attr(pc_scores, "days")
+  if (!is.null(days)) {
+    rows <- match(paste(days$tag_ID, days$date_only), paste(depth_data$tag_ID, depth_data$date_only))
+    if (anyNA(rows)) {
+      missing <- days[is.na(rows), , drop = FALSE]
+      stop(
+        "Depth statistics are missing for ", nrow(missing), " day(s) of the wavelet statistics, e.g. tag ",
+        missing$tag_ID[1], " on ", missing$date_only[1], ". Run create_depth_stats() again for these tags."
+      )
+    }
+    depth_data <- depth_data[rows, , drop = FALSE]
+    rownames(depth_data) <- NULL
+  } else if (nrow(depth_data) != nrow(pc_scores)) {
+    stop(
+      "The depth statistics have ", nrow(depth_data), " days but the PCA scores have ", nrow(pc_scores),
+      ". Run create_depth_stats() and create_wavelet_stats() again."
+    )
+  }
 
   # Combine the depth statistics with pc_scores
   combined_data <- cbind(depth_data, pc_scores)

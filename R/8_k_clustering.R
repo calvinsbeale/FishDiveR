@@ -34,8 +34,9 @@
 #'   prior to calling this function using \code{set.seed()}.
 #'
 #' @returns An object of class 'kmeans' containing the k-means clustering data
-#'   for the data frame. Additionally plots a 3D cluster plot of the top three
-#'   Principal Components.
+#'   for the data frame, with each day's distance from its cluster centre
+#'   ('distances'), tag ('tag_ID') and date ('date_only'). Additionally plots a
+#'   3D cluster plot of the top three Principal Components.
 #'
 #' @export
 #'
@@ -142,6 +143,11 @@ k_clustering <- function(kmeans_data,
 
   # Assign tag_ID column
   kmeans_result$tag_ID <- tag_IDs
+
+  # Keep each day's date, so the plots can find each day's cluster by date
+  if ("date_only" %in% names(kmeans_data)) {
+    kmeans_result$date_only <- as.Date(kmeans_data$date_only)
+  }
 
   # Create table of results
   cluster_table <- as.data.frame(table(kmeans_result$cluster))

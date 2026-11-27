@@ -12,6 +12,28 @@
 #' @inheritParams import_tag_data
 #' @param wavelet An object of class "analyze.wavelet" from package
 #'   'WaveletComp'
+#' @param mask_ends Logical. If TRUE, also leave out the wavelet power near the
+#'   start and end of the record, as near a long gap. Defaults to FALSE.
+#' @param min_coverage The percentage of a day's records, and of its wavelet
+#'   power at every period, that must be valid for the day to be analysed.
+#'   NULL (the default) uses the archive's setting from [regularise_archive()],
+#'   or 70.
+#'
+#' @details Each day is the wavelet's records on that local date. Days with
+#'   less than \code{min_coverage} percent real records (see
+#'   [regularise_archive()]) are left out.
+#'
+#'   Wavelet power near a gap too long to fill, where the wavelet ran over
+#'   filled values, is not valid. For each period, the power within the
+#'   e-folding time of its scale (the square root of 2 times the scale, about
+#'   1.35 times the period) either side of the gap is left out of the day's
+#'   statistics (Torrence & Compo 1998). With \code{mask_ends = TRUE}, the
+#'   power this close to the start and end of the record is left out too. A
+#'   day is left out if less than \code{min_coverage} percent of its power is
+#'   valid at any period, e.g. within about 1.4 days of a gap for a 24 hour
+#'   upper period.
+#'
+#'   The days left out, and why, are in the attribute 'dropped_days'.
 #'
 #' @returns A data frame containing the seven wavelet statistics for each
 #'   period. One observation is available per period per day:
@@ -48,7 +70,9 @@ create_wavelet_stats <- function(wavelet,
                                  tag_ID,
                                  output = FALSE,
                                  output_folder = NULL,
-                                 verbose = FALSE) {
+                                 verbose = FALSE,
+                                 mask_ends = FALSE,
+                                 min_coverage = NULL) {
   if (verbose) message(paste0("Running create_wavelet_stats() on tag ID ", tag_ID))
   # Check if 'wavelet' is a list
   if (!is.list(wavelet)) {
@@ -73,58 +97,122 @@ create_wavelet_stats <- function(wavelet,
     stop("When output = TRUE, output_folder must be provided.")
   }
 
-  # Creating daily blocks
-  aggregate_period_hours <- 24
-
-  # Convert the aggregation period to seconds
-  aggregate_period_secs <- aggregate_period_hours * 3600
+  if (!is.logical(mask_ends) || length(mask_ends) != 1 || is.na(mask_ends)) {
+    stop("mask_ends must be TRUE or FALSE.")
+  }
+  # Days need this percentage of real records, and of valid wavelet power
+  if (is.null(min_coverage)) min_coverage <- attr(wavelet, "min_coverage")
+  if (is.null(min_coverage)) min_coverage <- 70
+  if (!is.numeric(min_coverage) || length(min_coverage) != 1 || min_coverage < 0 || min_coverage > 100) {
+    stop("min_coverage must be a percentage between 0 and 100.")
+  }
 
   # Define wavelet periods and reverse the order
   wavelet_periods <- seq(wavelet$nr, 1, -1) # All wavelet periods
-  start_date <- wavelet$series$date[1]
+  nc <- wavelet$nc
 
-  # Define the daily block size to calculate values
-  sampling_interval <- as.numeric(difftime(wavelet$series[2, 1], wavelet$series[1, 1], units = "secs"))
-  block_size <- (aggregate_period_secs / sampling_interval)
+  # Each column of the wavelet belongs to the local day of its time
+  dates <- wavelet$series$date
+  time_zone <- attr(wavelet, "time_zone")
+  if (is.null(time_zone)) time_zone <- attr(dates, "tzone")
+  if (is.null(time_zone) || !nzchar(time_zone)) time_zone <- "UTC"
+  sampling_interval <- as.numeric(difftime(dates[2], dates[1], units = "secs"))
+  first_midnight <- lubridate::floor_date(lubridate::with_tz(dates[1], time_zone), "day")
+  last_midnight <- lubridate::ceiling_date(lubridate::with_tz(dates[nc], time_zone), "day", change_on_boundary = TRUE)
+  # "DSTday" steps calendar days, which are 23 or 25 hours at clock changes
+  midnights <- seq(first_midnight, last_midnight, by = "DSTday")
+  day <- findInterval(as.numeric(dates), as.numeric(midnights))
+  n_days <- length(midnights) - 1
+  day_dates <- as.Date(format(midnights[seq_len(n_days)], "%Y-%m-%d", tz = time_zone))
+  day_first <- match(seq_len(n_days), day)
+  day_last <- nc + 1 - match(seq_len(n_days), rev(day))
+  expected <- diff(as.numeric(midnights)) / sampling_interval
 
-  # Calculate the number of blocks in each row. Should equal the number of days if aggregate_period_hours = 24
-  num_blocks <- wavelet$nc %/% block_size
+  # Days with too few real records: as found by regularise_archive(), or for
+  # other records, days with too few records in the wavelet
+  day_coverage <- attr(wavelet, "day_coverage")
+  if (!is.null(day_coverage)) {
+    coverage <- day_coverage$coverage[match(day_dates, day_coverage$date)]
+  } else {
+    coverage <- 100 * ifelse(is.na(day_first), 0, day_last - day_first + 1) / expected
+  }
+  coverage[is.na(coverage)] <- 0
+  dropped <- data.frame(date = day_dates, reason = ifelse(coverage < min_coverage, paste0("records ", round(coverage, 1), "%"), NA))
+
+  # Wavelet power near a long gap (or the record's start and end) is affected
+  # by the missing data. Leave out the power within the e-folding time of
+  # each scale, sqrt(2) * scale (Torrence & Compo 1998): about 1.35 times the
+  # period on each side.
+  reach <- ceiling(sqrt(2) * wavelet$Scale / wavelet$dt)
+  masks <- attr(wavelet, "long_gaps")
+  if (is.null(masks)) masks <- data.frame(first = integer(), last = integer())
+  if (mask_ends) masks <- rbind(masks, data.frame(first = c(-Inf, nc + 1), last = c(0, Inf)))
 
   # Initialize matrices to store aggregated data
-  aggAmpl_mean <- matrix(0, nrow = wavelet$nr, ncol = num_blocks)
-  aggPhase_mean <- matrix(0, nrow = wavelet$nr, ncol = num_blocks)
-  aggPhase_var <- matrix(0, nrow = wavelet$nr, ncol = num_blocks)
-  aggPower_mean <- matrix(0, nrow = wavelet$nr, ncol = num_blocks)
-  aggVar_ampl <- matrix(0, nrow = wavelet$nr, ncol = num_blocks)
-  aggVar_power <- matrix(0, nrow = wavelet$nr, ncol = num_blocks)
-  aggmean_sq_power <- matrix(0, nrow = wavelet$nr, ncol = num_blocks)
+  new_matrix <- function() matrix(NA_real_, nrow = wavelet$nr, ncol = n_days)
+  aggAmpl_mean <- new_matrix()
+  aggPhase_mean <- new_matrix()
+  aggPhase_var <- new_matrix()
+  aggPower_mean <- new_matrix()
+  aggVar_ampl <- new_matrix()
+  aggVar_power <- new_matrix()
+  aggmean_sq_power <- new_matrix()
 
-  # Calculate the aggregated data
-  for (i in seq(1, wavelet$nc, block_size)) {
-    tryCatch(
-      {
-        start_of_block <- i
-        end_of_block <- min(i + block_size - 1, wavelet$nc)
+  row_stats <- function(ampl, phase, power, d, rows) {
+    aggAmpl_mean[rows, d] <<- rowMeans(ampl)
+    aggPhase_mean[rows, d] <<- rowMeans(phase)
+    aggPhase_var[rows, d] <<- apply(phase, 1, var)
+    aggPower_mean[rows, d] <<- rowMeans(power)
+    aggVar_ampl[rows, d] <<- apply(ampl, 1, var)
+    aggVar_power[rows, d] <<- apply(power, 1, var)
+    aggmean_sq_power[rows, d] <<- rowMeans(power^2)
+  }
 
-        # Extract blocks for each variable
-        blockAmpl <- wavelet$Ampl[, start_of_block:end_of_block]
-        blockPhase <- wavelet$Phase[, start_of_block:end_of_block]
-        blockPower <- wavelet$Power[, start_of_block:end_of_block]
-        blockWaveCoeffs <- wavelet$Wave[, start_of_block:end_of_block]
+  # Calculate the aggregated data for each day
+  for (d in seq_len(n_days)) {
+    if (!is.na(dropped$reason[d])) next
+    cols <- day_first[d]:day_last[d]
+    blockAmpl <- wavelet$Ampl[, cols, drop = FALSE]
+    blockPhase <- wavelet$Phase[, cols, drop = FALSE]
+    blockPower <- wavelet$Power[, cols, drop = FALSE]
+    row_stats(blockAmpl, blockPhase, blockPower, d, seq_len(wavelet$nr))
 
-        # Calculate all metrics within a single loop iteration
-        aggAmpl_mean[, (i - 1) / block_size + 1] <- rowMeans(blockAmpl)
-        aggPhase_mean[, (i - 1) / block_size + 1] <- rowMeans(blockPhase)
-        aggPhase_var[, (i - 1) / block_size + 1] <- apply(blockPhase, 1, var)
-        aggPower_mean[, (i - 1) / block_size + 1] <- rowMeans(blockPower)
-        aggVar_ampl[, (i - 1) / block_size + 1] <- apply(blockAmpl, 1, var)
-        aggVar_power[, (i - 1) / block_size + 1] <- apply(blockPower, 1, var)
-        aggmean_sq_power[, (i - 1) / block_size + 1] <- rowMeans(blockPower^2)
-      },
-      error = function(e) {
-        stop("Error during wave statistic calculation. Please check tag deployment and release are within the input dataset.\n")
+    # Periods whose power is affected by a gap or edge on this day, longest
+    # (furthest reaching) first
+    if (nrow(masks) == 0) next
+    for (r in rev(seq_len(wavelet$nr))) {
+      lo <- masks$first - reach[r]
+      hi <- masks$last + reach[r]
+      near <- which(lo <= day_last[d] & hi >= day_first[d])
+      if (length(near) == 0) next
+      valid <- rep(TRUE, length(cols))
+      for (m in near) {
+        valid[(max(lo[m], day_first[d]) - day_first[d] + 1):(min(hi[m], day_last[d]) - day_first[d] + 1)] <- FALSE
       }
-    )
+      share <- 100 * sum(valid) / expected[d]
+      if (share < min_coverage) {
+        dropped$reason[d] <- paste0("wavelet power ", round(share, 1), "% (", signif(wavelet$Period[r] * 24, 3), " h period)")
+        break
+      }
+      row_stats(
+        blockAmpl[r, valid, drop = FALSE], blockPhase[r, valid, drop = FALSE], blockPower[r, valid, drop = FALSE],
+        d, r
+      )
+    }
+  }
+  kept <- is.na(dropped$reason)
+  dropped <- dropped[!kept, , drop = FALSE]
+  if (!any(kept)) stop("No days have enough records and wavelet power to analyse.")
+
+  # Rescale power to the variance of the real records, if long gaps were
+  # filled (see add_gap_attrs()). Amplitude scales with its square root.
+  power_scale <- attr(wavelet, "power_scale")
+  if (!is.null(power_scale)) {
+    aggPower_mean <- aggPower_mean * power_scale
+    aggVar_power <- aggVar_power * power_scale^2
+    aggmean_sq_power <- aggmean_sq_power * power_scale^2
+    aggAmpl_mean <- aggAmpl_mean * sqrt(power_scale)
+    aggVar_ampl <- aggVar_ampl * power_scale
   }
 
   # Nested function to extract variables for each period
@@ -132,13 +220,13 @@ create_wavelet_stats <- function(wavelet,
     index <- which(wavelet_periods == period)
 
     df <- data.frame(
-      Amplitude_mean = aggAmpl_mean[period, ],
-      Phase_mean = aggPhase_mean[period, ],
-      Phase_variance = aggPhase_var[period, ],
-      Power_mean = aggPower_mean[period, ],
-      Amplitude_variance = aggVar_ampl[period, ],
-      Power_variance = aggVar_power[period, ],
-      Mean_sq_power = aggmean_sq_power[period, ]
+      Amplitude_mean = aggAmpl_mean[period, kept],
+      Phase_mean = aggPhase_mean[period, kept],
+      Phase_variance = aggPhase_var[period, kept],
+      Power_mean = aggPower_mean[period, kept],
+      Amplitude_variance = aggVar_ampl[period, kept],
+      Power_variance = aggVar_power[period, kept],
+      Mean_sq_power = aggmean_sq_power[period, kept]
     )
 
     # Rename all columns in df
@@ -147,7 +235,7 @@ create_wavelet_stats <- function(wavelet,
     # Add tag_ID and date_only to df
     if (index == length(wavelet_periods)) {
       df$tag_ID <- tag_ID
-      df$date_only <- seq(start_date, (start_date + lubridate::days(nrow(as.data.frame(aggAmpl_mean[period, ])) - 1)), by = "day")
+      df$date_only <- day_dates[kept]
     }
     return(df)
   }
@@ -159,6 +247,16 @@ create_wavelet_stats <- function(wavelet,
   # Set tag_ID as factor and date_only as date:
   waveStats$tag_ID <- factor(waveStats$tag_ID)
   waveStats$date_only <- as.Date(waveStats$date_only)
+
+  # Report the days left out
+  attr(waveStats, "dropped_days") <- dropped
+  if (nrow(dropped) > 0 && verbose) {
+    message(
+      "Left out ", nrow(dropped), " day", if (nrow(dropped) > 1) "s", " with less than ", min_coverage,
+      "% of ", if (nrow(dropped) > 1) "their" else "its", " records or valid wavelet power: ",
+      paste0(dropped$date, " (", dropped$reason, ")", collapse = ", ")
+    )
+  }
 
   if (output) {
     # Create the directory if it doesn't exist

@@ -142,6 +142,7 @@ plot_clusters <- function(tag_vector = tag_list,
     for (tag in tag_vector) {
       # Load the archive data for each tag
       archive_days <- readRDS(file.path(data_folder, tag, "archive_days.rds"))
+      time_zone <- attr(archive_days, "time_zone")
       archive_days$tag_ID <- tag # Add tag_ID column
 
       # Print maximum depth
@@ -191,9 +192,15 @@ plot_clusters <- function(tag_vector = tag_list,
         }
       }
 
+      # Times since local midnight, in the tag's own time zone, before tags
+      # with different time zones are combined
+      archive_days <- add_day_times(archive_days, time_zone)
+
       # Fix the time zone to UTC before adding to list to prevent sunrise and sunset changing
-      archive_days$sunrise <- lubridate::force_tz(archive_days$sunrise, "UTC")
-      archive_days$sunset <- lubridate::force_tz(archive_days$sunset, "UTC")
+      if ("sunrise" %in% names(archive_days)) {
+        archive_days$sunrise <- lubridate::force_tz(archive_days$sunrise, "UTC")
+        archive_days$sunset <- lubridate::force_tz(archive_days$sunset, "UTC")
+      }
 
       # Append to the list
       data_list[[tag]] <- archive_days
@@ -209,11 +216,13 @@ plot_clusters <- function(tag_vector = tag_list,
     }
 
     # Combine all tag data frames into one after processing each tag. Now re-sampled at every_nth data points
-    all_archive_ts <- do.call(rbind, data_list)
+    # Tags with and without diel times have different columns
+    all_archive_ts <- as.data.frame(data.table::rbindlist(data_list, use.names = TRUE, fill = TRUE))
   } else { # Single tag
 
     # Load the archive data for the single tag
     archive_days <- readRDS(file.path(data_folder, tag_vector, "archive_days.rds"))
+    time_zone <- attr(archive_days, "time_zone")
     archive_days$tag_ID <- tag_vector # Add tag_ID column
 
     if (verbose) message(paste0("Maximum depth is ", max(archive_days$depth)))
@@ -261,6 +270,9 @@ plot_clusters <- function(tag_vector = tag_list,
       }
     }
 
+    # Times since local midnight
+    archive_days <- add_day_times(archive_days, time_zone)
+
     # Directly assign the unique dates and tag ID for the single tag
     unique_dates <- unique(archive_days$date_only)
     id_data <- data.frame(date_only = unique_dates, tag_ID = tag_vector, stringsAsFactors = FALSE)
@@ -281,7 +293,14 @@ plot_clusters <- function(tag_vector = tag_list,
   # Sum all the unique counts across all tag IDs
   total_unique_dates <- sum(unique_dates_by_tag$unique_dates)
 
-  if (total_unique_dates != length(kmeans_result$cluster)) {
+  if (!is.null(kmeans_result$date_only)) {
+    # The k-means result has each day's tag and date: use them, as days left
+    # out of the analysis (e.g. for gaps) are still in the archives
+    id_data <- data.frame(
+      date_only = as.Date(kmeans_result$date_only), tag_ID = as.character(kmeans_result$tag_ID),
+      stringsAsFactors = FALSE
+    )
+  } else if (total_unique_dates != length(kmeans_result$cluster)) {
     if (verbose) message("Data length and number of clusters do not match. Cluster assignment may be incorrect. This error should only be ignored for readme data.")
 
     # Get length of all_archive_ts
@@ -453,34 +472,42 @@ plot_clusters <- function(tag_vector = tag_list,
       next
     }
 
-    # Assign a unique number to each date
-    plot_data$date_number <- match(plot_data$date_only, unique(plot_data$date_only))
+    # Assign a unique number to each day of each tag (tags can share dates)
+    day_key <- paste(plot_data$tag_ID, plot_data$date_only)
+    plot_data$date_number <- match(day_key, unique(day_key))
 
-    # Create a time column and set all dates to the same date to facet
-    plot_data$time <- format(as.POSIXct(plot_data$date), "%H:%M:%S")
-    plot_data$time <- as.POSIXct(paste("1970-01-01", plot_data$time), format = "%Y-%m-%d %H:%M:%S")
+    # Plot each day against the time since its local midnight, on one axis.
+    # A day with a clock change runs 23 or 25 hours.
+    axis_time <- function(secs) as.POSIXct(secs, origin = "1970-01-01", tz = "UTC")
     plot_data <- as.data.frame(plot_data)
+    plot_data$time <- axis_time(plot_data$day_secs)
 
     # Create a sequence of specific times incrementing by 6 hours
-    time_breaks <- seq(
-      from = as.POSIXct("1970-01-01 06:00:00"),
-      to = as.POSIXct("1970-01-01 18:00:00"),
-      by = "6 hours"
-    )
+    time_breaks <- axis_time(c(6, 12, 18) * 3600)
 
     # Start the plot, with night shading underneath the depth line if required
     cluster_plot <- ggplot(data = plot_data, aes(x = time, y = depth))
 
-    if (diel_shade) {
+    # Days without sunrise and sunset times (tags without diel statistics)
+    # can't be shaded
+    day_rows <- plot_data[!duplicated(plot_data$date_number), ]
+    has_sun <- if ("sunrise_secs" %in% names(day_rows)) !is.na(day_rows$sunrise_secs) & !is.na(day_rows$sunset_secs) else rep(FALSE, nrow(day_rows))
+    if (diel_shade && any(!has_sun)) {
+      message(
+        "No night shading for ", paste0(day_rows$tag_ID[!has_sun], " ", day_rows$date_only[!has_sun], collapse = ", "),
+        ": no sunrise and sunset times. Run create_depth_stats() with diel = TRUE for these tags."
+      )
+    }
+
+    if (diel_shade && any(has_sun)) {
       # One rectangle per night period (midnight to sunrise, sunset to midnight)
       # for each day, using that day's sunrise and sunset. Spanning -Inf to Inf
       # fills the panel whatever the Y-axis limits.
-      day_rows <- plot_data[!duplicated(plot_data$date_number), ]
-      clock_time <- function(x) as.POSIXct(paste("1970-01-01", format(x, "%H:%M:%S")))
+      day_rows <- day_rows[has_sun, , drop = FALSE]
       night <- data.frame(
         date_number = rep(day_rows$date_number, 2),
-        xmin = c(rep(as.POSIXct("1970-01-01 00:00:00"), nrow(day_rows)), clock_time(day_rows$sunset)),
-        xmax = c(clock_time(day_rows$sunrise), rep(as.POSIXct("1970-01-01 23:59:59"), nrow(day_rows)))
+        xmin = axis_time(c(rep(0, nrow(day_rows)), day_rows$sunset_secs)),
+        xmax = axis_time(c(day_rows$sunrise_secs, day_rows$day_length))
       )
       cluster_plot <- cluster_plot +
         geom_rect(
@@ -492,7 +519,7 @@ plot_clusters <- function(tag_vector = tag_list,
 
     # Plot the base TDR (in distance from cluster centre order)
     cluster_plot <- cluster_plot +
-      geom_line(colour = custom_palette[i], linewidth = 1) +
+      geom_line(colour = custom_palette[i], linewidth = 1, na.rm = TRUE) +
       scale_x_datetime(breaks = time_breaks, date_labels = "%H %M", position = "top", expand = c(0.001, 0, 0, 0)) +
       labs(x = "Time of day", y = "Depth (meters)") +
       theme_bw() +
@@ -519,8 +546,8 @@ plot_clusters <- function(tag_vector = tag_list,
     ## Plotting the free Y-axis version of TDR
 
     # Calculate the minimum, maximum, and difference in depth of this cluster (i) for the free Y-axis limits
-    max_depth <- max(plot_data$depth)
-    min_depth <- min(plot_data$depth)
+    max_depth <- max(plot_data$depth, na.rm = TRUE)
+    min_depth <- min(plot_data$depth, na.rm = TRUE)
     depth_dif <- max_depth - min_depth
 
     # Calculate Y-axis limits

@@ -1,5 +1,21 @@
 # FishDiveR (development version)
 
+## Records with gaps
+- New `regularise_archive()` puts a depth record on a regular time grid from local midnight, as the wavelet analysis needs. Duplicate times, times out of order and changes of sampling rate are resolved. Gaps of up to `max_fill_mins` (5 minutes by default, at most 6 hours) are filled by linear interpolation, with a warning. Longer gaps are filled only so that the wavelet can run, and marked in a `long_gap` column. Each day's coverage by real records is recorded, and days below `min_coverage` (70% by default) are left out of the statistics.
+- `import_tag_data()` now runs `regularise_archive()`, with new `max_fill_mins` and `min_coverage` arguments. Imported records have `filled` and `long_gap` columns, and keep the `sampling_report()` of the original records as an attribute. This replaces the warning about a non-constant sampling interval.
+- `create_wavelet_stats()` now finds each day by its local date, rather than counting a day's worth of records from the start, so gaps no longer shift later days. Wavelet power within the e-folding time of each scale of a long gap (about 1.35 times the period either side; Torrence & Compo 1998) is left out, and days with too little valid power at any period are left out. Power is rescaled to the variance of the real records. New `mask_ends` treats the start and end of the record the same way. The days left out, and why, are in the attribute `dropped_days`.
+- `create_depth_stats()` leaves out records filled in long gaps and days below the coverage threshold, and no longer measures vertical speed across a gap.
+- The PCA scores now keep each row's tag and date, and `combine_data()` matches the depth statistics to them by date, as the wavelet statistics can leave out days that the depth statistics keep.
+- `thin_archive()` keeps the gap flags and day coverage. `plot_TDR()` breaks the line at long gaps, and `plot_time_at()` leaves out their filled values.
+- `k_clustering()` now keeps each day's date (`date_only`) with its tag, and `plot_clusters()` and `plot_cluster_TDR()` match clusters to days by date. Before, they matched them in order, which gave days the wrong cluster when any day had been left out. Days not clustered are grey in `plot_cluster_TDR()`. Older k-means results without dates are matched in order as before.
+- `plot_clusters()` and `plot_cluster_TDR()` break the line at long gaps.
+- In the app, step 2 has the gap fill limit and day coverage settings, a **Days kept** column, and lists the gaps filled and days left out for the selected tag. Tags imported before gaps were filled, or with other gap settings, are marked **Outdated**. Step 4 has the option to leave out wavelet power near the start and end of each tag.
+
+## Daylight saving and time zones
+- Days with a clock change are now 23 or 25 hours long throughout: in `regularise_archive()`'s day coverage, and in `create_wavelet_stats()`, which before split them into 24 hour blocks.
+- `plot_clusters()` now plots each example day against the time since its local midnight, so a day with a clock change runs 23 or 25 hours instead of repeating or skipping an hour of clock time. Times are taken in each tag's own time zone, so tags from different time zones plot correctly together.
+- `create_depth_stats()` with fixed `sunrise_time` and `sunset_time` now reads them in the tag's time zone. Before, they were read in the computer's time zone, which shifted day and night for tags in other time zones (e.g. by 9 hours for a tag in Tokyo analysed on a computer in the UK). Diel statistics from fixed times should be made again. Times from GPS files were not affected.
+
 ## New features
 - In the app, the deployment and release times in step 1 are typed as digits only: the dashes, space and colons of `yyyy-mm-dd hh:mm:ss` are added as you type, dates pasted with other separators (e.g. `2024/3/5 8:30`) are tidied, a date without a time gets `00:00:00`, and impossible dates or times are marked. A calendar opens as soon as the box has the cursor, to pick the year, then the month, then the day; once the date is picked or typed, a clock follows, to pick the hour, then the minute, then the second. Calendar and clock buttons beside the box open them too. The fixed sunrise and sunset times in step 4 work the same way, as `hh:mm:ss` with the clock.
 

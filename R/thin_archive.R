@@ -31,8 +31,9 @@
 #' @param verbose Logical. If TRUE, progress messages are shown. Defaults to FALSE.
 #'
 #' @returns The thinned archive, with the same columns and 'time_zone'
-#'   attribute. Returned unchanged if \code{interval_s} equals the current
-#'   sampling interval.
+#'   attribute. A block is marked 'filled' or 'long_gap' if any of its records
+#'   are (see [regularise_archive()]). Returned unchanged if \code{interval_s}
+#'   equals the current sampling interval.
 #'
 #' @export
 #'
@@ -84,7 +85,13 @@ thin_archive <- function(archive, interval_s, verbose = FALSE) {
   if ("temp" %in% names(archive)) {
     thinned$temp <- block_mean(archive$temp)
   }
+  # A block is filled, or in a long gap, if any of its records are
+  for (flag in intersect(c("filled", "long_gap"), names(archive))) {
+    thinned[[flag]] <- as.vector(rowsum(as.numeric(archive[[flag]]), block, reorder = FALSE)) > 0
+  }
   attr(thinned, "time_zone") <- attr(archive, "time_zone")
+  thinned <- copy_regular_attrs(thinned, archive)
+  if (!is.null(attr(archive, "interval_s"))) attr(thinned, "interval_s") <- interval_s
 
   if (verbose) {
     message(

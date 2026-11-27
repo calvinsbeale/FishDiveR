@@ -108,8 +108,12 @@ create_depth_stats <- function(archive,
     stop("archive must have a valid 'time_zone' attribute (single character string).")
   }
 
-  # Keep only 'date', 'depth' , and 'date_only' columns
-  archive <- as.data.frame(archive)[c("date", "depth", "date_only")]
+  # Keep the archive's attributes from regularise_archive(), to save them again
+  original <- archive
+
+  # Keep only 'date', 'depth' , and 'date_only' columns, and the gap flags
+  gap_cols <- intersect(c("filled", "long_gap"), names(archive))
+  archive <- as.data.frame(archive)[c("date", "depth", "date_only", gap_cols)]
 
   # Convert to data.table for efficiency
   data.table::setDT(archive)
@@ -117,18 +121,39 @@ create_depth_stats <- function(archive,
   # Create date_tz_adjusted
   archive[, date_tz_adjusted := as.Date(format(lubridate::with_tz(date, tzone = time_zone), "%Y-%m-%d"))]
 
-  # Create vertical velocity in ms
-  archive$VV_ms <- c(0, diff(archive$depth) / as.numeric(difftime(archive$date[2], archive$date[1], units = "secs")))
+  # Create vertical velocity in ms, between consecutive records only: not
+  # across a gap, or the filled values of a long gap
+  secs <- as.numeric(archive$date)
+  sampling_interval <- attr(original, "interval_s")
+  if (is.null(sampling_interval)) sampling_interval <- secs[2] - secs[1]
+  archive$VV_ms <- c(0, diff(archive$depth) / diff(secs))
+  consecutive <- c(TRUE, abs(diff(secs) - sampling_interval) < 1e-6)
+  if ("long_gap" %in% gap_cols) {
+    consecutive <- consecutive & !archive$long_gap & !c(FALSE, archive$long_gap[-nrow(archive)])
+  }
+  archive$VV_ms[!consecutive] <- NA
+
+  # Records used for the statistics: not those filled in long gaps, and not
+  # on days with too few real records (see regularise_archive())
+  analysed <- function(a) {
+    use <- rep(TRUE, nrow(a))
+    if ("long_gap" %in% names(a)) use <- !a$long_gap
+    days <- kept_days(original)
+    if (!is.null(days)) use <- use & a$date_tz_adjusted %in% days
+    use
+  }
+  stats_archive <- archive[analysed(archive)]
+  if (nrow(stats_archive) == 0) stop("No days have enough records to analyse.")
 
   # Perform aggregations using data.table
-  depthStats <- archive[, list(
+  depthStats <- stats_archive[, list(
     depth.mean = mean(depth),
     depth.sd = sd(depth),
     depth.min = min(depth),
     depth.max = max(depth),
-    mean.abs_vv = mean(abs(VV_ms)),
-    max.dsc_vv = max(VV_ms),
-    max.asc_vv = min(VV_ms) * -1, # This makes ascent VV positive for ease of comparison of variables.
+    mean.abs_vv = mean(abs(VV_ms), na.rm = TRUE),
+    max.dsc_vv = max(VV_ms, na.rm = TRUE),
+    max.asc_vv = min(VV_ms, na.rm = TRUE) * -1, # This makes ascent VV positive for ease of comparison of variables.
     skewness_depth = moments::skewness(depth),
     kurtosis_depth = moments::kurtosis(depth)
   ), by = list(date_tz_adjusted)]
@@ -140,7 +165,7 @@ create_depth_stats <- function(archive,
   surface_depth_threshold <- 7.5
 
   # Calculate proportion of time spent near the surface for each day
-  surface_proportion <- aggregate(depth ~ date_tz_adjusted, data = archive, function(x) mean(x < surface_depth_threshold))
+  surface_proportion <- aggregate(depth ~ date_tz_adjusted, data = stats_archive, function(x) mean(x < surface_depth_threshold))
 
   # Rename the column
   names(surface_proportion)[names(surface_proportion) == "depth"] <- "surface_proportion"
@@ -148,9 +173,10 @@ create_depth_stats <- function(archive,
   # Merge daily surface proportion with depthStats (aggregated daily)
   depthStats$surface_proportion <- surface_proportion$surface_proportion
 
-  # Function to convert time strings into POSIXct datetime objects for each date in archive
+  # Function to convert time strings into POSIXct datetime objects for each
+  # date in archive, as local times in the tag's time zone
   convert_time <- function(time_str, date) {
-    as.POSIXct(paste(date, time_str), format = "%Y-%m-%d %H:%M:%S")
+    as.POSIXct(paste(date, time_str), format = "%Y-%m-%d %H:%M:%S", tz = time_zone)
   }
 
   # Improved # Function to check date format of 'gps' file
@@ -205,9 +231,9 @@ create_depth_stats <- function(archive,
         mean_depth = mean(data$depth),
         sd_depth = sd(data$depth),
         range_depth = diff(range(data$depth)),
-        abs_VV = mean(abs(data$VV_ms)),
-        dsc_VV = max(data$VV_ms),
-        asc_VV = -min(data$VV_ms), # This makes ascent VV positive for ease of comparison of variables.
+        abs_VV = mean(abs(data$VV_ms), na.rm = TRUE),
+        dsc_VV = max(data$VV_ms, na.rm = TRUE),
+        asc_VV = -min(data$VV_ms, na.rm = TRUE), # This makes ascent VV positive for ease of comparison of variables.
         surf_prop = mean(data$depth < surface_depth_threshold)
       )
     }
@@ -368,6 +394,7 @@ create_depth_stats <- function(archive,
       # Assign daytime column and re-assign time_zome
       archive[, daytime := ifelse(date >= sunrise & date < sunset, 1, 0)]
       attr(archive, "time_zone") <- time_zone
+      archive <- copy_regular_attrs(archive, original)
 
       # Save the 'tag_archive' object to output_folder
       archive_path <- file.path(output_folder, tag_ID, "archive_days.rds")
@@ -392,13 +419,14 @@ create_depth_stats <- function(archive,
 
       # Reorder columns
       archive <- as.data.frame(archive)
-      archive <- archive[, c("date", "depth", "date_only", "VV_ms", "sunrise", "sunset", "date_tz_adjusted", "daytime")]
+      archive <- archive[, c("date", "depth", "date_only", gap_cols, "VV_ms", "sunrise", "sunset", "date_tz_adjusted", "daytime")]
 
       # Convert to data.table for efficiency
       data.table::setDT(archive)
 
       # Reassign time zone
       attr(archive, "time_zone") <- time_zone
+      archive <- copy_regular_attrs(archive, original)
 
       # Save the 'tag_archive' object to output_folder
       archive_path <- file.path(output_folder, tag_ID, "archive_days.rds")
@@ -423,11 +451,11 @@ create_depth_stats <- function(archive,
       max_asc_VV = numeric()
     )
 
-    # Create the lists of metrics
-    dates <- unique(archive$date_tz_adjusted)[1]
-    for (dates in unique(archive$date_tz_adjusted)) {
+    # Create the lists of metrics, from the records analysed
+    stats_archive <- archive[analysed(archive)]
+    for (dates in unique(stats_archive$date_tz_adjusted)) {
       # Subset one day of depth data
-      daily_subset <- archive[archive$date_tz_adjusted == dates, ]
+      daily_subset <- stats_archive[stats_archive$date_tz_adjusted == dates, ]
 
       # Calculate maximum depth on that day
       daily_max_depth <- max(daily_subset$depth)

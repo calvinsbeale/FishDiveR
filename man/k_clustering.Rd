@@ -40,8 +40,9 @@ Defaults to TRUE.}
 }
 \value{
 An object of class 'kmeans' containing the k-means clustering data
-for the data frame. Additionally plots a 3D cluster plot of the top three
-Principal Components.
+for the data frame, with each day's distance from its cluster centre
+('distances'), tag ('tag_ID') and date ('date_only'). Additionally plots a
+3D cluster plot of the top three Principal Components.
 }
 \description{
 \code{k_clustering} performs k-means clustering on the PC scores with the selected

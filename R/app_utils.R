@@ -403,7 +403,9 @@ archive_summary <- function(file) {
     return(archive_summary_cache[[key]])
   }
   archive <- readRDS(file)
-  report <- sampling_report(archive)
+  # Archives put on a regular grid keep the check of their original records
+  report <- attr(archive, "sampling_report")
+  if (is.null(report)) report <- sampling_report(archive)
   summary <- list(
     n_records = nrow(archive),
     sampling_s = report$interval_s,
@@ -412,10 +414,84 @@ archive_summary <- function(file) {
     sampling = report,
     has_temp_col = "temp" %in% names(archive),
     has_temp = has_temperature(archive),
-    time_zone = if (is.null(attr(archive, "time_zone"))) NA_character_ else attr(archive, "time_zone")
+    time_zone = if (is.null(attr(archive, "time_zone"))) NA_character_ else attr(archive, "time_zone"),
+    # From regularise_archive(); NULL for archives imported before it
+    day_coverage = attr(archive, "day_coverage"),
+    gaps = attr(archive, "gaps"),
+    max_fill_mins = attr(archive, "max_fill_mins"),
+    min_coverage = attr(archive, "min_coverage")
   )
   archive_summary_cache[[key]] <- summary
   summary
+}
+
+#' Days kept for analysis, e.g. "9 of 10", or "" for older imports
+#' @noRd
+days_kept_text <- function(summary) {
+  coverage <- summary$day_coverage
+  if (is.null(coverage)) return("")
+  paste(sum(coverage$kept), "of", nrow(coverage))
+}
+
+#' Lines describing how an archive's gaps were filled and which days are kept
+#' @noRd
+gap_summary_lines <- function(summary) {
+  coverage <- summary$day_coverage
+  if (is.null(coverage)) {
+    return("Imported before gaps were filled: re-import to fill gaps and check each day's coverage.")
+  }
+  gaps <- summary$gaps
+  short <- gaps[gaps$filled, , drop = FALSE]
+  long <- gaps[!gaps$filled, , drop = FALSE]
+  lines <- paste0("Put on a regular grid every ", summary$sampling_s, " s.")
+  lines <- c(lines, if (nrow(short) > 0) {
+    paste0(
+      "  Filled by interpolation (up to ", summary$max_fill_mins, " min): ", nrow(short), " gap",
+      if (nrow(short) > 1) "s", ", ", format(sum(short$missing_records), big.mark = ","), " records."
+    )
+  } else {
+    paste0("  No gaps to fill (up to ", summary$max_fill_mins, " min).")
+  })
+  if (nrow(long) > 0) {
+    lines <- c(lines, paste0(
+      "  Longer gaps, left out of the analysis: ", nrow(long), " (the longest ", format_seconds(max(long$length_s)), ")."
+    ))
+    shown <- utils::head(long, 20)
+    lines <- c(lines, paste0("    ", format(shown$start, "%Y-%m-%d %H:%M:%S"), " to ", format(shown$end, "%Y-%m-%d %H:%M:%S"),
+      " (", vapply(shown$length_s, format_seconds, character(1)), ")"))
+    if (nrow(long) > 20) lines <- c(lines, paste0("    ... and ", nrow(long) - 20, " more"))
+  }
+  lines <- c(lines, paste0(
+    "Days kept: ", sum(coverage$kept), " of ", nrow(coverage), " (at least ", summary$min_coverage, "% real records)."
+  ))
+  dropped <- coverage[!coverage$kept, , drop = FALSE]
+  if (nrow(dropped) > 0) {
+    shown <- utils::head(dropped, 20)
+    lines <- c(lines, paste0("    ", shown$date, ": ", round(shown$coverage, 1), "% of records"))
+    if (nrow(dropped) > 20) lines <- c(lines, paste0("    ... and ", nrow(dropped) - 20, " more"))
+  }
+  lines
+}
+
+#' Gap settings that differ from those a tag was imported with
+#'
+#' @param max_fill_mins,min_coverage The settings to import with now.
+#' @returns Descriptions of the changed settings, or character(0).
+#' @noRd
+changed_gap_settings <- function(tag_ID, project_folder, max_fill_mins, min_coverage) {
+  settings_file <- file.path(project_folder, tag_ID, "import_settings.rds")
+  if (!file.exists(file.path(project_folder, tag_ID, "archive_days.rds")) || !file.exists(settings_file)) {
+    return(character())
+  }
+  used <- readRDS(settings_file)
+  # Imported before gaps were filled
+  if (is.null(used$max_fill_mins)) {
+    return("gap filling")
+  }
+  changed <- character()
+  if (!isTRUE(all.equal(as.numeric(used$max_fill_mins), as.numeric(max_fill_mins)))) changed <- c(changed, "gap fill limit")
+  if (!isTRUE(all.equal(as.numeric(used$min_coverage), as.numeric(min_coverage)))) changed <- c(changed, "day coverage")
+  changed
 }
 
 #' One-line summary of a sampling_report(), e.g. "Irregular: 2 gaps, 1 duplicate"

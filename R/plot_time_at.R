@@ -99,6 +99,8 @@ plot_time_at <- function(archive,
   }
 
   archive <- as.data.frame(archive)
+  # Leave out values filled in gaps too long to fill (see regularise_archive())
+  if ("long_gap" %in% names(archive)) archive <- archive[!archive$long_gap, , drop = FALSE]
   values <- archive[[variable]]
   has_value <- !is.na(values)
 

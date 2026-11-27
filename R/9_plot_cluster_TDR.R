@@ -124,30 +124,16 @@ plot_cluster_TDR <- function(tag_ID,
 
   if (verbose) message(paste0("Maximum depth is ", max(archive_days$depth)))
 
-  # Extract the cluster and tag_ID
-  tag_data <- as.data.frame(kmeans_result$cluster)
-  tag_data$tag_ID <- kmeans_result$tag_ID
-
-  # Split the dataframe by 'tag_ID'
-  list_of_dataframes <- split(tag_data, tag_data$tag_ID)
-
   # Ensure 'archive_days' is treated as a data.table for efficient operations
   data.table::setDT(archive_days)
 
-  # Create a data frame or data.table mapping each unique date to its cluster assignment
+  # Map each day to its cluster: by date, or in day order for older k-means
+  # results. Days not clustered (e.g. left out for gaps) have no cluster.
   unique_dates <- unique(archive_days$date_only)
-
-  # Get cluster assignments
-  cluster_assignments <- list_of_dataframes[[tag_ID]]$`kmeans_result$cluster`
-
-  # Check lengths of unique_dates and cluster map
-  if (length(unique_dates) != length(cluster_assignments)) {
-    if (verbose) message("Length of unique dates in archive is not equal to cluster assignment length. Please check.")
-    l <- length(unique_dates)
-    date_cluster_mapping <- data.table::data.table(date_only = unique_dates, cluster = cluster_assignments[l])
-  } else {
-    date_cluster_mapping <- data.table::data.table(date_only = unique_dates, cluster = cluster_assignments)
-  }
+  date_cluster_mapping <- data.table::data.table(
+    date_only = unique_dates,
+    cluster = cluster_of_days(kmeans_result, tag_ID, unique_dates, verbose = verbose)
+  )
 
   # Join this mapping back to archive_days to assign each row the correct cluster
   archive_days <- merge(archive_days, date_cluster_mapping, by = "date_only", all.x = TRUE)
@@ -215,6 +201,11 @@ plot_cluster_TDR <- function(tag_ID,
   # Select the plot data
   quick_plot_data <- archive_days[, c("date", "depth", "cluster")]
 
+  # Break the line at gaps too long to fill (see regularise_archive())
+  if ("long_gap" %in% names(archive_days)) {
+    quick_plot_data$depth[as.logical(archive_days$long_gap)] <- NA
+  }
+
   # Add a group to plot with geom_path
   quick_plot_data$group <- tag_ID
 
@@ -266,10 +257,11 @@ plot_cluster_TDR <- function(tag_ID,
 
   # Use the custom palette with scale_color_manual
   plot <- ggplot(data = quick_plot_data, aes(x = date, y = depth, colour = cluster, group = tag_ID)) +
-    geom_path() +
+    geom_path(na.rm = TRUE) +
     scale_y_reverse(limits = c(Y_lim[2], Y_lim[1]), breaks = seq(Y_lim[1], Y_lim[2], Y_lim[3]), expand = c(0, 0)) +
     scale_x_datetime(date_breaks = date_breaks, date_labels = "%Y-%m-%d", expand = c(0, 0, 0, 0), position = "top") +
-    scale_color_manual(values = custom_palette) +
+    # Days not clustered, e.g. left out for gaps, are grey
+    scale_color_manual(values = custom_palette, na.value = "grey70") +
     labs(
       x = "Date",
       y = "Depth (m)",

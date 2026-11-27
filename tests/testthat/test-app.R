@@ -549,3 +549,36 @@ test_that("diel statistics need a GPS file for every tag in GPS mode", {
     expect_length(diel_problems(tag_info()), 0)
   })
 })
+
+test_that("the app summarises gaps and marks imports with other gap settings", {
+  project <- file.path(tempdir(), "app_project_gaps")
+  unlink(project, recursive = TRUE)
+  dir.create(project)
+  tag <- example_tag()
+  gappy_file <- file.path(project, "gappy-Archive.csv")
+  archive <- utils::read.csv(tag$archive)
+  utils::write.csv(archive[-c(100:102, 5000:5300), ], gappy_file, row.names = FALSE)
+  suppressWarnings(import_tag_data(
+    tag_ID = "gappy", tag_deploy_UTC = tag$tag_deploy_UTC, tag_release_UTC = tag$tag_release_UTC,
+    archive = gappy_file, time_zone = tag$time_zone, min_coverage = 85, output = TRUE, output_folder = project
+  ))
+
+  summary <- archive_summary(file.path(project, "gappy", "archive_days.rds"))
+  expect_equal(days_kept_text(summary), "9 of 10")
+  # The sampling check is of the original records
+  expect_false(summary$sampling$regular)
+  lines <- gap_summary_lines(summary)
+  expect_match(lines, "Filled by interpolation (up to 5 min): 1 gap, 3 records", all = FALSE, fixed = TRUE)
+  expect_match(lines, "Longer gaps, left out of the analysis: 1 (the longest 5.03 h)", all = FALSE, fixed = TRUE)
+  expect_match(lines, "Days kept: 9 of 10 (at least 85% real records)", all = FALSE, fixed = TRUE)
+  expect_match(lines, "2000-01-04: 79.1% of records", all = FALSE)
+
+  expect_length(changed_gap_settings("gappy", project, 5, 85), 0)
+  expect_equal(changed_gap_settings("gappy", project, 10, 70), c("gap fill limit", "day coverage"))
+  # Imported before gaps were filled
+  settings <- readRDS(file.path(project, "gappy", "import_settings.rds"))
+  settings$max_fill_mins <- NULL
+  saveRDS(settings, file.path(project, "gappy", "import_settings.rds"))
+  expect_equal(changed_gap_settings("gappy", project, 5, 70), "gap filling")
+  expect_length(changed_gap_settings("not_imported", project, 5, 70), 0)
+})

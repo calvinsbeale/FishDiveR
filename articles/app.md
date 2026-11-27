@@ -71,8 +71,8 @@ whole table from a csv file with these columns:
 |----|----|----|
 | `tag_ID` | Yes | Unique ID of the tag, e.g. `237522` |
 | `archive` | Yes | Path of the tag’s csv archive |
-| `tag_deploy_UTC` | Yes | Deployment time in UTC, `yyyy-mm-dd hh:mm:ss` |
-| `tag_release_UTC` | Yes | Release time in UTC, `yyyy-mm-dd hh:mm:ss` |
+| `tag_deploy_UTC` | Yes | Deployment time in UTC, `yyyy-mm-dd hh:mm:ss` (other formats, such as `25/10/2013 02:46:00`, are converted) |
+| `tag_release_UTC` | Yes | Release time in UTC, in the same format |
 | `time_zone` | Yes | Local time zone, e.g. `Asia/Tokyo` (see [`OlsonNames()`](https://rdrr.io/r/base/timezones.html)) |
 | `date_time_col` | No | Column number of the date-time. Defaults to 1 |
 | `depth_col` | No | Column number of the depth. Defaults to 2 |
@@ -100,6 +100,13 @@ Open or create the project folder, then add tags with the form, load a
 tag table csv, or add the example tag to try things out. Select a tag in
 the table to edit or remove it. Removing a tag from the table keeps its
 results in the project folder.
+
+Below the column numbers, the form shows how the archive’s date-times
+will be read, e.g. “day/month/year hh:mm:ss: ‘25/10/2013 02:46:00’ is
+2013-10-25 02:46:00”. The format is detected from the archive (see
+[`?import_tag_data`](https://calvinsbeale.github.io/FishDiveR/reference/import_tag_data.md));
+if it can’t be, check the date-time column number. Tags whose date-times
+can’t be read are flagged in the table’s Check column.
 
 For the deployment and release times, type only the digits: the dashes,
 space and colons of `yyyy-mm-dd hh:mm:ss` are added as you type, and

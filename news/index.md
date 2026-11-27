@@ -64,6 +64,29 @@
   gap settings, are marked **Outdated**. Step 4 has the option to leave
   out wavelet power near the start and end of each tag.
 
+### Date formats
+
+- [`import_tag_data()`](https://calvinsbeale.github.io/FishDiveR/reference/import_tag_data.md)
+  now detects the format of the archive’s date-times, rather than
+  reading only `00:01:00 01-Jan-2000`. Dates can be year-month-day,
+  day/month/year, month/day/year or day month-name year, separated by
+  `-`, `/`, `.` or spaces, with times as hh:mm:ss (with optional decimal
+  seconds) or hh:mm before or after the date, including ISO 8601
+  (`2000-01-01T00:01:00Z`). Where no day is above 12, the order of day
+  and month is taken from the spacing of the records. New `date_format`
+  sets the format instead. Date-times that can’t be read are left out
+  with a warning.
+- [`create_depth_stats()`](https://calvinsbeale.github.io/FishDiveR/reference/create_depth_stats.md)
+  detects the format of dates in GPS files the same way. Before, it used
+  the first of day/month/year, year/month/day and month/day/year that
+  read any date, so could read month/day dates as day/month.
+- Month names are read in English whatever the computer’s language.
+- In the app, step 1 shows how the chosen archive’s date-times will be
+  read, and the Check column flags archives whose date-times can’t be
+  read. Deployment and release times in other formats in a loaded tag
+  table, e.g. `25/10/2013 02:46:00`, are converted to yyyy-mm-dd
+  hh:mm:ss.
+
 ### Daylight saving and time zones
 
 - Days with a clock change are now 23 or 25 hours long throughout: in
@@ -83,6 +106,22 @@
   hours for a tag in Tokyo analysed on a computer in the UK). Diel
   statistics from fixed times should be made again. Times from GPS files
   were not affected.
+
+### Fixes
+
+- [`create_depth_stats()`](https://calvinsbeale.github.io/FishDiveR/reference/create_depth_stats.md)
+  with `diel = TRUE`: a day with a maximum depth of 0 m was left out of
+  the diel statistics, which then shifted every later day’s diel
+  statistics onto the wrong date. Such days now have diel differences of
+  0, and diel statistics are matched to days by date.
+- [`create_depth_stats()`](https://calvinsbeale.github.io/FishDiveR/reference/create_depth_stats.md)
+  with `diel = TRUE` no longer needs an `output_folder` when
+  `output = FALSE`.
+- [`plot_clusters()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_clusters.md)
+  with several tags: tags with and without diel times can now be plotted
+  together (days without times are not shaded, with a message), and days
+  of different tags on the same date now have their own panels instead
+  of sharing one.
 
 ### New features
 

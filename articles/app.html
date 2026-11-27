@@ -150,14 +150,13 @@ or load a whole table from a csv file with these columns:</p>
 <tr class="odd">
 <td><code>tag_deploy_UTC</code></td>
 <td>Yes</td>
-<td>Deployment time in UTC, <code>yyyy-mm-dd hh:mm:ss</code>
-</td>
+<td>Deployment time in UTC, <code>yyyy-mm-dd hh:mm:ss</code> (other
+formats, such as <code>25/10/2013 02:46:00</code>, are converted)</td>
 </tr>
 <tr class="even">
 <td><code>tag_release_UTC</code></td>
 <td>Yes</td>
-<td>Release time in UTC, <code>yyyy-mm-dd hh:mm:ss</code>
-</td>
+<td>Release time in UTC, in the same format</td>
 </tr>
 <tr class="odd">
 <td><code>time_zone</code></td>
@@ -209,6 +208,12 @@ to the next one.</p>
 a tag table csv, or add the example tag to try things out. Select a tag
 in the table to edit or remove it. Removing a tag from the table keeps
 its results in the project folder.</p>
+<p>Below the column numbers, the form shows how the archive’s date-times
+will be read, e.g. “day/month/year hh:mm:ss: ‘25/10/2013 02:46:00’ is
+2013-10-25 02:46:00”. The format is detected from the archive (see
+<code><a href="../reference/import_tag_data.html">?import_tag_data</a></code>); if it can’t be, check the date-time
+column number. Tags whose date-times can’t be read are flagged in the
+table’s Check column.</p>
 <p>For the deployment and release times, type only the digits: the
 dashes, space and colons of <code>yyyy-mm-dd hh:mm:ss</code> are added
 as you type, and dates pasted with other separators, such as

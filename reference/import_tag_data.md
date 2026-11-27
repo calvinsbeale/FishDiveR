@@ -16,6 +16,7 @@ import_tag_data(
   depth_col = 2,
   temp_col = NA,
   time_zone,
+  date_format = NULL,
   max_fill_mins = 5,
   min_coverage = 70,
   output = FALSE,
@@ -48,7 +49,8 @@ import_tag_data(
 
 - date_time_col:
 
-  Column number of the date time series
+  Column number of the date time series. Date-times are in UTC, and
+  their format is detected (see `date_format`).
 
 - depth_col:
 
@@ -61,6 +63,17 @@ import_tag_data(
 - time_zone:
 
   Time zone of the data. E.g. "Asia/Tokyo"
+
+- date_format:
+
+  NULL (the default) to detect the format of the date-times, or a
+  [`strptime()`](https://rdrr.io/r/base/strptime.html) format, e.g.
+  "%d/%m/%Y %H:%M:%S". Detected formats are dates as year-month-day,
+  day/month/year, month/day/year or day month-name year (e.g.
+  2024-03-05, 05/03/2024 or 05-Mar-2024), with times as hh:mm:ss or
+  hh:mm, before or after the date, e.g. "00:01:00 01-Jan-2000" (Wildlife
+  Computers) or "2000-01-01T00:01:00Z". Where no day is above 12, the
+  order of day and month is taken from the spacing of the records.
 
 - max_fill_mins:
 
@@ -149,11 +162,12 @@ archive_days <- import_tag_data(
 )
 #> 
 #> Tag ID = data
+#> Date-times read as hh:mm:ss day month-name year: '00:00:00 01-Jan-2000' is 2000-01-01 00:00:00
 #> Depth sampling interval is 60 seconds
 #> Number of depth values corrected (above 0):0
 #> Mean depth = 75.5 SD = 81.9
 #> Maximum depth = 256.6
 #> Number of full days in dataset: 10
 #> Regular grid: every 60 s, 14,400 records. Filled 0 records in short gaps; 0 in long gaps (not analysed). 10 of 10 days kept (at least 70% real records).
-#> Output file: /tmp/RtmpMLXK2Y/data/archive_days.rds
+#> Output file: /tmp/RtmpZxdM6K/data/archive_days.rds
 ```

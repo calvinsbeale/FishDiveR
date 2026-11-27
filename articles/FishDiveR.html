@@ -193,8 +193,17 @@ is kept as <code>attr(archive_days, "sampling_report")</code>: it shows
 any duplicate times, gaps and changes of sampling rate. Each day’s
 coverage is in <code>attr(archive_days, "day_coverage")</code>.</li>
 <li>
-<strong>Date-time format.</strong> Dates are currently read in the
-format <code>00:01:00 01-Jan-2000</code>.</li>
+<strong>Date-time format.</strong> Date-times are in UTC, and their
+format is detected: dates as year-month-day, day/month/year,
+month/day/year or day month-name year, with times as hh:mm:ss or hh:mm
+before or after the date, e.g. <code>00:01:00 01-Jan-2000</code>
+(Wildlife Computers), <code>2000-01-01 00:01:00</code> or
+<code>01/01/2000 00:01</code>. Where no day is above 12, the order of
+day and month is taken from the spacing of the records.
+<code>verbose = TRUE</code> reports the format found, and
+<code>date_format</code> sets it,
+e.g. <code>date_format = "%Y%m%d %H%M%S"</code>. Dates in GPS files are
+detected the same way.</li>
 </ul>
 <p><code><a href="../reference/plot_TDR.html">plot_TDR()</a></code> plots the depth record. Its
 <code>minmax_bins</code> option plots only the shallowest and deepest

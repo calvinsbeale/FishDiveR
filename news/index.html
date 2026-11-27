@@ -59,12 +59,30 @@
 <li>In the app, step 2 has the gap fill limit and day coverage settings, a <strong>Days kept</strong> column, and lists the gaps filled and days left out for the selected tag. Tags imported before gaps were filled, or with other gap settings, are marked <strong>Outdated</strong>. Step 4 has the option to leave out wavelet power near the start and end of each tag.</li>
 </ul></div>
 <div class="section level3">
+<h3 id="date-formats-development-version">Date formats<a class="anchor" aria-label="anchor" href="#date-formats-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/import_tag_data.html">import_tag_data()</a></code> now detects the format of the archive’s date-times, rather than reading only <code>00:01:00 01-Jan-2000</code>. Dates can be year-month-day, day/month/year, month/day/year or day month-name year, separated by <code>-</code>, <code>/</code>, <code>.</code> or spaces, with times as hh:mm:ss (with optional decimal seconds) or hh:mm before or after the date, including ISO 8601 (<code>2000-01-01T00:01:00Z</code>). Where no day is above 12, the order of day and month is taken from the spacing of the records. New <code>date_format</code> sets the format instead. Date-times that can’t be read are left out with a warning.</li>
+<li>
+<code><a href="../reference/create_depth_stats.html">create_depth_stats()</a></code> detects the format of dates in GPS files the same way. Before, it used the first of day/month/year, year/month/day and month/day/year that read any date, so could read month/day dates as day/month.</li>
+<li>Month names are read in English whatever the computer’s language.</li>
+<li>In the app, step 1 shows how the chosen archive’s date-times will be read, and the Check column flags archives whose date-times can’t be read. Deployment and release times in other formats in a loaded tag table, e.g. <code>25/10/2013 02:46:00</code>, are converted to yyyy-mm-dd hh:mm:ss.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="daylight-saving-and-time-zones-development-version">Daylight saving and time zones<a class="anchor" aria-label="anchor" href="#daylight-saving-and-time-zones-development-version"></a></h3>
 <ul><li>Days with a clock change are now 23 or 25 hours long throughout: in <code><a href="../reference/regularise_archive.html">regularise_archive()</a></code>’s day coverage, and in <code><a href="../reference/create_wavelet_stats.html">create_wavelet_stats()</a></code>, which before split them into 24 hour blocks.</li>
 <li>
 <code><a href="../reference/plot_clusters.html">plot_clusters()</a></code> now plots each example day against the time since its local midnight, so a day with a clock change runs 23 or 25 hours instead of repeating or skipping an hour of clock time. Times are taken in each tag’s own time zone, so tags from different time zones plot correctly together.</li>
 <li>
 <code><a href="../reference/create_depth_stats.html">create_depth_stats()</a></code> with fixed <code>sunrise_time</code> and <code>sunset_time</code> now reads them in the tag’s time zone. Before, they were read in the computer’s time zone, which shifted day and night for tags in other time zones (e.g. by 9 hours for a tag in Tokyo analysed on a computer in the UK). Diel statistics from fixed times should be made again. Times from GPS files were not affected.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/create_depth_stats.html">create_depth_stats()</a></code> with <code>diel = TRUE</code>: a day with a maximum depth of 0 m was left out of the diel statistics, which then shifted every later day’s diel statistics onto the wrong date. Such days now have diel differences of 0, and diel statistics are matched to days by date.</li>
+<li>
+<code><a href="../reference/create_depth_stats.html">create_depth_stats()</a></code> with <code>diel = TRUE</code> no longer needs an <code>output_folder</code> when <code>output = FALSE</code>.</li>
+<li>
+<code><a href="../reference/plot_clusters.html">plot_clusters()</a></code> with several tags: tags with and without diel times can now be plotted together (days without times are not shaded, with a message), and days of different tags on the same date now have their own panels instead of sharing one.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>

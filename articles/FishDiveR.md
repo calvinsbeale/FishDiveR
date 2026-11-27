@@ -120,8 +120,15 @@ A few things to check with your own data:
   is kept as `attr(archive_days, "sampling_report")`: it shows any
   duplicate times, gaps and changes of sampling rate. Each day’s
   coverage is in `attr(archive_days, "day_coverage")`.
-- **Date-time format.** Dates are currently read in the format
-  `00:01:00 01-Jan-2000`.
+- **Date-time format.** Date-times are in UTC, and their format is
+  detected: dates as year-month-day, day/month/year, month/day/year or
+  day month-name year, with times as hh:mm:ss or hh:mm before or after
+  the date, e.g. `00:01:00 01-Jan-2000` (Wildlife Computers),
+  `2000-01-01 00:01:00` or `01/01/2000 00:01`. Where no day is above 12,
+  the order of day and month is taken from the spacing of the records.
+  `verbose = TRUE` reports the format found, and `date_format` sets it,
+  e.g. `date_format = "%Y%m%d %H%M%S"`. Dates in GPS files are detected
+  the same way.
 
 [`plot_TDR()`](https://calvinsbeale.github.io/FishDiveR/reference/plot_TDR.md)
 plots the depth record. Its `minmax_bins` option plots only the

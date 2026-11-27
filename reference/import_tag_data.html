@@ -60,6 +60,7 @@ column. Data is cropped by deployment and release times.</p>
 <span>  depth_col <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  temp_col <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  <span class="va">time_zone</span>,</span>
+<span>  date_format <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_fill_mins <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  min_coverage <span class="op">=</span> <span class="fl">70</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -93,7 +94,8 @@ data/123456/123456-Archive.csv")</p></dd>
 
 
 <dt id="arg-date-time-col">date_time_col<a class="anchor" aria-label="anchor" href="#arg-date-time-col"></a></dt>
-<dd><p>Column number of the date time series</p></dd>
+<dd><p>Column number of the date time series. Date-times are
+in UTC, and their format is detected (see <code>date_format</code>).</p></dd>
 
 
 <dt id="arg-depth-col">depth_col<a class="anchor" aria-label="anchor" href="#arg-depth-col"></a></dt>
@@ -106,6 +108,17 @@ data/123456/123456-Archive.csv")</p></dd>
 
 <dt id="arg-time-zone">time_zone<a class="anchor" aria-label="anchor" href="#arg-time-zone"></a></dt>
 <dd><p>Time zone of the data. E.g. "Asia/Tokyo"</p></dd>
+
+
+<dt id="arg-date-format">date_format<a class="anchor" aria-label="anchor" href="#arg-date-format"></a></dt>
+<dd><p>NULL (the default) to detect the format of the
+date-times, or a <code><a href="https://rdrr.io/r/base/strptime.html" class="external-link">strptime()</a></code> format, e.g. "%d/%m/%Y %H:%M:%S". Detected
+formats are dates as year-month-day, day/month/year, month/day/year or day
+month-name year (e.g. 2024-03-05, 05/03/2024 or 05-Mar-2024), with times
+as hh:mm:ss or hh:mm, before or after the date, e.g. "00:01:00
+01-Jan-2000" (Wildlife Computers) or "2000-01-01T00:01:00Z". Where no
+day is above 12, the order of day and month is taken from the spacing of
+the records.</p></dd>
 
 
 <dt id="arg-max-fill-mins">max_fill_mins<a class="anchor" aria-label="anchor" href="#arg-max-fill-mins"></a></dt>
@@ -182,13 +195,14 @@ they were put on the grid is kept as <code>attr(archive, "sampling_report")</cod
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Tag ID = data</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Date-times read as hh:mm:ss day month-name year: '00:00:00 01-Jan-2000' is 2000-01-01 00:00:00</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Depth sampling interval is 60 seconds</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Number of depth values corrected (above 0):0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Mean depth = 75.5 SD = 81.9</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Maximum depth = 256.6</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Number of full days in dataset: 10</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Regular grid: every 60 s, 14,400 records. Filled 0 records in short gaps; 0 in long gaps (not analysed). 10 of 10 days kept (at least 70% real records).</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Output file: /tmp/RtmpMLXK2Y/data/archive_days.rds</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Output file: /tmp/RtmpZxdM6K/data/archive_days.rds</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

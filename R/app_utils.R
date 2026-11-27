@@ -58,7 +58,8 @@ read_tag_metadata <- function(file) {
   meta <- meta[!is.na(meta$tag_ID) & nzchar(meta$tag_ID), , drop = FALSE]
   rownames(meta) <- NULL
 
-  meta
+  # Deployment and release times in other formats, e.g. 25/10/2013 02:46
+  standardise_tag_times(meta)
 }
 
 #' Write a tag table to csv
@@ -392,6 +393,60 @@ format_bytes <- function(bytes) {
 }
 
 # Archive summaries, cached by file path and modification time
+#' Write deployment and release times in other formats as yyyy-mm-dd hh:mm:ss
+#'
+#' E.g. a tag table with "25/10/2013 02:46". Times that can't be read are left
+#' for validate_tag() to report. Where the order of day and month can't be
+#' told, the attribute 'date_note' says how they were read.
+#' @noRd
+standardise_tag_times <- function(meta) {
+  cols <- c("tag_deploy_UTC", "tag_release_UTC")
+  values <- unlist(meta[cols], use.names = FALSE)
+  values <- values[!is.na(values) & nzchar(trimws(values))]
+  if (length(values) == 0 || all(grepl("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$", values))) {
+    return(meta)
+  }
+  detected <- tryCatch(
+    detect_date_format(values, type = "any", ordered = FALSE, what = "deployment and release times"),
+    error = function(e) NULL
+  )
+  if (is.null(detected)) return(meta)
+  for (col in cols) {
+    times <- parse_date_times(meta[[col]], detected$format)
+    meta[[col]] <- ifelse(is.na(times), meta[[col]], format(times, "%Y-%m-%d %H:%M:%S"))
+  }
+  if (detected$ambiguous) {
+    attr(meta, "date_note") <- paste0(
+      "Deployment and release times such as '", detected$example, "' were read as ", detected$label,
+      ". Check them, and edit any that should be month/day."
+    )
+  }
+  meta
+}
+
+date_note_cache <- new.env(parent = emptyenv())
+
+#' How an archive's date-times will be read, from its first 2,000 rows
+#' @returns A list: ok (whether they can be read) and text describing how.
+#' @noRd
+archive_date_note <- function(file, col) {
+  key <- paste(file, file.mtime(file), col)
+  if (!is.null(date_note_cache[[key]])) return(date_note_cache[[key]])
+  note <- tryCatch(
+    {
+      x <- data.table::fread(file, select = col, nrows = 2000, colClasses = list(character = col), showProgress = FALSE)[[1]]
+      detected <- detect_date_format(x, what = paste0("date-time column (", col, ")"))
+      list(ok = TRUE, text = paste0(
+        "Date-times read as ", describe_date_format(detected),
+        if (detected$ambiguous) ". The order of day and month is checked again from the whole record at import." else "."
+      ))
+    },
+    error = function(e) list(ok = FALSE, text = conditionMessage(e))
+  )
+  date_note_cache[[key]] <- note
+  note
+}
+
 archive_summary_cache <- new.env(parent = emptyenv())
 
 #' Number of records, sampling interval, maximum depth and date range of an

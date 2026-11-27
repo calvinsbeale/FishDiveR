@@ -33,6 +33,8 @@ mod_project_ui <- function(id) {
           shiny::numericInput(ns("depth_col"), "Depth column", value = 2, min = 1, step = 1),
           shiny::numericInput(ns("temp_col"), "Temp. column", value = NA, min = 1, step = 1)
         ),
+        # How the archive's date-times will be read
+        shiny::uiOutput(ns("date_note")),
         path_input(ns("GPS"), "GPS csv file (optional, for diel statistics)"),
         shiny::div(
           shiny::actionButton(ns("save_tag"), "Save tag", class = "btn-primary"),
@@ -197,6 +199,14 @@ mod_project_server <- function(id, state) {
       }
     })
 
+    output$date_note <- shiny::renderUI({
+      path <- trimws(if (is.null(input$archive)) "" else input$archive)
+      col <- input$date_time_col
+      shiny::req(nzchar(path), file.exists(path), is.numeric(col), !is.na(col), col >= 1)
+      note <- archive_date_note(path, as.integer(col))
+      shiny::div(class = paste("form-text mb-3", if (!note$ok) "text-danger"), note$text)
+    })
+
     shiny::observeEvent(input$clear_form, {
       fill_form(data.frame(
         tag_ID = "", archive = "", tag_deploy_UTC = "", tag_release_UTC = "", GPS = "",
@@ -213,6 +223,11 @@ mod_project_server <- function(id, state) {
 
       problems <- vapply(seq_len(nrow(tags)), function(i) {
         problems <- validate_tag(tags[i, ])
+        archive <- tags$archive[i]
+        if (!is.na(archive) && file.exists(archive) && !is.na(tags$date_time_col[i]) &&
+          !archive_date_note(archive, tags$date_time_col[i])$ok) {
+          problems <- c(problems, "date-times not recognised")
+        }
         changed <- changed_import_settings(tags[i, ], state$project)
         if (length(changed) > 0) problems <- c(problems, paste0("re-import: ", paste(changed, collapse = ", "), " changed"))
         paste(problems, collapse = "; ")
@@ -263,6 +278,8 @@ mod_project_server <- function(id, state) {
         if (is.null(new_tags)) return()
         save_tags(upsert_tags(state$tags, new_tags))
         shiny::showNotification(paste("Loaded", nrow(new_tags), "tag(s)."))
+        note <- attr(new_tags, "date_note")
+        if (!is.null(note)) shiny::showNotification(note, type = "warning", duration = 15)
       })
     })
 

@@ -179,45 +179,6 @@ create_depth_stats <- function(archive,
     as.POSIXct(paste(date, time_str), format = "%Y-%m-%d %H:%M:%S", tz = time_zone)
   }
 
-  # Improved # Function to check date format of 'gps' file
-  check_date_format <- function(date_column, allowed_formats = c("dmy", "ymd", "mdy")) {
-    # If the column is Date or IDate, no need to check further
-    if (inherits(date_column, c("Date", "IDate"))) {
-      return(TRUE)
-    }
-
-    # If the column is not a character string, throw an error
-    if (!is.character(date_column)) {
-      stop("Date column must be a character string, Date, or IDate.")
-    }
-
-    # Function to attempt parsing with multiple formats
-    try_parse_date <- function(date_str, formats) {
-      for (format in formats) {
-        parsed_date <- switch(format,
-                              "dmy" = lubridate::dmy(date_str),
-                              "ymd" = lubridate::ymd(date_str),
-                              "mdy" = lubridate::mdy(date_str),
-                              stop("Unsupported format specified."))
-        if (!all(is.na(parsed_date))) {
-          return(parsed_date)
-        }
-      }
-      return(rep(NA, length(date_str)))
-    }
-
-    # Attempt to parse the column
-    parsed_dates <- try_parse_date(date_column, formats = allowed_formats)
-
-    if (any(is.na(parsed_dates))) {
-      stop(paste0(
-        "Date column contains invalid or unsupported formats. ",
-        "Allowed formats: ", paste(allowed_formats, collapse = ", "), "."
-      ))
-    }
-
-    return(TRUE)
-  }
 
   # Function to calculate diel difference statistics
   calculate_metrics <- function(daily_subset, daily_max_depth, surface_depth_threshold) {
@@ -322,34 +283,18 @@ create_depth_stats <- function(archive,
         stop("NA's in GPS data. Please fix.")
       }
 
-      # Check format of gps$date
-      check_date_format(gps$date)
-
-      # Convert gps$date to a Date object
-      # gps$date <- lubridate::dmy(gps$date)
-
-      # Ensure 'gps$date' is converted to a Date object if not already
-      if (!inherits(gps$date, c("Date", "IDate"))) {
-        # Try parsing the date column with allowed formats
-        parsed_date <- NULL
-        for (format in c("dmy", "ymd", "mdy")) {
-          parsed_date <- switch(format,
-                                "dmy" = lubridate::dmy(gps$date),
-                                "ymd" = lubridate::ymd(gps$date),
-                                "mdy" = lubridate::mdy(gps$date))
-          if (!all(is.na(parsed_date))) {
-            gps$date <- parsed_date
-            break
-          }
-        }
-
-        # If parsing fails for all formats
-        if (is.null(parsed_date) || all(is.na(parsed_date))) {
-          stop("Failed to parse dates. Please ensure the date format is supported.")
-        }
-      } else {
-        # If already a date, ensure it's a 'Date' class
+      # Read the GPS dates as Dates, detecting their format (see
+      # detect_date_format()), unless fread() already read them as dates
+      if (inherits(gps$date, c("Date", "IDate", "POSIXct"))) {
         gps$date <- as.Date(gps$date)
+      } else {
+        detected <- detect_date_format(gps$date, type = "date", what = "date column of the GPS file")
+        if (verbose) message("GPS dates read as ", detected$label, ", e.g. '", detected$example, "'")
+        dates <- as.Date(parse_date_times(gps$date, detected$format))
+        if (anyNA(dates)) {
+          stop("Could not read every date in the GPS file, e.g. '", gps$date[which(is.na(dates))[1]], "'.")
+        }
+        gps$date <- dates
       }
 
       # Add a day before the first date and after the last date
@@ -397,12 +342,9 @@ create_depth_stats <- function(archive,
       archive <- copy_regular_attrs(archive, original)
 
       # Save the 'tag_archive' object to output_folder
-      archive_path <- file.path(output_folder, tag_ID, "archive_days.rds")
-      if (file.exists(archive_path)) {
-        if (verbose) message("Archive updated with diel periods based on GPS calculated times")
-      }
-
       if (output) {
+        archive_path <- file.path(output_folder, tag_ID, "archive_days.rds")
+        if (verbose && file.exists(archive_path)) message("Archive updated with diel periods based on GPS calculated times")
         dir.create(file.path(output_folder, tag_ID), recursive = TRUE, showWarnings = FALSE)
         saveRDS(object = archive, file = archive_path)
       }
@@ -429,53 +371,43 @@ create_depth_stats <- function(archive,
       archive <- copy_regular_attrs(archive, original)
 
       # Save the 'tag_archive' object to output_folder
-      archive_path <- file.path(output_folder, tag_ID, "archive_days.rds")
-      if (file.exists(archive_path)) {
-        if (verbose) message("Archive updated with diel periods")
-      }
-
       if (output) {
+        archive_path <- file.path(output_folder, tag_ID, "archive_days.rds")
+        if (verbose && file.exists(archive_path)) message("Archive updated with diel periods")
         dir.create(file.path(output_folder, tag_ID), recursive = TRUE, showWarnings = FALSE)
         saveRDS(object = archive, file = archive_path)
       }
 
     }
 
-    # Initialise data frame
-    diel_metrics <- data.frame(
-      mean_Depth = numeric(),
-      sd_Depth = numeric(),
-      range_Depth = numeric(),
-      mean_abs_VV = numeric(),
-      max_dsc_VV = numeric(),
-      max_asc_VV = numeric()
-    )
-
-    # Create the lists of metrics, from the records analysed
+    # Create the lists of metrics, from the records analysed, one row per day
     stats_archive <- archive[analysed(archive)]
-    for (dates in unique(stats_archive$date_tz_adjusted)) {
+    days <- unique(stats_archive$date_tz_adjusted)
+    diel_metrics <- lapply(seq_along(days), function(d) {
       # Subset one day of depth data
-      daily_subset <- stats_archive[stats_archive$date_tz_adjusted == dates, ]
+      daily_subset <- stats_archive[stats_archive$date_tz_adjusted == days[d], ]
 
       # Calculate maximum depth on that day
       daily_max_depth <- max(daily_subset$depth)
 
-      # Skip days with max depth zero to avoid division by zero
-      if (daily_max_depth == 0) next
-
       # Calculate the daily metrics using 'calculate_metrics' function
-      metrics_result <- calculate_metrics(
+      metrics_result <- as.data.frame(calculate_metrics(
         daily_subset = daily_subset,
         daily_max_depth = daily_max_depth,
         surface_depth_threshold = surface_depth_threshold
-      )
+      ))
 
-      # Bind all the diel metrics into a data frame
-      diel_metrics <- rbind(diel_metrics, metrics_result)
-    }
+      # A day spent at the surface has no difference between day and night.
+      # (Its standardised differences would divide by a maximum depth of 0.)
+      if (daily_max_depth == 0) metrics_result[] <- 0
 
-    # Bind the diel metrics to the depthStats data frame
-    depthStats <- cbind(depthStats, diel_metrics)
+      cbind(date_only = days[d], metrics_result)
+    })
+    diel_metrics <- do.call(rbind, diel_metrics)
+
+    # Add the diel metrics to the depthStats data frame, matching days by date
+    diel_metrics <- diel_metrics[match(depthStats$date_only, diel_metrics$date_only), , drop = FALSE]
+    depthStats <- cbind(depthStats, diel_metrics[, setdiff(names(diel_metrics), "date_only"), drop = FALSE])
 
     # Assign value TRUE to 'diel' attribute
     attr(depthStats, "diel") <- TRUE

@@ -194,7 +194,8 @@ regularise_archive <- function(archive,
     warning(
       "Filled ", format(nrow(short), big.mark = ","), " gap", if (nrow(short) > 1) "s",
       " of up to ", format_seconds(max(short$length_s)), " by interpolation (",
-      format(sum(short$missing_records), big.mark = ","), " records). These are used in the analysis.",
+      format(sum(short$missing_records), big.mark = ","), " record", if (sum(short$missing_records) > 1) "s",
+      "). These are used in the analysis.",
       call. = FALSE
     )
   }

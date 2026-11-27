@@ -34,7 +34,16 @@
 #'   "2014-04-23 23:17:35"
 #' @param archive File path of the time-series depth archive. E.g. ("C:/Tag
 #'   data/123456/123456-Archive.csv")
-#' @param date_time_col Column number of the date time series
+#' @param date_time_col Column number of the date time series. Date-times are
+#'   in UTC, and their format is detected (see \code{date_format}).
+#' @param date_format NULL (the default) to detect the format of the
+#'   date-times, or a [strptime()] format, e.g. "%d/%m/%Y %H:%M:%S". Detected
+#'   formats are dates as year-month-day, day/month/year, month/day/year or day
+#'   month-name year (e.g. 2024-03-05, 05/03/2024 or 05-Mar-2024), with times
+#'   as hh:mm:ss or hh:mm, before or after the date, e.g. "00:01:00
+#'   01-Jan-2000" (Wildlife Computers) or "2000-01-01T00:01:00Z". Where no
+#'   day is above 12, the order of day and month is taken from the spacing of
+#'   the records.
 #' @param depth_col Column number of the depth series
 #' @param temp_col (Optional) Column number of temperature series
 #' @param time_zone Time zone of the data. E.g. "Asia/Tokyo"
@@ -89,6 +98,7 @@ import_tag_data <- function(tag_ID,
                             depth_col = 2,
                             temp_col = NA,
                             time_zone,
+                            date_format = NULL,
                             max_fill_mins = 5,
                             min_coverage = 70,
                             output = FALSE,
@@ -120,13 +130,17 @@ import_tag_data <- function(tag_ID,
   if (!time_zone %in% OlsonNames()) {
     stop("time_zone must be an accepted R time zone.")
   }
-
-  # Read the data using fread
-  if (is.na(temp_col)) {
-    tag_archive <- data.table::fread(archive, select = c(date_time_col, depth_col), col.names = c("date", "depth"))
-  } else {
-    tag_archive <- data.table::fread(archive, select = c(date_time_col, depth_col, temp_col), col.names = c("date", "depth", "temp"))
+  if (!is.null(date_format) && (!is.character(date_format) || length(date_format) != 1 || !grepl("%", date_format))) {
+    stop("date_format must be NULL, to detect it, or a strptime() format such as '%d/%m/%Y %H:%M:%S'.")
   }
+
+  # Read the data using fread, with the date-times as text to read below
+  cols <- if (is.na(temp_col)) c(date_time_col, depth_col) else c(date_time_col, depth_col, temp_col)
+  tag_archive <- data.table::fread(
+    archive,
+    select = cols, col.names = c("date", "depth", if (!is.na(temp_col)) "temp"),
+    colClasses = list(character = date_time_col)
+  )
 
   # Check that the number of rows is at least 1
   if (nrow(tag_archive) < 1) {
@@ -144,8 +158,34 @@ import_tag_data <- function(tag_ID,
     stop("Error: The tag archive has no rows after removing NA values in the Depth column.")
   }
 
-  # Set date as a POSIXct object
-  tag_archive$date <- as.POSIXct(tag_archive$date, format = "%H:%M:%S %d-%b-%Y", tz = "UTC")
+  # Read the date-times (UTC), detecting their format unless given
+  if (is.null(date_format)) {
+    detected <- detect_date_format(tag_archive$date, what = paste0("date-time column (", date_time_col, ")"))
+    date_format <- detected$format
+    if (verbose) message("Date-times read as ", describe_date_format(detected))
+    if (detected$ambiguous) {
+      warning(
+        "No day in the date-times is above 12, and the spacing of the records doesn't show which is the day: they ",
+        "were read as ", detected$label, ". Give date_format if they are month/day.",
+        call. = FALSE
+      )
+    }
+  }
+  dates <- parse_date_times(tag_archive$date, date_format)
+  unread <- is.na(dates)
+  if (all(unread)) {
+    stop("Could not read any date-times in column ", date_time_col, " with the format '", date_format, "'.")
+  }
+  if (any(unread)) {
+    warning(
+      format(sum(unread), big.mark = ","), " date-time", if (sum(unread) > 1) "s", " could not be read and ",
+      if (sum(unread) > 1) "were" else "was", " left out, e.g. '", tag_archive$date[which(unread)[1]], "'.",
+      call. = FALSE
+    )
+    tag_archive <- tag_archive[!unread, ]
+    dates <- dates[!unread]
+  }
+  tag_archive$date <- dates
 
   # Find the range of dates in tag_archive
   min_date <- min(tag_archive$date, na.rm = TRUE)

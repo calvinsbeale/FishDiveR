@@ -13,6 +13,7 @@ import_tag_data(
   depth_col = 2,
   temp_col = NA,
   time_zone,
+  date_format = NULL,
   max_fill_mins = 5,
   min_coverage = 70,
   output = FALSE,
@@ -33,13 +34,23 @@ E.g. "2013-10-25 02:46:00"}
 \item{archive}{File path of the time-series depth archive. E.g. ("C:/Tag
 data/123456/123456-Archive.csv")}
 
-\item{date_time_col}{Column number of the date time series}
+\item{date_time_col}{Column number of the date time series. Date-times are
+in UTC, and their format is detected (see \code{date_format}).}
 
 \item{depth_col}{Column number of the depth series}
 
 \item{temp_col}{(Optional) Column number of temperature series}
 
 \item{time_zone}{Time zone of the data. E.g. "Asia/Tokyo"}
+
+\item{date_format}{NULL (the default) to detect the format of the
+date-times, or a \code{\link[=strptime]{strptime()}} format, e.g. "\%d/\%m/\%Y \%H:\%M:\%S". Detected
+formats are dates as year-month-day, day/month/year, month/day/year or day
+month-name year (e.g. 2024-03-05, 05/03/2024 or 05-Mar-2024), with times
+as hh:mm:ss or hh:mm, before or after the date, e.g. "00:01:00
+01-Jan-2000" (Wildlife Computers) or "2000-01-01T00:01:00Z". Where no
+day is above 12, the order of day and month is taken from the spacing of
+the records.}
 
 \item{max_fill_mins}{The longest gap, in minutes, to fill by interpolation
 for analysis (default 5, at most 360). See \code{\link[=regularise_archive]{regularise_archive()}}.}

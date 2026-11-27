@@ -216,7 +216,8 @@ plot_clusters <- function(tag_vector = tag_list,
     }
 
     # Combine all tag data frames into one after processing each tag. Now re-sampled at every_nth data points
-    all_archive_ts <- do.call(rbind, data_list)
+    # Tags with and without diel times have different columns
+    all_archive_ts <- as.data.frame(data.table::rbindlist(data_list, use.names = TRUE, fill = TRUE))
   } else { # Single tag
 
     # Load the archive data for the single tag
@@ -471,8 +472,9 @@ plot_clusters <- function(tag_vector = tag_list,
       next
     }
 
-    # Assign a unique number to each date
-    plot_data$date_number <- match(plot_data$date_only, unique(plot_data$date_only))
+    # Assign a unique number to each day of each tag (tags can share dates)
+    day_key <- paste(plot_data$tag_ID, plot_data$date_only)
+    plot_data$date_number <- match(day_key, unique(day_key))
 
     # Plot each day against the time since its local midnight, on one axis.
     # A day with a clock change runs 23 or 25 hours.
@@ -486,11 +488,22 @@ plot_clusters <- function(tag_vector = tag_list,
     # Start the plot, with night shading underneath the depth line if required
     cluster_plot <- ggplot(data = plot_data, aes(x = time, y = depth))
 
-    if (diel_shade) {
+    # Days without sunrise and sunset times (tags without diel statistics)
+    # can't be shaded
+    day_rows <- plot_data[!duplicated(plot_data$date_number), ]
+    has_sun <- if ("sunrise_secs" %in% names(day_rows)) !is.na(day_rows$sunrise_secs) & !is.na(day_rows$sunset_secs) else rep(FALSE, nrow(day_rows))
+    if (diel_shade && any(!has_sun)) {
+      message(
+        "No night shading for ", paste0(day_rows$tag_ID[!has_sun], " ", day_rows$date_only[!has_sun], collapse = ", "),
+        ": no sunrise and sunset times. Run create_depth_stats() with diel = TRUE for these tags."
+      )
+    }
+
+    if (diel_shade && any(has_sun)) {
       # One rectangle per night period (midnight to sunrise, sunset to midnight)
       # for each day, using that day's sunrise and sunset. Spanning -Inf to Inf
       # fills the panel whatever the Y-axis limits.
-      day_rows <- plot_data[!duplicated(plot_data$date_number), ]
+      day_rows <- day_rows[has_sun, , drop = FALSE]
       night <- data.frame(
         date_number = rep(day_rows$date_number, 2),
         xmin = axis_time(c(rep(0, nrow(day_rows)), day_rows$sunset_secs)),
